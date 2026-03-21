@@ -1,0 +1,50 @@
+{% extends "setup/base_wizard.html" %}
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<div class="wizard-welcome">
+    <div class="wizard-logo-mark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2>Welcome to Gatekeeper</h2>
+    <p class="wizard-tagline">Your trading discipline platform.</p>
+
+    <div class="wizard-intro">
+        <p>Gatekeeper enforces your personal trading plan through a 7-layer checklist before every trade — so you only take setups that meet your own criteria.</p>
+        <p>Every idea moves through layers: <strong>Context → Setup → Confirmation → Entry → Risk → Management → Behavioral</strong>. No shortcuts.</p>
+    </div>
+
+    <div class="wizard-what-to-expect">
+        <h5>This wizard will help you:</h5>
+        <ul class="wizard-checklist-preview">
+            <li>
+                <span class="wcp-icon wcp-icon--ai">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+                </span>
+                Connect an AI provider for plan building and idea review
+            </li>
+            <li>
+                <span class="wcp-icon wcp-icon--plan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </span>
+                Set up your trading plan with a starter template or from scratch
+            </li>
+            <li>
+                <span class="wcp-icon wcp-icon--watchlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </span>
+                Build your watchlist of instruments
+            </li>
+        </ul>
+    </div>
+
+    <p class="wizard-time-estimate">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Takes about 2 minutes
+    </p>
+
+    <div class="wizard-nav">
+        <a href="/setup/ai" role="button">Get Started →</a>
+    </div>
+</div>
+{% endblock %}

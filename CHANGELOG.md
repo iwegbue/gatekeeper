@@ -5,7 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-_Changes staged for the next release._
+### Added
+
+- **Setup walkthrough wizard** — 5-step onboarding flow after initial password setup: Welcome intro, AI provider configuration, trading plan selection, watchlist builder, and quick tour
+- **Plan starter templates** — two curated rule sets (Trend Following, Mean Reversion) covering all 7 layers to help new users get started immediately; fully editable after setup
+- **`setup_completed` flag** — new `settings.setup_completed` boolean column (migration `004_add_setup_completed`) tracks whether onboarding has been completed; authenticated users are redirected to the wizard until it is
 
 ---
 

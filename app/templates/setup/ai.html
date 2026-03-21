@@ -1,0 +1,76 @@
+{% extends "setup/base_wizard.html" %}
+{% block title %}AI Setup{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h3>AI Provider</h3>
+    <p>Connect an AI provider to unlock plan building, idea review, and journal coaching. All optional — you can skip this and configure it later in Settings.</p>
+</hgroup>
+
+<form method="post" action="/setup/ai" id="ai-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <label for="ai_provider">Provider</label>
+    <select id="ai_provider" name="ai_provider" onchange="showProviderFields(this.value)">
+        <option value="anthropic" {% if settings.ai_provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude)</option>
+        <option value="openai" {% if settings.ai_provider == 'openai' %}selected{% endif %}>OpenAI (GPT)</option>
+        <option value="ollama" {% if settings.ai_provider == 'ollama' %}selected{% endif %}>Ollama (Local)</option>
+    </select>
+
+    <div id="field-anthropic" class="provider-fields">
+        <label for="anthropic_api_key">Anthropic API Key</label>
+        {% if settings.anthropic_api_key %}
+        <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Key configured — leave blank to keep it, or enter a new key to replace.</p>
+        {% endif %}
+        <input type="password" id="anthropic_api_key" name="anthropic_api_key"
+               placeholder="{{ '••••••••' + settings.anthropic_api_key[-4:] if settings.anthropic_api_key else 'sk-ant-...' }}">
+        <p class="muted" style="font-size:0.8rem;">Get your key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+    </div>
+
+    <div id="field-openai" class="provider-fields" style="display:none;">
+        <label for="openai_api_key">OpenAI API Key</label>
+        {% if settings.openai_api_key %}
+        <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Key configured — leave blank to keep it, or enter a new key to replace.</p>
+        {% endif %}
+        <input type="password" id="openai_api_key" name="openai_api_key"
+               placeholder="{{ '••••••••' + settings.openai_api_key[-4:] if settings.openai_api_key else 'sk-...' }}">
+        <p class="muted" style="font-size:0.8rem;">Get your key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.</p>
+    </div>
+
+    <div id="field-ollama" class="provider-fields" style="display:none;">
+        <label for="ollama_base_url">Ollama Base URL</label>
+        <input type="text" id="ollama_base_url" name="ollama_base_url"
+               value="{{ settings.ollama_base_url }}"
+               placeholder="http://localhost:11434">
+        <p class="muted" style="font-size:0.8rem;">Ollama must be reachable at a local address (localhost or 127.0.0.1).</p>
+    </div>
+
+    <details class="wizard-advanced">
+        <summary>Advanced: model override</summary>
+        <label for="ai_model">Model (optional)</label>
+        <input type="text" id="ai_model" name="ai_model" value="{{ settings.ai_model }}"
+               placeholder="e.g. claude-sonnet-4-20250514, gpt-4o">
+        <p class="muted" style="font-size:0.8rem;">Leave blank to use the recommended default for your provider.</p>
+    </details>
+
+    <div class="wizard-nav">
+        <a href="/setup/welcome" role="button" class="secondary outline wizard-back">← Back</a>
+        <div class="wizard-nav-right">
+            <a href="/setup/plan" class="wizard-skip">Skip for now</a>
+            <button type="submit">Next →</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showProviderFields(provider) {
+    document.querySelectorAll('.provider-fields').forEach(el => el.style.display = 'none');
+    const target = document.getElementById('field-' + provider);
+    if (target) target.style.display = 'block';
+}
+// Show correct field on page load
+showProviderFields(document.getElementById('ai_provider').value);
+</script>
+{% endblock %}

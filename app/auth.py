@@ -53,6 +53,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         token = request.cookies.get(SESSION_COOKIE)
         if token and verify_session_token(token):
+            # Redirect authenticated users to the onboarding wizard if they haven't
+            # completed it yet. Exempt /logout so they can always log out.
+            if not getattr(request.app.state, "setup_completed", True) and path != "/logout":
+                return RedirectResponse(url="/setup/welcome", status_code=302)
             return await call_next(request)
 
         return RedirectResponse(url="/login", status_code=302)

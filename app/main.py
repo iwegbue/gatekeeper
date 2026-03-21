@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 
     # Seed admin password from env var if provided and no hash exists in the DB yet
     from app.database import AsyncSessionFactory
-    from app.services.settings_service import admin_password_is_set, set_admin_password
+    from app.services.settings_service import admin_password_is_set, set_admin_password, get_settings
     async with AsyncSessionFactory() as db:
         password_set = await admin_password_is_set(db)
         if not password_set and _settings.ADMIN_PASSWORD:
@@ -48,6 +48,8 @@ async def lifespan(app: FastAPI):
             password_set = True
             logger.info("Admin password seeded from ADMIN_PASSWORD env var")
         app.state.needs_setup = not password_set
+        s = await get_settings(db)
+        app.state.setup_completed = s.setup_completed
 
     logger.info("Gatekeeper Core starting up")
     from app.tasks.background import start_background_tasks

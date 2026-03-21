@@ -1,0 +1,26 @@
+<div id="instrument-list">
+    {% if instruments %}
+    <ul class="instrument-mini-list">
+        {% for inst in instruments %}
+        <li class="instrument-mini-item">
+            <div class="instrument-mini-info">
+                <strong>{{ inst.symbol }}</strong>
+                <span class="muted">{{ inst.display_name }}</span>
+                <span class="badge" style="font-size:0.65rem;">{{ inst.asset_class }}</span>
+            </div>
+            <form hx-post="/setup/instruments/delete/{{ inst.id }}"
+                  hx-target="#instrument-list"
+                  hx-swap="outerHTML"
+                  style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="instrument-mini-remove" aria-label="Remove {{ inst.symbol }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted instrument-mini-empty">No instruments added yet. Add at least one to get started.</p>
+    {% endif %}
+</div>

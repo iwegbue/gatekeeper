@@ -540,6 +540,553 @@ footer.container {
     opacity: 0.5;
 }
 
+/* ── Setup Wizard ────────────────────────────────────────────────────── */
+
+.wizard-body {
+    background: var(--pico-background-color, #11191f);
+}
+
+.wizard-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    background: var(--pico-background-color, #11191f);
+    border-bottom: 1px solid var(--pico-muted-border-color, #374151);
+    z-index: 10;
+}
+
+.wizard-brand {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    color: var(--pico-color, #e5e7eb);
+}
+
+.wizard-main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 5rem 1rem 3rem;
+}
+
+/* Stepper */
+
+.wizard-stepper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0;
+}
+
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.wizard-step-circle {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--pico-card-background-color, #141e26);
+    border: 2px solid var(--pico-muted-border-color, #374151);
+    color: var(--pico-muted-color, #6b7280);
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.wizard-step-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pico-muted-color, #6b7280);
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.wizard-step--active .wizard-step-circle {
+    background: var(--pico-primary, #6366f1);
+    border-color: var(--pico-primary, #6366f1);
+    color: #fff;
+}
+
+.wizard-step--active .wizard-step-label {
+    color: var(--pico-color, #e5e7eb);
+}
+
+.wizard-step--done .wizard-step-circle {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--pico-primary, #6366f1);
+    color: var(--pico-primary, #6366f1);
+}
+
+.wizard-step--done .wizard-step-label {
+    color: var(--pico-primary, #6366f1);
+}
+
+.wizard-step-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--pico-muted-border-color, #374151);
+    margin: 0 0.4rem;
+    margin-bottom: 1.35rem;
+    transition: background 0.2s;
+}
+
+/* Card */
+
+.wizard-card {
+    padding: 2rem;
+}
+
+/* Navigation row */
+
+.wizard-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+.wizard-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wizard-skip {
+    font-size: 0.85rem;
+    color: var(--pico-muted-color, #6b7280);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.wizard-skip:hover {
+    color: var(--pico-color, #e5e7eb);
+}
+
+.wizard-back {
+    white-space: nowrap;
+}
+
+/* Welcome step */
+
+.wizard-welcome {
+    text-align: center;
+}
+
+.wizard-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--pico-primary, #6366f1);
+    margin-bottom: 1rem;
+}
+
+.wizard-tagline {
+    color: var(--pico-muted-color, #6b7280);
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.wizard-intro {
+    text-align: left;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.wizard-intro p {
+    margin-bottom: 0.5rem;
+}
+
+.wizard-intro p:last-child {
+    margin-bottom: 0;
+}
+
+.wizard-what-to-expect {
+    text-align: left;
+    margin-bottom: 1.25rem;
+}
+
+.wizard-what-to-expect h5 {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--pico-muted-color, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.wizard-checklist-preview {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.wizard-checklist-preview li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.9rem;
+}
+
+.wcp-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.wcp-icon--ai      { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+.wcp-icon--plan    { background: rgba(34, 197, 94, 0.12);  color: #4ade80; }
+.wcp-icon--watchlist { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+
+.wizard-time-estimate {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--pico-muted-color, #6b7280);
+    margin-bottom: 0.5rem;
+}
+
+.wizard-welcome .wizard-nav {
+    justify-content: center;
+}
+
+/* AI advanced toggle */
+
+.wizard-advanced {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.wizard-advanced summary {
+    color: var(--pico-muted-color, #9ca3af);
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 0.25rem 0;
+    margin-bottom: 0;
+}
+
+.wizard-advanced[open] summary {
+    margin-bottom: 0.75rem;
+}
+
+/* Template cards */
+
+.template-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.template-card {
+    border: 2px solid var(--pico-muted-border-color, #374151);
+    border-radius: 10px;
+    padding: 1rem 1.125rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--pico-card-background-color, #141e26);
+}
+
+.template-card:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(99, 102, 241, 0.04);
+}
+
+.template-card--selected {
+    border-color: var(--pico-primary, #6366f1);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.template-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.template-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.template-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--pico-primary, #6366f1);
+    flex-shrink: 0;
+}
+
+.template-rule-count {
+    font-size: 0.75rem;
+    color: var(--pico-muted-color, #6b7280);
+    white-space: nowrap;
+}
+
+.template-card-desc {
+    font-size: 0.85rem;
+    color: var(--pico-muted-color, #9ca3af);
+    margin: 0 0 0.5rem;
+    line-height: 1.5;
+}
+
+/* Template rule preview */
+
+.template-preview {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    border: none;
+    padding: 0;
+}
+
+.template-preview summary {
+    color: var(--pico-muted-color, #6b7280);
+    cursor: pointer;
+    padding: 0.25rem 0;
+    font-size: 0.78rem;
+}
+
+.template-preview-rules {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.template-layer-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--pico-muted-color, #6b7280);
+    margin: 0.6rem 0 0.25rem;
+}
+
+.template-preview-rules ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.template-preview-rules li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.18rem 0;
+    font-size: 0.8rem;
+    color: var(--pico-muted-color, #d1d5db);
+}
+
+.template-rule-type-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.template-rule-type-dot--required  { background: #6366f1; }
+.template-rule-type-dot--optional  { background: #22c55e; }
+.template-rule-type-dot--advisory  { background: #eab308; }
+
+.template-preview-legend {
+    font-size: 0.72rem;
+    color: var(--pico-muted-color, #6b7280);
+    margin: 0.5rem 0 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* Instrument add row */
+
+.instrument-add-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr auto;
+    gap: 0.75rem;
+    align-items: start;
+    margin-bottom: 0.25rem;
+}
+
+.instrument-add-btn-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.instrument-add-btn-wrap button {
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+/* Instrument mini list */
+
+.instrument-mini-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.instrument-mini-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 6px;
+    gap: 0.5rem;
+}
+
+.instrument-mini-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.instrument-mini-info .muted {
+    font-size: 0.82rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.instrument-mini-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--pico-muted-color, #6b7280);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.instrument-mini-remove:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.instrument-mini-empty {
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+}
+
+/* Tour */
+
+.tour-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 1.5rem;
+}
+
+.tour-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.75rem 0;
+}
+
+.tour-step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.tour-step-icon--ideas     { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+.tour-step-icon--checklist { background: rgba(34, 197, 94, 0.12);  color: #4ade80; }
+.tour-step-icon--trade     { background: rgba(20, 184, 166, 0.12); color: #2dd4bf; }
+.tour-step-icon--journal   { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; }
+.tour-step-icon--reports   { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+
+.tour-step-content {
+    flex: 1;
+    padding-top: 0.35rem;
+}
+
+.tour-step-content strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.95rem;
+}
+
+.tour-step-content p {
+    font-size: 0.85rem;
+    color: var(--pico-muted-color, #9ca3af);
+    margin: 0 0 0.3rem;
+}
+
+.tour-link {
+    font-size: 0.8rem;
+}
+
+.tour-connector {
+    width: 2px;
+    height: 1.25rem;
+    background: var(--pico-muted-border-color, #374151);
+    margin-left: 1.35rem;
+}
+
+.tour-extras {
+    border-top: 1px solid var(--pico-muted-border-color, #374151);
+    padding-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.wizard-finish {
+    font-weight: 600;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────── */
 
 @media (max-width: 1023px) {
@@ -597,5 +1144,38 @@ footer.container {
     table th,
     table td {
         padding: 0.35rem 0.4rem;
+    }
+
+    .wizard-stepper {
+        gap: 0;
+    }
+
+    .wizard-step-label {
+        display: none;
+    }
+
+    .wizard-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .instrument-add-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .instrument-add-btn-wrap {
+        grid-column: 1 / -1;
+    }
+
+    .wizard-nav {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .wizard-nav-right {
+        justify-content: space-between;
+    }
+
+    .wizard-back {
+        text-align: center;
     }
 }

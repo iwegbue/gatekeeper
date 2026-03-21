@@ -36,6 +36,9 @@ class Settings(Base):
     # Admin password (scrypt hash — set via /setup wizard or ADMIN_PASSWORD env var at boot)
     admin_password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
 
+    # Onboarding walkthrough completed flag
+    setup_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), onupdate=lambda: datetime.now(timezone.utc),
     )

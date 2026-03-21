@@ -1,0 +1,55 @@
+{% extends "setup/base_wizard.html" %}
+{% block title %}Watchlist{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h3>Build Your Watchlist</h3>
+    <p>Add the instruments you trade. You can add more, edit, or remove them anytime from the Instruments page.</p>
+</hgroup>
+
+{# ── Add instrument form ──────────────────────────────────────────────────── #}
+<form hx-post="/setup/instruments"
+      hx-target="#instrument-list"
+      hx-swap="outerHTML"
+      hx-on::after-request="this.reset()"
+      id="add-instrument-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="instrument-add-row">
+        <div>
+            <label for="symbol">Symbol</label>
+            <input type="text" id="symbol" name="symbol" required
+                   placeholder="e.g. EURUSD" style="text-transform:uppercase;"
+                   autocomplete="off">
+        </div>
+        <div>
+            <label for="display_name">Display name</label>
+            <input type="text" id="display_name" name="display_name" required
+                   placeholder="e.g. Euro / US Dollar" autocomplete="off">
+        </div>
+        <div>
+            <label for="asset_class">Asset class</label>
+            <select id="asset_class" name="asset_class">
+                {% for ac in asset_classes %}
+                <option value="{{ ac }}">{{ ac }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="instrument-add-btn-wrap">
+            <label>&nbsp;</label>
+            <button type="submit">Add</button>
+        </div>
+    </div>
+    <span class="htmx-indicator muted" style="font-size:0.8rem;">Adding…</span>
+</form>
+
+{# ── Instrument list (HTMX target) ────────────────────────────────────────── #}
+{% include "setup/_instrument_list.html" %}
+
+<div class="wizard-nav" style="margin-top: 1.5rem;">
+    <a href="/setup/plan" role="button" class="secondary outline wizard-back">← Back</a>
+    <div class="wizard-nav-right">
+        <a href="/setup/tour" class="wizard-skip">Skip for now</a>
+        <a href="/setup/tour" role="button">Next →</a>
+    </div>
+</div>
+{% endblock %}

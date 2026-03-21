@@ -13,9 +13,10 @@ async def seeded_client(client, db):
     """HTTP client with an admin password pre-seeded in the DB."""
     await set_admin_password(db, _TEST_PASSWORD)
     await db.commit()
-    # Mark setup as complete on app state so the middleware doesn't redirect to /setup
+    # Mark setup as complete so the middleware doesn't redirect to /setup or /setup/welcome
     from app.main import app
     app.state.needs_setup = False
+    app.state.setup_completed = True
     return client
 
 

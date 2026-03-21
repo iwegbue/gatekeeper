@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Setup{% endblock %} — Gatekeeper</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="wizard-body">
+
+<header class="wizard-header">
+    <span class="wizard-brand">Gatekeeper</span>
+</header>
+
+<main class="wizard-main">
+
+    {# ── Stepper ──────────────────────────────────────────────────────────── #}
+    <nav class="wizard-stepper" aria-label="Setup progress">
+        {% set steps = [
+            (1, "Welcome"),
+            (2, "AI Setup"),
+            (3, "Trading Plan"),
+            (4, "Watchlist"),
+            (5, "Tour"),
+        ] %}
+        {% for num, label in steps %}
+        <div class="wizard-step {% if num < step %}wizard-step--done{% elif num == step %}wizard-step--active{% endif %}">
+            <div class="wizard-step-circle">
+                {% if num < step %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {% else %}
+                {{ num }}
+                {% endif %}
+            </div>
+            <span class="wizard-step-label">{{ label }}</span>
+        </div>
+        {% if not loop.last %}
+        <div class="wizard-step-connector"></div>
+        {% endif %}
+        {% endfor %}
+    </nav>
+
+    {# ── Card ─────────────────────────────────────────────────────────────── #}
+    <article class="wizard-card">
+        {% block content %}{% endblock %}
+    </article>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
