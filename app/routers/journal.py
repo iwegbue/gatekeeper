@@ -56,7 +56,9 @@ async def journal_edit(
         would_take_again=would_take_again,
         rating=rating,
     )
-    if entry and tags:
+    if entry is None:
+        return RedirectResponse(url="/journal?msg=Entry+not+found&msg_type=error", status_code=303)
+    if tags:
         tag_names = [t.strip() for t in tags.split(",") if t.strip()]
         await journal_service.set_entry_tags(db, entry_id, tag_names)
     await db.commit()
@@ -65,13 +67,17 @@ async def journal_edit(
 
 @router.post("/{entry_id}/complete")
 async def journal_complete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    await journal_service.complete_entry(db, entry_id)
+    result = await journal_service.complete_entry(db, entry_id)
+    if result is None:
+        return RedirectResponse(url="/journal?msg=Entry+not+found&msg_type=error", status_code=303)
     await db.commit()
     return RedirectResponse(url=f"/journal/{entry_id}?msg=Marked+complete", status_code=303)
 
 
 @router.post("/{entry_id}/delete")
 async def journal_delete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    await journal_service.delete_entry(db, entry_id)
+    deleted = await journal_service.delete_entry(db, entry_id)
+    if not deleted:
+        return RedirectResponse(url="/journal?msg=Entry+not+found&msg_type=error", status_code=303)
     await db.commit()
     return RedirectResponse(url="/journal?msg=Entry+deleted", status_code=303)

@@ -81,21 +81,27 @@ async def trade_update_sl(
     sl_price: float = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
-    await trade_service.update_trade(db, trade_id, sl_price=sl_price)
+    result = await trade_service.update_trade(db, trade_id, sl_price=sl_price)
+    if result is None:
+        return RedirectResponse(url="/trades?msg=Trade+not+found&msg_type=error", status_code=303)
     await db.commit()
     return RedirectResponse(url=f"/trades/{trade_id}?msg=SL+updated", status_code=303)
 
 
 @router.post("/{trade_id}/partial")
 async def trade_partial(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    await trade_service.take_partial(db, trade_id)
+    result = await trade_service.take_partial(db, trade_id)
+    if result is None:
+        return RedirectResponse(url="/trades?msg=Trade+not+found&msg_type=error", status_code=303)
     await db.commit()
     return RedirectResponse(url=f"/trades/{trade_id}?msg=Partial+recorded", status_code=303)
 
 
 @router.post("/{trade_id}/be")
 async def trade_be(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    await trade_service.lock_be(db, trade_id)
+    result = await trade_service.lock_be(db, trade_id)
+    if result is None:
+        return RedirectResponse(url="/trades?msg=Trade+not+found&msg_type=error", status_code=303)
     await db.commit()
     return RedirectResponse(url=f"/trades/{trade_id}?msg=BE+locked", status_code=303)
 
