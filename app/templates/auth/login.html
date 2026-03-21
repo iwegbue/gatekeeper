@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gatekeeper</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="container" style="max-width: 400px; margin-top: 10vh;">
+        <article>
+            <hgroup>
+                <h2>Gatekeeper</h2>
+                <p>Trading Discipline Platform</p>
+            </hgroup>
+            {% if error %}
+            <p style="color: var(--pico-color-red-500);">{{ error }}</p>
+            {% endif %}
+            <form method="post" action="/login">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autofocus>
+                <button type="submit">Login</button>
+            </form>
+        </article>
+    </main>
+</body>
+</html>

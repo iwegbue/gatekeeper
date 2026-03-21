@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Edit Plan - Gatekeeper{% endblock %}
+{% block content %}
+<a href="/plan" class="back-link">&larr; Back to Plan</a>
+<h2>Edit Trading Plan</h2>
+
+<form method="post" action="/plan/edit">
+    <label for="name">Plan Name</label>
+    <input type="text" id="name" name="name" value="{{ plan.name or '' }}" required>
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description" rows="4">{{ plan.description or '' }}</textarea>
+
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

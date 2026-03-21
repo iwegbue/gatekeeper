@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gatekeeper{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/htmx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    {# ── Top Bar ────────────────────────────────────────────────────────── #}
+    <header class="top-bar">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+            <i data-lucide="menu"></i>
+        </button>
+        <a class="top-bar-brand" href="/">Gatekeeper</a>
+
+        <nav class="top-bar-icons" aria-label="Quick navigation">
+            <a href="/" class="top-bar-icon" title="Dashboard"
+               {% if request.url.path == '/' %}aria-current="page"{% endif %}>
+                <i data-lucide="layout-dashboard"></i>
+            </a>
+            <a href="/ideas" class="top-bar-icon" title="Ideas"
+               {% if '/ideas' in request.url.path %}aria-current="page"{% endif %}>
+                <i data-lucide="lightbulb"></i>
+            </a>
+            <a href="/trades" class="top-bar-icon" title="Trades"
+               {% if '/trades' in request.url.path %}aria-current="page"{% endif %}>
+                <i data-lucide="trending-up"></i>
+            </a>
+            <a href="/settings" class="top-bar-icon" title="Settings"
+               {% if request.url.path.startswith('/settings') %}aria-current="page"{% endif %}>
+                <i data-lucide="settings"></i>
+            </a>
+        </nav>
+
+        <small id="utc-clock" class="top-bar-clock"></small>
+    </header>
+
+    {# ── App Layout ──────────────────────────────────────────────────────── #}
+    <div class="app-layout" id="app-layout">
+
+        {# ── Left Sidebar ────────────────────────────────────────────────── #}
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+
+                <div class="sidebar-group">
+                    <span class="sidebar-group-label">Core</span>
+                    <ul>
+                        <li><a href="/"
+                               {% if request.url.path == '/' %}aria-current="page"{% endif %}>
+                            <i data-lucide="layout-dashboard"></i> Dashboard
+                        </a></li>
+                        <li><a href="/ideas"
+                               {% if '/ideas' in request.url.path %}aria-current="page"{% endif %}>
+                            <i data-lucide="lightbulb"></i> Ideas
+                        </a></li>
+                        <li><a href="/trades"
+                               {% if '/trades' in request.url.path %}aria-current="page"{% endif %}>
+                            <i data-lucide="trending-up"></i> Trades
+                        </a></li>
+                        <li><a href="/journal"
+                               {% if request.url.path.startswith('/journal') %}aria-current="page"{% endif %}>
+                            <i data-lucide="book-open"></i> Journal
+                        </a></li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-group">
+                    <span class="sidebar-group-label">Analysis</span>
+                    <ul>
+                        <li><a href="/reports"
+                               {% if request.url.path.startswith('/reports') %}aria-current="page"{% endif %}>
+                            <i data-lucide="bar-chart-2"></i> Reports
+                        </a></li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-group">
+                    <span class="sidebar-group-label">Config</span>
+                    <ul>
+                        <li><a href="/settings"
+                               {% if request.url.path.startswith('/settings') %}aria-current="page"{% endif %}>
+                            <i data-lucide="settings"></i> Settings
+                        </a></li>
+                        <li><a href="/plan"
+                               {% if request.url.path.startswith('/plan') %}aria-current="page"{% endif %}>
+                            <i data-lucide="target"></i> Trading Plan
+                        </a></li>
+                        <li><a href="/instruments"
+                               {% if request.url.path.startswith('/instruments') %}aria-current="page"{% endif %}>
+                            <i data-lucide="eye"></i> Instruments
+                        </a></li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-group">
+                    <ul>
+                        <li class="sidebar-logout"><a href="/logout">
+                            <i data-lucide="log-out"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+
+            </nav>
+        </aside>
+        <script>
+        (function(){
+            var layout = document.getElementById('app-layout');
+            var sidebar = document.getElementById('sidebar');
+            if (layout && sidebar && window.innerWidth >= 1024 && localStorage.getItem('sidebar-collapsed') === 'true') {
+                sidebar.classList.add('sidebar--hidden');
+                layout.classList.add('sidebar-collapsed');
+            }
+        })();
+        </script>
+
+        {# ── Sidebar Overlay (mobile tap-to-close) ───────────────────────── #}
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        {# ── Main Content ────────────────────────────────────────────────── #}
+        <div class="main-content">
+            <main class="container">
+
+                {# ── Flash Messages ──────────────────────────────────────── #}
+                {% set flash_msg = request.query_params.get('msg', '') %}
+                {% set flash_type = request.query_params.get('msg_type', 'success') %}
+                {% if flash_msg %}
+                <div class="flash flash-{{ flash_type }}" role="alert">
+                    {{ flash_msg }}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+
+            <footer class="container">
+                <small>Gatekeeper Core v{{ app_version }} <span class="muted">({{ app_commit }})</span></small>
+            </footer>
+        </div>
+
+    </div>
+
+    {% block head_extra_bottom %}{% endblock %}
+    <script>
+    lucide.createIcons();
+
+    (function updateClock() {
+        var el = document.getElementById('utc-clock');
+        if (el) {
+            var now = new Date();
+            el.textContent = now.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+        }
+        setTimeout(updateClock, 10000);
+    })();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var flash = document.querySelector('.flash');
+        if (flash) {
+            setTimeout(function() {
+                flash.style.transition = 'opacity 0.4s ease';
+                flash.style.opacity = '0';
+                setTimeout(function() { flash.remove(); }, 400);
+            }, 5000);
+        }
+
+        var toggle   = document.getElementById('sidebar-toggle');
+        var sidebar  = document.getElementById('sidebar');
+        var overlay  = document.getElementById('sidebar-overlay');
+        var layout   = document.getElementById('app-layout');
+
+        var isMobile = function() { return window.innerWidth < 1024; };
+        var scrollY  = 0;
+
+        function lockBodyScroll() {
+            scrollY = window.scrollY;
+            document.body.classList.add('sidebar-scroll-lock');
+            document.body.style.top = '-' + scrollY + 'px';
+        }
+
+        function unlockBodyScroll() {
+            document.body.classList.remove('sidebar-scroll-lock');
+            document.body.style.top = '';
+            window.scrollTo(0, scrollY);
+        }
+
+        function openSidebar() {
+            sidebar.classList.add('sidebar--open');
+            overlay.classList.add('active');
+            lockBodyScroll();
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('sidebar--open');
+            overlay.classList.remove('active');
+            unlockBodyScroll();
+        }
+
+        function toggleSidebar() {
+            if (isMobile()) {
+                if (sidebar.classList.contains('sidebar--open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            } else {
+                var hidden = sidebar.classList.toggle('sidebar--hidden');
+                layout.classList.toggle('sidebar-collapsed', hidden);
+                localStorage.setItem('sidebar-collapsed', hidden ? 'true' : 'false');
+            }
+        }
+
+        if (toggle) toggle.addEventListener('click', toggleSidebar);
+
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                closeSidebar();
+            });
+        }
+
+        sidebar.querySelectorAll('.sidebar-nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (isMobile()) closeSidebar();
+            });
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Instruments - Gatekeeper{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Instruments</h2>
+    <a href="/instruments/new" role="button" class="small">+ Add Instrument</a>
+</div>
+
+{% if instruments %}
+<div class="overflow-auto">
+<table>
+    <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Display Name</th>
+            <th>Asset Class</th>
+            <th>Enabled</th>
+            <th>Priority</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inst in instruments %}
+        <tr>
+            <td><strong>{{ inst.symbol }}</strong></td>
+            <td>{{ inst.display_name }}</td>
+            <td><span class="badge state-watch">{{ inst.asset_class }}</span></td>
+            <td>{% if inst.is_enabled %}<span class="check-pass">Yes</span>{% else %}<span class="check-fail">No</span>{% endif %}</td>
+            <td>{{ inst.priority }}</td>
+            <td><a href="/instruments/{{ inst.id }}/edit" class="small">Edit</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No instruments yet. <a href="/instruments/new">Add your first instrument</a>.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Settings - Gatekeeper{% endblock %}
+{% block content %}
+<h2>Settings</h2>
+
+<form method="post" action="/settings">
+    <h4>AI Provider (BYOK)</h4>
+    <p class="muted" style="font-size:0.85rem;">Bring your own API key. Configure your preferred AI provider below.</p>
+
+    <label for="ai_provider">Provider</label>
+    <select id="ai_provider" name="ai_provider">
+        <option value="anthropic" {% if settings.ai_provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude)</option>
+        <option value="openai" {% if settings.ai_provider == 'openai' %}selected{% endif %}>OpenAI (GPT)</option>
+        <option value="ollama" {% if settings.ai_provider == 'ollama' %}selected{% endif %}>Ollama (Local)</option>
+    </select>
+
+    <label for="anthropic_api_key">Anthropic API Key</label>
+    <input type="password" id="anthropic_api_key" name="anthropic_api_key" value="{{ settings.anthropic_api_key }}" placeholder="sk-ant-...">
+
+    <label for="openai_api_key">OpenAI API Key</label>
+    <input type="password" id="openai_api_key" name="openai_api_key" value="{{ settings.openai_api_key }}" placeholder="sk-...">
+
+    <label for="ollama_base_url">Ollama Base URL</label>
+    <input type="text" id="ollama_base_url" name="ollama_base_url" value="{{ settings.ollama_base_url }}" placeholder="http://localhost:11434">
+
+    <label for="ai_model">Model Override (optional)</label>
+    <input type="text" id="ai_model" name="ai_model" value="{{ settings.ai_model }}" placeholder="e.g., claude-sonnet-4-20250514 or gpt-4o">
+
+    <hr>
+    <h4>General</h4>
+
+    <label>
+        <input type="checkbox" name="notifications_enabled" value="true" {% if settings.notifications_enabled %}checked{% endif %}>
+        Notifications enabled
+    </label>
+
+    <label for="entry_window_hours">Entry Window (hours)</label>
+    <input type="number" id="entry_window_hours" name="entry_window_hours" value="{{ settings.entry_window_hours }}" min="1" max="72">
+
+    <button type="submit">Save Settings</button>
+</form>
+{% endblock %}

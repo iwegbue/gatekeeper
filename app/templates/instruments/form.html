@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{% if instrument %}Edit{% else %}New{% endif %} Instrument - Gatekeeper{% endblock %}
+{% block content %}
+<a href="/instruments" class="back-link">&larr; Back to Instruments</a>
+<h2>{% if instrument %}Edit Instrument{% else %}New Instrument{% endif %}</h2>
+
+<form method="post" action="{% if instrument %}/instruments/{{ instrument.id }}/edit{% else %}/instruments/new{% endif %}">
+    <div class="grid">
+        <div>
+            <label for="symbol">Symbol</label>
+            <input type="text" id="symbol" name="symbol" value="{{ instrument.symbol if instrument else '' }}" required placeholder="e.g., EURUSD">
+        </div>
+        <div>
+            <label for="display_name">Display Name</label>
+            <input type="text" id="display_name" name="display_name" value="{{ instrument.display_name if instrument else '' }}" required placeholder="e.g., EUR/USD">
+        </div>
+    </div>
+
+    <div class="grid">
+        <div>
+            <label for="asset_class">Asset Class</label>
+            <select id="asset_class" name="asset_class">
+                {% for ac in asset_classes %}
+                <option value="{{ ac.value }}" {% if instrument and instrument.asset_class == ac.value %}selected{% endif %}>{{ ac.value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="priority">Priority</label>
+            <input type="number" id="priority" name="priority" value="{{ instrument.priority if instrument else 0 }}" min="0">
+        </div>
+    </div>
+
+    <label>
+        <input type="checkbox" name="is_enabled" value="true" {% if not instrument or instrument.is_enabled %}checked{% endif %}>
+        Enabled (appears in watchlist)
+    </label>
+
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="2">{{ instrument.notes if instrument else '' }}</textarea>
+
+    <button type="submit">{% if instrument %}Update{% else %}Create{% endif %}</button>
+
+    {% if instrument %}
+    <div style="margin-top: 1rem;">
+        <form method="post" action="/instruments/{{ instrument.id }}/delete" style="display:inline;"
+              onsubmit="return confirm('Delete this instrument?');">
+            <button type="submit" class="btn-danger small">Delete</button>
+        </form>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}

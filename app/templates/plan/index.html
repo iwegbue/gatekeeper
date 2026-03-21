@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Trading Plan - Gatekeeper{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>{{ plan.name }}</h2>
+    <a href="/plan/edit" class="small" role="button">Edit Plan</a>
+</div>
+
+{% if plan.description %}
+<p class="muted">{{ plan.description }}</p>
+{% endif %}
+
+<div style="margin-bottom: 1rem;">
+    <a href="/plan/rules/new" role="button" class="small">+ Add Rule</a>
+</div>
+
+{% for layer in layers %}
+<section id="{{ layer.value }}" style="margin-bottom: 1.5rem;">
+    <div class="section-header">
+        <h4>{{ layer.value }}
+            <span class="count-badge">{{ rules_by_layer[layer.value] | length }}</span>
+        </h4>
+        <a href="/plan/rules/new?layer={{ layer.value }}" class="small" role="button" style="font-size:0.75rem;">+ Add</a>
+    </div>
+
+    {% if rules_by_layer[layer.value] %}
+    <table>
+        <thead>
+            <tr>
+                <th>Rule</th>
+                <th>Type</th>
+                <th>Weight</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rule in rules_by_layer[layer.value] %}
+            <tr{% if not rule.is_active %} style="opacity: 0.5;"{% endif %}>
+                <td>
+                    <strong>{{ rule.name }}</strong>
+                    {% if rule.description %}<br><small class="muted">{{ rule.description }}</small>{% endif %}
+                </td>
+                <td><span class="badge {% if rule.rule_type == 'REQUIRED' %}grade-a{% elif rule.rule_type == 'OPTIONAL' %}grade-b{% else %}state-watch{% endif %}">{{ rule.rule_type }}</span></td>
+                <td>{{ rule.weight }}</td>
+                <td>
+                    <a href="/plan/rules/{{ rule.id }}/edit" class="small">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted" style="font-size: 0.85rem;">No rules defined for this layer yet.</p>
+    {% endif %}
+</section>
+{% endfor %}
+{% endblock %}
