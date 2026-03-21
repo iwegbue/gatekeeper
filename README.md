@@ -40,28 +40,24 @@ Bring your own AI key (Anthropic, OpenAI, or Ollama) for plan-building assistanc
 ### Prerequisites
 
 - Docker + Docker Compose
-- uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 
-### 1. Clone and configure
+### 1. Clone and start
 
 ```bash
 git clone https://github.com/your-org/gatekeeper-core
 cd gatekeeper-core
-cp .env.example .env
-# Edit .env — set ADMIN_PASSWORD at minimum
-```
-
-### 2. Start
-
-```bash
 docker compose up -d
 ```
 
-App is available at **http://localhost**.
+That's it. No `.env` editing required.
 
-### 3. Login
+### 2. Complete first-run setup
 
-Navigate to http://localhost/login. Use the `ADMIN_PASSWORD` from your `.env`.
+Navigate to **http://localhost** — you'll be redirected to the setup wizard automatically.
+Set your admin password and you're in.
+
+A strong `SECRET_KEY` is auto-generated on first run and persisted to the `appdata` Docker
+volume so sessions survive container restarts.
 
 ### 4. Set up your plan
 

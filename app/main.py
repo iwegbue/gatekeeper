@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.auth import AuthMiddleware
-from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, trades
+from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, setup, trades
 from app.routers.api.v1 import api_v1_auth_router, api_v1_router
 
 limiter = Limiter(key_func=get_remote_address)
@@ -35,7 +35,20 @@ else:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.config import settings as _settings
-    _settings.check_security()
+    _settings.check_security()  # logs a warning if SECRET_KEY is still ephemeral
+
+    # Seed admin password from env var if provided and no hash exists in the DB yet
+    from app.database import AsyncSessionFactory
+    from app.services.settings_service import admin_password_is_set, set_admin_password
+    async with AsyncSessionFactory() as db:
+        password_set = await admin_password_is_set(db)
+        if not password_set and _settings.ADMIN_PASSWORD:
+            await set_admin_password(db, _settings.ADMIN_PASSWORD)
+            await db.commit()
+            password_set = True
+            logger.info("Admin password seeded from ADMIN_PASSWORD env var")
+        app.state.needs_setup = not password_set
+
     logger.info("Gatekeeper Core starting up")
     from app.tasks.background import start_background_tasks
     start_background_tasks(app)
@@ -85,6 +98,7 @@ def create_app() -> FastAPI:
     app.add_middleware(AuthMiddleware)
 
     # Routers
+    app.include_router(setup.router)
     app.include_router(auth.router)
     app.include_router(dashboard.router)
     app.include_router(plan.router)

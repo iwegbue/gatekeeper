@@ -33,6 +33,9 @@ class Settings(Base):
     # API token (hashed)
     api_token_hash: Mapped[str | None] = mapped_column(String, nullable=True)
 
+    # Admin password (scrypt hash — set via /setup wizard or ADMIN_PASSWORD env var at boot)
+    admin_password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), onupdate=lambda: datetime.now(timezone.utc),
     )

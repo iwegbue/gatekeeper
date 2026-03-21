@@ -21,21 +21,28 @@ services:
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql+asyncpg://gatekeeper:${POSTGRES_PASSWORD:-gatekeeper}@db:5432/gatekeeper
-      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in .env}
+      # SECRET_KEY is auto-generated and persisted to /data/secret_key on first run.
+      # Set this explicitly only if you need sessions to survive container recreation
+      # without the /data volume (e.g. ephemeral CI environments).
+      SECRET_KEY: ${SECRET_KEY:-}
+      # ADMIN_PASSWORD is set via the /setup wizard on first run.
+      # You can override it here to skip the wizard (useful for scripted deployments).
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
       SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-}
       NOTIFY_EMAIL: ${NOTIFY_EMAIL:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost}
+    volumes:
+      - appdata:/data
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/login')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/setup')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -51,3 +58,4 @@ services:
 
 volumes:
   pgdata:
+  appdata:

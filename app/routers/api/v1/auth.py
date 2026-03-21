@@ -1,11 +1,8 @@
-import hmac
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings as app_settings
 from app.database import get_db
 from app.schemas.auth import TokenGenerateRequest, TokenGenerateResponse
 from app.services import settings_service
@@ -21,8 +18,7 @@ async def generate_token(
     body: TokenGenerateRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    # Timing-safe comparison prevents timing attacks on the password
-    if not hmac.compare_digest(body.password, app_settings.ADMIN_PASSWORD):
+    if not await settings_service.verify_admin_password(db, body.password):
         raise HTTPException(status_code=401, detail="Invalid password")
     raw_token = await settings_service.generate_api_token(db)
     return TokenGenerateResponse(token=raw_token)
