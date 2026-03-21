@@ -540,6 +540,108 @@ footer.container {
     opacity: 0.5;
 }
 
+/* ── Settings collapsible cards ─────────────────────────────────────── */
+
+.settings-card {
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    background: var(--pico-card-background-color, #141e26);
+    overflow: hidden;
+}
+
+.settings-card-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    gap: 0.75rem;
+    transition: background 0.15s;
+}
+
+.settings-card-summary::-webkit-details-marker { display: none; }
+
+.settings-card-summary:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.settings-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--pico-color, #e5e7eb);
+}
+
+.settings-card-title svg {
+    color: var(--pico-muted-color, #6b7280);
+    flex-shrink: 0;
+}
+
+.settings-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.settings-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.settings-badge--ok {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.settings-badge--warn {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.settings-badge--neutral {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--pico-muted-color, #6b7280);
+    border: 1px solid var(--pico-muted-border-color, #374151);
+}
+
+.settings-card-chevron {
+    color: var(--pico-muted-color, #6b7280);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.settings-card[open] > .settings-card-summary .settings-card-chevron {
+    transform: rotate(180deg);
+}
+
+.settings-card-body {
+    padding: 0 1.1rem 1.1rem;
+    border-top: 1px solid var(--pico-muted-border-color, #374151);
+}
+
+.settings-card-body form {
+    margin-top: 1rem;
+}
+
+.settings-card-body button[type="submit"] {
+    margin-top: 0.5rem;
+}
+
 /* ── Tooltips ────────────────────────────────────────────────────────── */
 
 .tip {

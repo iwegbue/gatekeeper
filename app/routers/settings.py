@@ -35,7 +35,6 @@ async def settings_update(
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
-    # Build kwargs — only overwrite API keys when a new non-empty value is submitted
     kwargs: dict = dict(
         ai_provider=ai_provider,
         ollama_base_url=ollama_base_url,
@@ -50,6 +49,42 @@ async def settings_update(
 
     await settings_service.update_settings(db, **kwargs)
     return RedirectResponse(url="/settings?msg=Settings+saved", status_code=303)
+
+
+@router.post("/ai")
+async def settings_ai_update(
+    request: Request,
+    ai_provider: str = Form("anthropic"),
+    anthropic_api_key: str = Form(""),
+    openai_api_key: str = Form(""),
+    ollama_base_url: str = Form(""),
+    ai_model: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    kwargs: dict = dict(ai_provider=ai_provider, ollama_base_url=ollama_base_url, ai_model=ai_model)
+    if anthropic_api_key:
+        kwargs["anthropic_api_key"] = anthropic_api_key
+    if openai_api_key:
+        kwargs["openai_api_key"] = openai_api_key
+    await settings_service.update_settings(db, **kwargs)
+    return RedirectResponse(url="/settings?msg=AI+settings+saved", status_code=303)
+
+
+@router.post("/general")
+async def settings_general_update(
+    request: Request,
+    notifications_enabled: bool = Form(False),
+    entry_window_hours: int = Form(4),
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    await settings_service.update_settings(
+        db,
+        notifications_enabled=notifications_enabled,
+        entry_window_hours=entry_window_hours,
+    )
+    return RedirectResponse(url="/settings?msg=General+settings+saved", status_code=303)
 
 
 @router.post("/generate-token")
