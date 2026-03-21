@@ -69,15 +69,45 @@ The idea state machine in `app/services/state_machine.py` is the core domain con
 
 ## Development Workflow
 
+### Branch and PR — always
+
+**Never commit directly to `main`.** Every change, no matter how small, goes through a feature branch and a pull request.
+
+```bash
+# Start every feature this way
+git checkout main && git pull
+git checkout -b feat/short-description   # or fix/, security/, docs/, refactor/
+```
+
+Branch naming: `feat/`, `fix/`, `security/`, `docs/`, `refactor/` followed by a short slug (e.g. `feat/webhook-notifications`).
+
+When the work is done:
+```bash
+git add <files>
+git commit -m "feat(scope): short summary"
+gh pr create --title "feat(scope): short summary" --body "$(cat <<'EOF'
+## Summary
+- What changed and why
+
+## Test plan
+- [ ] Existing tests pass: `SKIP_SECURITY_CHECKS=1 uv run pytest`
+- [ ] New service tests written
+- [ ] CHANGELOG.md updated under [Unreleased]
+EOF
+)"
+```
+
 ### For every new feature
 
-1. **Spec first** — write a short description of what changes and why before touching code.
+1. **Branch first** — `git checkout -b feat/name` before touching any code.
+2. **Spec first** — write a short description of what changes and why before touching code.
    For larger features, create a plan file (e.g. `docs/plans/FEATURE_NAME.md`).
-2. **Migration if needed** — create `alembic/versions/NNN_description.py` before writing service code.
-3. **Service first** — implement and test the service layer before writing any router.
-4. **Tests alongside** — write tests as you write service code, not after.
-5. **Router last** — wire the HTTP layer once the service is solid and tested.
-6. **Schema for API endpoints** — add Pydantic schemas to `app/schemas/` for any new API route.
+3. **Migration if needed** — create `alembic/versions/NNN_description.py` before writing service code.
+4. **Service first** — implement and test the service layer before writing any router.
+5. **Tests alongside** — write tests as you write service code, not after.
+6. **Router last** — wire the HTTP layer once the service is solid and tested.
+7. **Schema for API endpoints** — add Pydantic schemas to `app/schemas/` for any new API route.
+8. **PR** — open a pull request; do not merge directly.
 
 ### Running tests
 
