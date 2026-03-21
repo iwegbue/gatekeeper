@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Plan Builder — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>AI Plan Builder</h2>
+    <a href="/plan" class="secondary outline">← Trading Plan</a>
+</div>
+
+<p class="muted">
+    Describe your trading strategy in plain language. The AI will help you convert it into
+    structured rules organized by layer.
+    <a href="/settings">Configure your AI provider →</a>
+</p>
+
+<div id="chat-container" class="chat-container">
+    <div id="chat-messages" class="chat-messages">
+        <div class="chat-message chat-assistant">
+            <p>Hello! I'm here to help you build your trading plan. Tell me about your trading strategy — what markets do you trade, what setups do you look for, and how do you manage risk?</p>
+        </div>
+    </div>
+</div>
+
+<form id="chat-form" class="chat-input-form">
+    <input type="hidden" name="history" id="history-field" value="[]">
+    <div class="chat-input-row">
+        <textarea name="message" id="message-input" rows="2"
+                  placeholder="Describe your strategy…" required></textarea>
+        <button type="submit" id="send-btn">Send</button>
+    </div>
+</form>
+
+<script>
+(function() {
+    var form = document.getElementById('chat-form');
+    var messages = document.getElementById('chat-messages');
+    var historyField = document.getElementById('history-field');
+    var messageInput = document.getElementById('message-input');
+    var sendBtn = document.getElementById('send-btn');
+
+    function appendMessage(role, content) {
+        var div = document.createElement('div');
+        div.className = 'chat-message chat-' + role;
+        var p = document.createElement('p');
+        p.textContent = content;
+        div.appendChild(p);
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var msg = messageInput.value.trim();
+        if (!msg) return;
+
+        appendMessage('user', msg);
+        messageInput.value = '';
+        sendBtn.disabled = true;
+        sendBtn.textContent = '…';
+
+        var formData = new FormData();
+        formData.append('message', msg);
+        formData.append('history', historyField.value);
+
+        try {
+            var resp = await fetch('/plan/builder/chat', {method: 'POST', body: formData});
+            var data = await resp.json();
+            if (data.error) {
+                appendMessage('assistant', 'Error: ' + data.error);
+            } else {
+                appendMessage('assistant', data.response);
+                historyField.value = data.history;
+            }
+        } catch(err) {
+            appendMessage('assistant', 'Connection error. Please try again.');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send';
+        }
+    });
+
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+})();
+</script>
+{% endblock %}
