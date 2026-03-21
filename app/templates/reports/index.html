@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Reports — Gatekeeper{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h2>Discipline Reports</h2>
+
+{# ── Score row ─────────────────────────────────────────────────────────────── #}
+<div class="kpi-row">
+    <article class="kpi-card">
+        <small class="muted">Discipline Score</small>
+        <strong class="kpi-big">{{ discipline_score }}</strong>
+        <small class="muted">/ 100</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Avg Plan Adherence</small>
+        <strong class="kpi-big">{{ adherence_stats.avg }}%</strong>
+        <small class="muted">across all closed trades</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Win Rate</small>
+        <strong class="kpi-big">{{ trade_stats.win_rate }}%</strong>
+        <small class="muted">{{ trade_stats.wins }}W / {{ trade_stats.losses }}L / {{ trade_stats.breakeven }}BE</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Expectancy</small>
+        <strong class="kpi-big {% if trade_stats.expectancy > 0 %}positive{% elif trade_stats.expectancy < 0 %}negative{% endif %}">
+            {{ trade_stats.expectancy }}R
+        </strong>
+        <small class="muted">per trade</small>
+    </article>
+</div>
+
+{% if trade_stats.total == 0 %}
+<article class="empty-state">
+    <p>No closed trades yet. Complete some trades to see reports.</p>
+</article>
+{% else %}
+
+<div class="reports-grid">
+
+    {# ── Adherence trend ────────────────────────────────────────────────── #}
+    <article>
+        <header><strong>Plan Adherence Trend (30 days)</strong></header>
+        <canvas id="trend-chart" height="200"></canvas>
+    </article>
+
+    {# ── Grade distribution ─────────────────────────────────────────────── #}
+    <article>
+        <header><strong>Setup Grade Distribution</strong></header>
+        <canvas id="grade-chart" height="200"></canvas>
+        <dl class="dl-grid" style="margin-top:1rem">
+            <dt>A trades</dt><dd>{{ grade_dist.A }}</dd>
+            <dt>B trades</dt><dd>{{ grade_dist.B }}</dd>
+            <dt>C trades</dt><dd>{{ grade_dist.C }}</dd>
+        </dl>
+    </article>
+
+    {# ── Rule violations ────────────────────────────────────────────────── #}
+    <article>
+        <header><strong>Most Violated Rules</strong></header>
+        {% if violations %}
+        <table>
+            <thead><tr><th>Rule</th><th>Times Violated</th></tr></thead>
+            <tbody>
+                {% for v in violations %}
+                <tr>
+                    <td>{{ v.rule_name }}</td>
+                    <td>
+                        <span class="{% if v.count >= 5 %}negative{% elif v.count >= 2 %}warning{% endif %}">
+                            {{ v.count }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No violations recorded. 🎯</p>
+        {% endif %}
+    </article>
+
+    {# ── R stats ─────────────────────────────────────────────────────────── #}
+    <article>
+        <header><strong>R-Multiple Stats</strong></header>
+        <dl class="dl-grid">
+            <dt>Average R</dt>
+            <dd class="{% if trade_stats.avg_r > 0 %}positive{% elif trade_stats.avg_r < 0 %}negative{% endif %}">
+                {{ trade_stats.avg_r }}R
+            </dd>
+            <dt>Best trade</dt>
+            <dd class="positive">{{ trade_stats.best_r }}R</dd>
+            <dt>Worst trade</dt>
+            <dd class="negative">{{ trade_stats.worst_r }}R</dd>
+            <dt>Total trades</dt>
+            <dd>{{ trade_stats.total }}</dd>
+        </dl>
+    </article>
+
+</div>
+
+<script>
+(function() {
+    var trendData = {{ trend_data_json | safe }};
+    var gradeData = {{ grade_dist_json | safe }};
+
+    // Adherence trend
+    if (trendData.length > 0) {
+        var trendCtx = document.getElementById('trend-chart');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendData.map(d => d.date),
+                datasets: [{
+                    label: 'Plan Adherence %',
+                    data: trendData.map(d => d.adherence),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1,
+                    fill: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {y: {min: 0, max: 100}},
+                plugins: {legend: {display: false}},
+            }
+        });
+    }
+
+    // Grade distribution
+    var gradeCtx = document.getElementById('grade-chart');
+    new Chart(gradeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['A', 'B', 'C'],
+            datasets: [{
+                data: [gradeData.A, gradeData.B, gradeData.C],
+                backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {legend: {position: 'bottom'}},
+        }
+    });
+})();
+</script>
+
+{% endif %}
+{% endblock %}

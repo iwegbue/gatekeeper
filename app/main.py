@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 
 from app.auth import AuthMiddleware
-from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, settings, trades
+from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, trades
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +29,8 @@ else:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Gatekeeper Core starting up")
+    from app.tasks.background import start_background_tasks
+    start_background_tasks(app)
     yield
     logger.info("Gatekeeper Core shutting down")
 
@@ -67,6 +69,7 @@ def create_app() -> FastAPI:
     app.include_router(journal.router)
     app.include_router(instruments.router)
     app.include_router(settings.router)
+    app.include_router(reports.router)
 
     return app
 

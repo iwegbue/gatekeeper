@@ -1,18 +1,101 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - Gatekeeper{% endblock %}
+{% block title %}Dashboard — Gatekeeper{% endblock %}
 {% block content %}
 <h2>Dashboard</h2>
 
-<div class="grid">
-    <article>
-        <header><strong>Quick Start</strong></header>
-        <p>Welcome to Gatekeeper Core — your trading discipline platform.</p>
-        <ol>
-            <li><a href="/plan">Define your trading plan</a> — add rules across 7 layers</li>
-            <li><a href="/instruments">Set up your instruments</a> — build your watchlist</li>
-            <li><a href="/ideas">Create an idea</a> — track setups with your checklist</li>
-            <li><a href="/settings">Configure AI</a> — bring your own API key</li>
-        </ol>
+{# ── KPI row ─────────────────────────────────────────────────────────────── #}
+<div class="kpi-row">
+    <article class="kpi-card">
+        <small class="muted">Discipline Score</small>
+        <strong class="kpi-big">{{ discipline_score }}</strong>
+        <small class="muted">/ 100</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Win Rate</small>
+        <strong class="kpi-big">{{ trade_stats.win_rate }}%</strong>
+        <small class="muted">{{ trade_stats.wins }}W / {{ trade_stats.losses }}L</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Avg R</small>
+        <strong class="kpi-big {% if trade_stats.avg_r > 0 %}positive{% elif trade_stats.avg_r < 0 %}negative{% endif %}">
+            {{ trade_stats.avg_r }}R
+        </strong>
+        <small class="muted">{{ trade_stats.total }} closed trades</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Active Ideas</small>
+        <strong class="kpi-big">{{ active_ideas | length }}</strong>
+        <small class="muted"><a href="/ideas">View all →</a></small>
     </article>
 </div>
+
+<div class="dashboard-grid">
+
+    {# ── Open trades ──────────────────────────────────────────────────────── #}
+    <section>
+        <div class="section-header">
+            <h3>Open Trades</h3>
+            <a href="/trades" class="secondary small">All trades →</a>
+        </div>
+        {% if open_trades %}
+        <table>
+            <thead><tr><th>Instrument</th><th>Dir</th><th>Grade</th><th>Entry</th><th>SL</th><th></th></tr></thead>
+            <tbody>
+                {% for trade in open_trades %}
+                <tr>
+                    <td><strong>{{ trade.instrument }}</strong></td>
+                    <td><span class="badge badge-{{ 'long' if trade.direction == 'LONG' else 'short' }}">{{ trade.direction }}</span></td>
+                    <td><span class="badge badge-grade-{{ trade.grade | lower }}">{{ trade.grade }}</span></td>
+                    <td>{{ trade.entry_price }}</td>
+                    <td>{{ trade.sl_price }}</td>
+                    <td><a href="/trades/{{ trade.id }}" class="secondary small">→</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No open trades.</p>
+        {% endif %}
+    </section>
+
+    {# ── Active ideas ─────────────────────────────────────────────────────── #}
+    <section>
+        <div class="section-header">
+            <h3>Active Ideas</h3>
+            <a href="/ideas/new" class="secondary small">+ New →</a>
+        </div>
+        {% if active_ideas %}
+        <table>
+            <thead><tr><th>Instrument</th><th>Dir</th><th>State</th><th>Grade</th><th></th></tr></thead>
+            <tbody>
+                {% for idea in active_ideas[:8] %}
+                <tr>
+                    <td><strong>{{ idea.instrument }}</strong></td>
+                    <td><span class="badge badge-{{ 'long' if idea.direction == 'LONG' else 'short' }}">{{ idea.direction }}</span></td>
+                    <td><span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ idea.state }}</span></td>
+                    <td>{% if idea.grade %}<span class="badge badge-grade-{{ idea.grade | lower }}">{{ idea.grade }}</span>{% else %}—{% endif %}</td>
+                    <td><a href="/ideas/{{ idea.id }}" class="secondary small">→</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No active ideas. <a href="/ideas/new">Create one →</a></p>
+        {% endif %}
+    </section>
+
+</div>
+
+{# ── Quick start (only shown when no data) ────────────────────────────────── #}
+{% if trade_stats.total == 0 and not active_ideas %}
+<article class="quick-start">
+    <header><strong>Getting Started</strong></header>
+    <ol>
+        <li><a href="/plan">Define your trading plan</a> — add rules across 7 layers</li>
+        <li><a href="/instruments">Set up your watchlist</a></li>
+        <li><a href="/ideas/new">Create your first idea</a></li>
+        <li><a href="/settings">Configure AI</a> — bring your own API key (optional)</li>
+    </ol>
+</article>
+{% endif %}
 {% endblock %}
