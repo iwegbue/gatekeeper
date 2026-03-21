@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Journal — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Journal</h2>
+</div>
+
+{% if entries %}
+<div class="table-scroll">
+<table>
+    <thead>
+        <tr>
+            <th>Instrument</th>
+            <th>Direction</th>
+            <th>Grade</th>
+            <th>R</th>
+            <th>Adherence</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+        {% set ts = entry.trade_summary or {} %}
+        <tr>
+            <td><strong>{{ ts.get('instrument', '—') }}</strong></td>
+            <td>
+                {% if ts.get('direction') %}
+                <span class="badge badge-{{ 'long' if ts.direction == 'LONG' else 'short' }}">
+                    {{ ts.direction }}
+                </span>
+                {% else %}—{% endif %}
+            </td>
+            <td>
+                {% if ts.get('grade') %}
+                <span class="badge badge-grade-{{ ts.grade | lower }}">{{ ts.grade }}</span>
+                {% else %}—{% endif %}
+            </td>
+            <td>
+                {% if ts.get('r_multiple') is not none %}
+                <span class="{% if ts.r_multiple > 0 %}positive{% elif ts.r_multiple < 0 %}negative{% endif %}">
+                    {{ "%.2f" | format(ts.r_multiple) }}R
+                </span>
+                {% else %}—{% endif %}
+            </td>
+            <td>{{ entry.plan_adherence_pct }}%</td>
+            <td><span class="badge badge-state-{{ entry.status | lower }}">{{ entry.status }}</span></td>
+            <td class="muted small">{{ entry.created_at.strftime('%Y-%m-%d') }}</td>
+            <td><a href="/journal/{{ entry.id }}" class="secondary">Review →</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<article class="empty-state">
+    <i data-lucide="book-open" style="width:48px;height:48px;opacity:0.3"></i>
+    <p>No journal entries yet. Journal entries are auto-created when you close a trade.</p>
+    <a href="/trades" role="button">View Trades</a>
+</article>
+{% endif %}
+{% endblock %}

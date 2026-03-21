@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 
 from app.auth import AuthMiddleware
-from app.routers import auth, dashboard, ideas, instruments, plan, settings
+from app.routers import auth, dashboard, ideas, instruments, journal, plan, settings, trades
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,6 +62,8 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(plan.router)
     app.include_router(ideas.router)
+    app.include_router(trades.router)
+    app.include_router(journal.router)
     app.include_router(instruments.router)
     app.include_router(settings.router)
 

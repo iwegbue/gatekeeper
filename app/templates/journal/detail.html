@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Journal Entry — Gatekeeper{% endblock %}
+
+{% block content %}
+{% set ts = entry.trade_summary or {} %}
+
+<div class="page-header">
+    <div>
+        <h2>
+            {{ ts.get('instrument', 'Journal Entry') }}
+            {% if ts.get('direction') %}
+            <span class="badge badge-{{ 'long' if ts.direction == 'LONG' else 'short' }}">{{ ts.direction }}</span>
+            {% endif %}
+            <span class="badge badge-state-{{ entry.status | lower }}">{{ entry.status }}</span>
+        </h2>
+        <small class="muted">{{ entry.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+    </div>
+    <a href="/journal" class="secondary outline">← Journal</a>
+</div>
+
+{# Trade summary card #}
+<article>
+    <header><strong>Trade Summary</strong></header>
+    <div class="dl-grid-row">
+        <dl class="dl-grid">
+            <dt>Entry</dt><dd>{{ ts.get('entry_price', '—') }}</dd>
+            <dt>Exit</dt><dd>{{ ts.get('exit_price', '—') }}</dd>
+            <dt>Grade</dt>
+            <dd>{% if ts.get('grade') %}<span class="badge badge-grade-{{ ts.grade | lower }}">{{ ts.grade }}</span>{% else %}—{% endif %}</dd>
+            <dt>R-multiple</dt>
+            <dd>
+                {% if ts.get('r_multiple') is not none %}
+                <span class="{% if ts.r_multiple > 0 %}positive{% elif ts.r_multiple < 0 %}negative{% endif %}">
+                    {{ "%.2f" | format(ts.r_multiple) }}R
+                </span>
+                {% else %}—{% endif %}
+            </dd>
+        </dl>
+        <dl class="dl-grid">
+            <dt>Risk %</dt><dd>{{ ts.get('risk_pct', '—') }}</dd>
+            <dt>Plan adherence</dt><dd><strong>{{ entry.plan_adherence_pct }}%</strong></dd>
+            <dt>BE locked</dt><dd>{{ 'Yes' if ts.get('be_locked') else 'No' }}</dd>
+            <dt>Partials taken</dt><dd>{{ 'Yes' if ts.get('partials_taken') else 'No' }}</dd>
+        </dl>
+    </div>
+
+    {% set violations = entry.rule_violations.get('violated', []) if entry.rule_violations else [] %}
+    {% if violations %}
+    <div class="rule-violations">
+        <strong>Unchecked required rules:</strong>
+        <ul>
+            {% for v in violations %}
+            <li>{{ v }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</article>
+
+{# Review form #}
+<article>
+    <header><strong>Post-mortem Review</strong></header>
+    <form method="post" action="/journal/{{ entry.id }}/edit">
+        <div class="grid">
+            <label>
+                What went well?
+                <textarea name="what_went_well" rows="3">{{ entry.what_went_well or '' }}</textarea>
+            </label>
+            <label>
+                What went wrong?
+                <textarea name="what_went_wrong" rows="3">{{ entry.what_went_wrong or '' }}</textarea>
+            </label>
+        </div>
+
+        <label>
+            Lessons learned
+            <textarea name="lessons_learned" rows="3">{{ entry.lessons_learned or '' }}</textarea>
+        </label>
+
+        <label>
+            Emotions / psychology
+            <textarea name="emotions" rows="2">{{ entry.emotions or '' }}</textarea>
+        </label>
+
+        <div class="grid">
+            <label>
+                Rating (1–5)
+                <input type="number" name="rating" min="1" max="5" value="{{ entry.rating or '' }}">
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" name="would_take_again" value="true" {% if entry.would_take_again %}checked{% endif %}>
+                Would take this trade again
+            </label>
+        </div>
+
+        <label>
+            Tags <small class="muted">(comma-separated)</small>
+            <input type="text" name="tags"
+                   value="{{ entry.tags | map(attribute='name') | join(', ') if entry.tags else '' }}"
+                   placeholder="revenge, fomo, patient, disciplined">
+        </label>
+
+        <div class="form-actions">
+            <button type="submit">Save Review</button>
+        </div>
+    </form>
+</article>
+
+{# Mark complete #}
+{% if entry.status == 'DRAFT' %}
+<form method="post" action="/journal/{{ entry.id }}/complete">
+    <button type="submit">Mark as Completed</button>
+</form>
+{% endif %}
+
+{# Trade link #}
+<p class="muted small"><a href="/trades/{{ entry.trade_id }}" class="secondary">← Back to trade</a></p>
+{% endblock %}

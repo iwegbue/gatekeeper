@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Trades — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Trades</h2>
+    <a href="/trades?{% if show_closed %}{% else %}closed=1{% endif %}" class="secondary outline">
+        {% if show_closed %}Active only{% else %}Show closed{% endif %}
+    </a>
+</div>
+
+{% if trades %}
+<div class="table-scroll">
+<table>
+    <thead>
+        <tr>
+            <th>Instrument</th>
+            <th>Direction</th>
+            <th>Grade</th>
+            <th>Entry</th>
+            <th>SL</th>
+            <th>State</th>
+            <th>R</th>
+            <th>Opened</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for trade in trades %}
+        <tr>
+            <td><strong>{{ trade.instrument }}</strong></td>
+            <td>
+                <span class="badge badge-{{ 'long' if trade.direction == 'LONG' else 'short' }}">
+                    {{ trade.direction }}
+                </span>
+            </td>
+            <td><span class="badge badge-grade-{{ trade.grade | lower }}">{{ trade.grade }}</span></td>
+            <td>{{ trade.entry_price }}</td>
+            <td>{{ trade.sl_price }}</td>
+            <td><span class="badge badge-state-{{ trade.state | lower }}">{{ trade.state }}</span></td>
+            <td>
+                {% if trade.r_multiple is not none %}
+                    <span class="{% if trade.r_multiple > 0 %}positive{% elif trade.r_multiple < 0 %}negative{% endif %}">
+                        {{ "%.2f" | format(trade.r_multiple) }}R
+                    </span>
+                {% else %}
+                    <span class="muted">—</span>
+                {% endif %}
+            </td>
+            <td class="muted small">{{ trade.entry_time.strftime('%Y-%m-%d') }}</td>
+            <td><a href="/trades/{{ trade.id }}" class="secondary">View →</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<article class="empty-state">
+    <i data-lucide="trending-up" style="width:48px;height:48px;opacity:0.3"></i>
+    <p>No trades yet. Open a trade from an ENTRY_PERMITTED idea.</p>
+    <a href="/ideas" role="button">View Ideas</a>
+</article>
+{% endif %}
+{% endblock %}

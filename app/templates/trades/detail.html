@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}{{ trade.instrument }} Trade — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>
+            {{ trade.instrument }}
+            <span class="badge badge-{{ 'long' if trade.direction == 'LONG' else 'short' }}">{{ trade.direction }}</span>
+            <span class="badge badge-grade-{{ trade.grade | lower }}">{{ trade.grade }}</span>
+            <span class="badge badge-state-{{ trade.state | lower }}">{{ trade.state }}</span>
+        </h2>
+        <small class="muted">Opened {{ trade.entry_time.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+    </div>
+    <a href="/trades" class="secondary outline">← Trades</a>
+</div>
+
+<div class="trade-layout">
+
+    {# ── Trade info ───────────────────────────────────────────────────── #}
+    <section>
+        <article>
+            <header><strong>Position</strong></header>
+            <dl class="dl-grid">
+                <dt>Entry</dt><dd>{{ trade.entry_price }}</dd>
+                <dt>SL (current)</dt><dd>{{ trade.sl_price }}</dd>
+                <dt>Initial SL</dt><dd>{{ trade.initial_sl_price or '—' }}</dd>
+                <dt>TP</dt><dd>{{ trade.tp_price or '—' }}</dd>
+                <dt>Risk %</dt><dd>{{ trade.risk_pct }}%</dd>
+                <dt>Lot size</dt><dd>{{ trade.lot_size or '—' }}</dd>
+                {% if trade.exit_price %}
+                <dt>Exit</dt><dd>{{ trade.exit_price }}</dd>
+                <dt>R-multiple</dt>
+                <dd>
+                    <span class="{% if trade.r_multiple > 0 %}positive{% elif trade.r_multiple < 0 %}negative{% endif %}">
+                        {{ "%.2f" | format(trade.r_multiple) }}R
+                    </span>
+                </dd>
+                {% endif %}
+                <dt>BE locked</dt><dd>{% if trade.be_locked %}Yes{% else %}No{% endif %}</dd>
+                <dt>Partials</dt><dd>{% if trade.partials_taken %}Yes{% else %}No{% endif %}</dd>
+            </dl>
+        </article>
+
+        {% if idea %}
+        <article>
+            <header><strong>Idea</strong></header>
+            <a href="/ideas/{{ idea.id }}">← View idea</a>
+        </article>
+        {% endif %}
+
+        {% if journal_entry %}
+        <article>
+            <header><strong>Journal</strong></header>
+            <p>
+                <span class="badge badge-state-{{ journal_entry.status | lower }}">{{ journal_entry.status }}</span>
+                Plan adherence: <strong>{{ journal_entry.plan_adherence_pct }}%</strong>
+            </p>
+            <a href="/journal/{{ journal_entry.id }}">Open journal entry →</a>
+        </article>
+        {% endif %}
+    </section>
+
+    {# ── Actions ─────────────────────────────────────────────────────── #}
+    {% if trade.state != 'CLOSED' %}
+    <aside>
+
+        {# Update SL #}
+        <article>
+            <header><strong>Update SL</strong></header>
+            <form method="post" action="/trades/{{ trade.id }}/update-sl">
+                <label>
+                    New SL price
+                    <input type="number" name="sl_price" step="0.00001" value="{{ trade.sl_price }}" required>
+                </label>
+                <button type="submit" class="secondary">Update SL</button>
+            </form>
+        </article>
+
+        {# Quick actions #}
+        <article>
+            <header><strong>Management</strong></header>
+            <div class="button-row">
+                {% if not trade.partials_taken %}
+                <form method="post" action="/trades/{{ trade.id }}/partial">
+                    <button type="submit" class="secondary outline">Take Partial</button>
+                </form>
+                {% endif %}
+                {% if not trade.be_locked %}
+                <form method="post" action="/trades/{{ trade.id }}/be">
+                    <button type="submit" class="secondary outline">Lock BE</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+
+        {# Close trade #}
+        <article class="danger-zone">
+            <header><strong>Close Trade</strong></header>
+            <form method="post" action="/trades/{{ trade.id }}/close">
+                <label>
+                    Exit price
+                    <input type="number" name="exit_price" step="0.00001" required>
+                </label>
+                <button type="submit" class="contrast outline">Close Trade</button>
+            </form>
+        </article>
+
+    </aside>
+    {% endif %}
+
+</div>
+{% endblock %}
