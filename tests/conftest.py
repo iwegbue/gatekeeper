@@ -5,7 +5,7 @@ Each test runs inside a transaction that rolls back on completion — tests
 never pollute each other, no teardown needed.
 
 Usage:
-    TEST_DATABASE_URL=postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5432/gatekeeper_test pytest
+    TEST_DATABASE_URL=postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5433/gatekeeper_test pytest
 """
 import os
 
@@ -19,36 +19,30 @@ import app.models  # noqa: F401 — register all models
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5432/gatekeeper_test",
+    "postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5433/gatekeeper_test",
 )
 
+# Use a single event loop for the whole session so engine/connections share it.
+pytest_plugins = ("anyio",)
 
-@pytest_asyncio.fixture(scope="session")
-async def db_engine():
-    """Create all tables once per test session, drop on teardown."""
+
+@pytest_asyncio.fixture(scope="function")
+async def db():
+    """
+    Per-test: creates engine, creates all tables, yields session, drops tables.
+    Simpler than savepoints — avoids asyncpg event-loop scope issues.
+    """
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    yield engine
+
+    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with session_factory() as session:
+        yield session
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
-
-
-@pytest_asyncio.fixture
-async def db(db_engine):
-    """
-    Per-test AsyncSession wrapped in a savepoint that rolls back after the test.
-    This means each test starts with a clean slate without recreating tables.
-    """
-    async with db_engine.connect() as conn:
-        await conn.begin()
-        session_factory = async_sessionmaker(
-            bind=conn, class_=AsyncSession, expire_on_commit=False, join_transaction_mode="create_savepoint"
-        )
-        async with session_factory() as session:
-            yield session
-        await conn.rollback()
 
 
 @pytest_asyncio.fixture
