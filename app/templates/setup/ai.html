@@ -2,7 +2,7 @@
 {% block title %}AI Setup{% endblock %}
 
 {% block content %}
-{% from "setup/base_wizard.html" import tip %}
+{% from "setup/_macros.html" import tip %}
 <hgroup>
     <h3>AI Provider <span style="font-size:0.75rem; font-weight:400; color:var(--pico-muted-color);">(optional)</span></h3>
     <p>Connect an AI provider to unlock {{ tip("plan building", "An AI-guided conversation that helps you define your trading rules layer by layer. Access it from the Plan Builder page after setup.") }}, {{ tip("idea review", "AI analysis of a trade idea's rule checklist — highlights gaps and strengths before you enter.") }}, and {{ tip("journal coaching", "AI feedback on your post-trade journal entries — what you did well, what to improve.") }}. You can skip this and configure it later in Settings.</p>

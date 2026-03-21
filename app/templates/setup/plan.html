@@ -2,7 +2,7 @@
 {% block title %}Trading Plan{% endblock %}
 
 {% block content %}
-{% from "setup/base_wizard.html" import tip %}
+{% from "setup/_macros.html" import tip %}
 <hgroup>
     <h3>Your Trading Plan</h3>
     <p>Choose a starter template to get a ready-made set of {{ tip("rules", "Each rule is a specific criterion your trade must meet. Rules belong to one of 7 layers and are either Required (must pass), Optional (improve score), or Advisory (reminder only).") }} across all {{ tip("7 layers", "Context: market conditions · Setup: structural setup · Confirmation: signal confirmation · Entry: entry trigger · Risk: position sizing & stop · Management: exits & targets · Behavioral: emotional checklist.") }}, or start from scratch and build your own.</p>
