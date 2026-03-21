@@ -3,7 +3,7 @@ Application settings model — singleton pattern for runtime configuration.
 BYOK-focused: users configure their own AI provider keys from the UI.
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -31,5 +31,5 @@ class Settings(Base):
     entry_window_hours: Mapped[int] = mapped_column(Integer, default=4)
 
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), onupdate=datetime.utcnow,
+        DateTime(timezone=True), server_default=text("now()"), onupdate=lambda: datetime.now(timezone.utc),
     )

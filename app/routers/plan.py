@@ -110,7 +110,7 @@ async def rule_update(
     description: str = Form(""),
     rule_type: str = Form("REQUIRED"),
     weight: int = Form(1),
-    is_active: bool = Form(True),
+    is_active: bool = Form(False),
     db: AsyncSession = Depends(get_db),
 ):
     await plan_service.update_rule(

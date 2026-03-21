@@ -25,7 +25,7 @@ async def settings_update(
     openai_api_key: str = Form(""),
     ollama_base_url: str = Form(""),
     ai_model: str = Form(""),
-    notifications_enabled: bool = Form(False),
+    notifications_enabled: bool = Form(False),  # unchecked checkbox = not submitted = False
     entry_window_hours: int = Form(4),
     db: AsyncSession = Depends(get_db),
 ):

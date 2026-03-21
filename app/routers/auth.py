@@ -4,7 +4,7 @@ from fastapi import APIRouter, Form, Request
 from starlette.responses import RedirectResponse
 
 from app.auth import SESSION_COOKIE, MAX_SESSION_AGE, create_session_token
-from app.config import settings
+from app.config import settings as app_settings
 
 router = APIRouter()
 
@@ -19,14 +19,15 @@ async def login_page(request: Request):
 
 @router.post("/login")
 async def login(request: Request, password: str = Form(...)):
-    if hmac.compare_digest(password, settings.ADMIN_PASSWORD):
+    if hmac.compare_digest(password, app_settings.ADMIN_PASSWORD):
         response = RedirectResponse(url="/", status_code=303)
+        is_https = app_settings.APP_BASE_URL.startswith("https://")
         response.set_cookie(
             SESSION_COOKIE,
             create_session_token(),
             httponly=True,
             samesite="lax",
-            secure=True,
+            secure=is_https,
             max_age=MAX_SESSION_AGE,
         )
         return response

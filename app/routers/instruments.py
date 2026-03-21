@@ -34,7 +34,7 @@ async def instrument_create(
     symbol: str = Form(...),
     display_name: str = Form(...),
     asset_class: str = Form("FX"),
-    is_enabled: bool = Form(True),
+    is_enabled: bool = Form(False),
     priority: int = Form(0),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
