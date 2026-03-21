@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **SMTP email notifications** — replaced SendGrid with standard SMTP (Python `smtplib`); works with Gmail, Proton Mail Bridge, Mailhog, self-hosted Postfix, and any SMTP relay; configurable from Settings UI
+- **Telegram notifications** — bot token and chat ID now stored in DB and configurable from the UI instead of environment variables only
+- **Notifications settings card** — new collapsible "Notifications" card in Settings with SMTP config, Telegram config, per-channel enable toggles, and one-click test-send buttons for both channels
+- **`notifications_enabled` flag now enforced** — master toggle and per-channel toggles are respected before sending; previously the flag was stored but never read
+- **Trade-close notifications** — `notify_trade_closed` is now wired to `trade_service.close_trade()` (was dead code); fires email and/or Telegram with instrument, direction, and R-multiple
+- **Migration `005_notification_settings`** — adds 11 new columns to the `settings` table for SMTP host/port/credentials and Telegram bot token/chat ID
+
 - **Setup walkthrough wizard** — 5-step onboarding flow after initial password setup: Welcome intro, AI provider configuration, trading plan selection, watchlist builder, and quick tour
 - **Plan starter templates** — two curated rule sets (Trend Following, Mean Reversion) covering all 7 layers to help new users get started immediately; fully editable after setup
 - **`setup_completed` flag** — new `settings.setup_completed` boolean column (migration `004_add_setup_completed`) tracks whether onboarding has been completed; authenticated users are redirected to the wizard until it is

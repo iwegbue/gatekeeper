@@ -24,8 +24,23 @@ class Settings(Base):
     ollama_base_url: Mapped[str] = mapped_column(String, default="")
     ai_model: Mapped[str] = mapped_column(String(100), default="")  # e.g. "claude-sonnet-4-20250514", "gpt-4o"
 
-    # Notifications
+    # Notifications — master toggle
     notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Email / SMTP
+    email_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    smtp_host: Mapped[str] = mapped_column(String, default="")
+    smtp_port: Mapped[int] = mapped_column(Integer, default=587)
+    smtp_username: Mapped[str] = mapped_column(String, default="")
+    smtp_password: Mapped[str] = mapped_column(String, default="")
+    smtp_from_email: Mapped[str] = mapped_column(String, default="")
+    smtp_tls: Mapped[bool] = mapped_column(Boolean, default=True)
+    notify_email_to: Mapped[str] = mapped_column(String, default="")
+
+    # Telegram
+    telegram_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    telegram_bot_token: Mapped[str] = mapped_column(String, default="")
+    telegram_chat_id: Mapped[str] = mapped_column(String, default="")
 
     # Entry window default (hours)
     entry_window_hours: Mapped[int] = mapped_column(Integer, default=4)

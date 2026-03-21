@@ -7,7 +7,7 @@ from starlette.responses import RedirectResponse
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.services import settings_service
+from app.services import notification_service, settings_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/settings")
@@ -94,6 +94,78 @@ async def generate_token(
 ):
     raw_token = await settings_service.generate_api_token(db)
     return JSONResponse({"token": raw_token})
+
+
+@router.post("/notifications")
+async def settings_notifications_update(
+    request: Request,
+    notifications_enabled: bool = Form(False),
+    email_notifications_enabled: bool = Form(False),
+    smtp_host: str = Form(""),
+    smtp_port: int = Form(587),
+    smtp_username: str = Form(""),
+    smtp_password: str = Form(""),
+    smtp_from_email: str = Form(""),
+    smtp_tls: bool = Form(False),
+    notify_email_to: str = Form(""),
+    telegram_notifications_enabled: bool = Form(False),
+    telegram_bot_token: str = Form(""),
+    telegram_chat_id: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    kwargs: dict = dict(
+        notifications_enabled=notifications_enabled,
+        email_notifications_enabled=email_notifications_enabled,
+        smtp_host=smtp_host,
+        smtp_port=smtp_port,
+        smtp_username=smtp_username,
+        smtp_from_email=smtp_from_email,
+        smtp_tls=smtp_tls,
+        notify_email_to=notify_email_to,
+        telegram_notifications_enabled=telegram_notifications_enabled,
+        telegram_chat_id=telegram_chat_id,
+    )
+    # Only overwrite secrets when the user actually submits a new value
+    if smtp_password:
+        kwargs["smtp_password"] = smtp_password
+    if telegram_bot_token:
+        kwargs["telegram_bot_token"] = telegram_bot_token
+    await settings_service.update_settings(db, **kwargs)
+    return RedirectResponse(url="/settings?msg=Notification+settings+saved", status_code=303)
+
+
+@router.post("/notifications/test-email")
+async def test_email_notification(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    s = await settings_service.get_settings(db)
+    ok = await notification_service.send_email(
+        s,
+        subject="[Gatekeeper] Test notification",
+        body="This is a test email from Gatekeeper. Your email notifications are working correctly.",
+    )
+    if ok:
+        return RedirectResponse(url="/settings?msg=Test+email+sent+successfully", status_code=303)
+    return RedirectResponse(url="/settings?msg=Failed+to+send+test+email+%E2%80%94+check+your+SMTP+settings&msg_type=error", status_code=303)
+
+
+@router.post("/notifications/test-telegram")
+async def test_telegram_notification(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    s = await settings_service.get_settings(db)
+    ok = await notification_service.send_telegram(
+        s,
+        "🔔 This is a test message from Gatekeeper. Your Telegram notifications are working correctly.",
+    )
+    if ok:
+        return RedirectResponse(url="/settings?msg=Test+Telegram+message+sent", status_code=303)
+    return RedirectResponse(url="/settings?msg=Failed+to+send+Telegram+message+%E2%80%94+check+your+token+and+chat+ID&msg_type=error", status_code=303)
 
 
 @router.post("/restart-setup")

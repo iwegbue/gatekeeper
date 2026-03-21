@@ -157,6 +157,24 @@ export SKIP_SECURITY_CHECKS=1
 uv run uvicorn app.main:app --reload
 ```
 
+### Applying changes to the running Docker stack
+
+The app runs as a built Docker image — code changes on disk are **not** automatically picked up. After any code change that needs to be visible at http://localhost, always run these three steps in order:
+
+```bash
+# 1. Rebuild the app image from the current branch
+docker compose build app
+
+# 2. Run any new migrations against the live database
+docker compose run --rm app uv run alembic upgrade head
+
+# 3. Recreate the container with the new image
+docker compose up -d app
+```
+
+If there are no schema changes (no new migration), skip step 2.
+Check `docker compose logs app --tail=20` to confirm the app started cleanly after step 3.
+
 ---
 
 ## Code Conventions

@@ -33,7 +33,7 @@ async def check_expired_entry_windows() -> None:
                 try:
                     await state_machine.invalidate(db, idea, reason="Entry window expired")
                     await notification_service.notify_idea_expired(
-                        idea.instrument, idea.direction
+                        db, idea.instrument, idea.direction
                     )
                     logger.info("Invalidated expired idea: %s %s", idea.instrument, idea.direction)
                 except Exception as e:

@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import IdeaState, TradeState
 from app.models.idea import Idea
 from app.models.trade import Trade
-from app.services import checklist_service, state_machine
+from app.services import checklist_service, notification_service, state_machine
 
 
 async def get_trade(db: AsyncSession, trade_id: uuid.UUID) -> Trade | None:
@@ -170,6 +170,9 @@ async def close_trade(
         float(trade.initial_sl_price or trade.sl_price),
     )
     await db.flush()
+    await notification_service.notify_trade_closed(
+        db, trade.instrument, trade.direction, trade.r_multiple
+    )
     return trade
 
 

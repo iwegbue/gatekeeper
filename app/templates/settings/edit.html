@@ -86,12 +86,6 @@
         <form method="post" action="/settings/general">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-            <label>
-                <input type="checkbox" name="notifications_enabled" value="true"
-                       {% if settings.notifications_enabled %}checked{% endif %}>
-                Enable in-app notifications
-            </label>
-
             <label for="entry_window_hours">Entry window (hours)</label>
             <input type="number" id="entry_window_hours" name="entry_window_hours"
                    value="{{ settings.entry_window_hours }}" min="1" max="72">
@@ -100,6 +94,138 @@
             <button type="submit">Save general settings</button>
         </form>
 
+    </div>
+</details>
+
+{# ── Notifications card ────────────────────────────────────────────────────── #}
+{% set email_ok = settings.email_notifications_enabled and settings.smtp_host and settings.notify_email_to %}
+{% set tg_ok = settings.telegram_notifications_enabled and settings.telegram_bot_token and settings.telegram_chat_id %}
+<details class="settings-card" {% if not email_ok and not tg_ok and (settings.email_notifications_enabled or settings.telegram_notifications_enabled) %}open{% endif %}>
+    <summary class="settings-card-summary">
+        <div class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Notifications
+        </div>
+        <div class="settings-card-meta">
+            {% if email_ok or tg_ok %}
+            <span class="settings-badge settings-badge--ok">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {% if email_ok and tg_ok %}Email &amp; Telegram{% elif email_ok %}Email{% else %}Telegram{% endif %} active
+            </span>
+            {% else %}
+            <span class="settings-badge settings-badge--neutral">Not configured</span>
+            {% endif %}
+            <span class="settings-card-chevron">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+        </div>
+    </summary>
+
+    <div class="settings-card-body">
+        <form method="post" action="/settings/notifications">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <label>
+                <input type="checkbox" name="notifications_enabled" value="true"
+                       {% if settings.notifications_enabled %}checked{% endif %}>
+                Master notifications switch (disables all channels when off)
+            </label>
+
+            {# ── Email / SMTP ── #}
+            <hr style="margin: 1.25rem 0 1rem;">
+            <p style="font-weight:600; margin-bottom:0.75rem;">Email via SMTP</p>
+            <p class="muted" style="font-size:0.83rem; margin-bottom:1rem;">Works with any SMTP server — Gmail, Proton Mail Bridge, Mailhog, self-hosted Postfix, or relay services like Brevo / Mailgun SMTP.</p>
+
+            <label>
+                <input type="checkbox" name="email_notifications_enabled" value="true"
+                       {% if settings.email_notifications_enabled %}checked{% endif %}>
+                Enable email notifications
+            </label>
+
+            <div class="notif-smtp-grid">
+                <div>
+                    <label for="smtp_host">SMTP host</label>
+                    <input type="text" id="smtp_host" name="smtp_host"
+                           value="{{ settings.smtp_host }}" placeholder="smtp.gmail.com">
+                </div>
+                <div>
+                    <label for="smtp_port">Port</label>
+                    <input type="number" id="smtp_port" name="smtp_port"
+                           value="{{ settings.smtp_port or 587 }}" min="1" max="65535" style="width:100%;">
+                </div>
+            </div>
+
+            <label for="smtp_from_email">From address</label>
+            <input type="email" id="smtp_from_email" name="smtp_from_email"
+                   value="{{ settings.smtp_from_email }}" placeholder="gatekeeper@example.com">
+
+            <label for="notify_email_to">Deliver to</label>
+            <input type="email" id="notify_email_to" name="notify_email_to"
+                   value="{{ settings.notify_email_to }}" placeholder="you@example.com">
+
+            <label for="smtp_username">Username <span class="muted">(leave blank if not required)</span></label>
+            <input type="text" id="smtp_username" name="smtp_username"
+                   value="{{ settings.smtp_username }}" autocomplete="off">
+
+            <label for="smtp_password">Password / App password</label>
+            {% if settings.smtp_password %}
+            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Password saved — leave blank to keep existing, or enter a new one to replace it.</p>
+            {% endif %}
+            <input type="password" id="smtp_password" name="smtp_password" value=""
+                   placeholder="{{ '••••••••' if settings.smtp_password else 'App password or SMTP password' }}"
+                   autocomplete="new-password">
+
+            <label>
+                <input type="checkbox" name="smtp_tls" value="true"
+                       {% if settings.smtp_tls %}checked{% endif %}>
+                Use STARTTLS (recommended — port 587)
+            </label>
+
+            {# ── Telegram ── #}
+            <hr style="margin: 1.25rem 0 1rem;">
+            <p style="font-weight:600; margin-bottom:0.75rem;">Telegram</p>
+            <p class="muted" style="font-size:0.83rem; margin-bottom:1rem;">
+                Create a bot with <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>,
+                then send a message to your bot and get your chat ID from
+                <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>.
+            </p>
+
+            <label>
+                <input type="checkbox" name="telegram_notifications_enabled" value="true"
+                       {% if settings.telegram_notifications_enabled %}checked{% endif %}>
+                Enable Telegram notifications
+            </label>
+
+            <label for="telegram_bot_token">Bot token</label>
+            {% if settings.telegram_bot_token %}
+            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Token saved — leave blank to keep existing, or enter a new one to replace it.</p>
+            {% endif %}
+            <input type="password" id="telegram_bot_token" name="telegram_bot_token" value=""
+                   placeholder="{{ '••••••••' + settings.telegram_bot_token[-6:] if settings.telegram_bot_token else '123456:ABC-DEF...' }}"
+                   autocomplete="new-password">
+
+            <label for="telegram_chat_id">Chat ID</label>
+            <input type="text" id="telegram_chat_id" name="telegram_chat_id"
+                   value="{{ settings.telegram_chat_id }}" placeholder="-1001234567890">
+
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1.25rem; align-items:center;">
+                <button type="submit">Save notification settings</button>
+            </div>
+        </form>
+
+        {# Test buttons — separate forms to avoid accidentally overwriting settings #}
+        {% if settings.email_notifications_enabled and settings.smtp_host %}
+        <form method="post" action="/settings/notifications/test-email" style="display:inline; margin-top:0.75rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="secondary outline" style="margin-top:0.75rem;">Send test email</button>
+        </form>
+        {% endif %}
+        {% if settings.telegram_notifications_enabled and settings.telegram_bot_token %}
+        <form method="post" action="/settings/notifications/test-telegram" style="display:inline; margin-top:0.75rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="secondary outline" style="margin-top:0.75rem;">Send test Telegram message</button>
+        </form>
+        {% endif %}
     </div>
 </details>
 
