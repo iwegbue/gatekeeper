@@ -102,8 +102,9 @@ async def update_rule(
     rule = await get_rule(db, rule_id)
     if rule is None:
         return None
+    protected = ("id", "plan_id", "layer", "created_at")
     for key, value in kwargs.items():
-        if hasattr(rule, key):
+        if hasattr(rule, key) and key not in protected:
             setattr(rule, key, value)
     await db.flush()
     return rule

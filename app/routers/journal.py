@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
+from app.csrf import require_csrf
 from app.database import get_db
 from app.services import journal_service
 
@@ -46,6 +47,7 @@ async def journal_edit(
     rating: int | None = Form(None),
     tags: str = Form(""),  # comma-separated tag names
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     entry = await journal_service.update_entry(
         db, entry_id,
@@ -66,7 +68,7 @@ async def journal_edit(
 
 
 @router.post("/{entry_id}/complete")
-async def journal_complete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def journal_complete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     result = await journal_service.complete_entry(db, entry_id)
     if result is None:
         return RedirectResponse(url="/journal?msg=Entry+not+found&msg_type=error", status_code=303)
@@ -75,7 +77,7 @@ async def journal_complete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_d
 
 
 @router.post("/{entry_id}/delete")
-async def journal_delete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def journal_delete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     deleted = await journal_service.delete_entry(db, entry_id)
     if not deleted:
         return RedirectResponse(url="/journal?msg=Entry+not+found&msg_type=error", status_code=303)

@@ -1,6 +1,8 @@
 """Tests for authentication middleware and login/logout routes."""
 import pytest
 
+from app.csrf import generate_csrf_token
+
 
 @pytest.mark.asyncio
 async def test_login_page_accessible_without_auth(client):
@@ -19,7 +21,7 @@ async def test_protected_route_redirects_to_login(client):
 async def test_login_with_correct_password(client):
     response = await client.post(
         "/login",
-        data={"password": "admin"},
+        data={"password": "admin", "csrf_token": generate_csrf_token()},
         follow_redirects=False,
     )
     assert response.status_code == 303
@@ -30,7 +32,7 @@ async def test_login_with_correct_password(client):
 async def test_login_with_wrong_password(client):
     response = await client.post(
         "/login",
-        data={"password": "wrongpassword"},
+        data={"password": "wrongpassword", "csrf_token": generate_csrf_token()},
         follow_redirects=False,
     )
     assert response.status_code == 200
@@ -38,10 +40,22 @@ async def test_login_with_wrong_password(client):
 
 
 @pytest.mark.asyncio
+async def test_login_without_csrf_token_rejected(client):
+    response = await client.post(
+        "/login",
+        data={"password": "admin"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_logout_clears_session(client):
     # First login
     login_resp = await client.post(
-        "/login", data={"password": "admin"}, follow_redirects=False
+        "/login",
+        data={"password": "admin", "csrf_token": generate_csrf_token()},
+        follow_redirects=False,
     )
     assert login_resp.status_code == 303
 

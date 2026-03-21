@@ -3,8 +3,8 @@ AI provider factory — selects and instantiates the correct provider
 based on DB settings, with env var fallback for Anthropic.
 """
 import os
-from functools import lru_cache
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 if TYPE_CHECKING:
     from app.services.ai.base import AIProvider
@@ -47,10 +47,30 @@ def configure(
 
     if provider == "ollama":
         url = ollama_base_url or "http://localhost:11434"
+        _validate_ollama_url(url)
         from app.services.ai.ollama_provider import OllamaProvider
         return OllamaProvider(base_url=url, model=model)
 
     raise AIConfigError(f"Unknown AI provider: {provider!r}. Choose anthropic, openai, or ollama.")
+
+
+# Allowed hostnames for the Ollama base URL (prevents SSRF to internal services)
+_OLLAMA_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "::1", "ollama"}
+
+
+def _validate_ollama_url(url: str) -> None:
+    """Reject Ollama URLs that point to non-local hosts (SSRF prevention)."""
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+    except Exception:
+        raise AIConfigError(f"Invalid Ollama base URL: {url!r}")
+
+    if host not in _OLLAMA_ALLOWED_HOSTS:
+        raise AIConfigError(
+            f"Ollama base URL must point to a local host (got {host!r}). "
+            f"Allowed: {sorted(_OLLAMA_ALLOWED_HOSTS)}"
+        )
 
 
 async def get_provider_from_db(db) -> "AIProvider":

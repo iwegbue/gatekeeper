@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
+from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import AssetClass
 from app.services import instrument_service
@@ -38,6 +39,7 @@ async def instrument_create(
     priority: int = Form(0),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     await instrument_service.create(
         db,
@@ -73,6 +75,7 @@ async def instrument_update(
     priority: int = Form(0),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     await instrument_service.update_instrument(
         db, instrument_id,
@@ -87,6 +90,6 @@ async def instrument_update(
 
 
 @router.post("/{instrument_id}/delete")
-async def instrument_delete(instrument_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def instrument_delete(instrument_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     await instrument_service.delete_instrument(db, instrument_id)
     return RedirectResponse(url="/instruments?msg=Instrument+deleted", status_code=303)

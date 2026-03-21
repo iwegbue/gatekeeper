@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: gatekeeper
-      POSTGRES_PASSWORD: gatekeeper
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gatekeeper}
       POSTGRES_DB: gatekeeper
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -20,9 +20,9 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+asyncpg://gatekeeper:gatekeeper@db:5432/gatekeeper
-      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      DATABASE_URL: postgresql+asyncpg://gatekeeper:${POSTGRES_PASSWORD:-gatekeeper}@db:5432/gatekeeper
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in .env}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
       SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-}

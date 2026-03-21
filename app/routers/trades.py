@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
+from app.csrf import require_csrf
 from app.database import get_db
 from app.services import idea_service, journal_service, trade_service
 
@@ -52,6 +53,7 @@ async def trade_open(
     lot_size: float | None = Form(None),
     risk_pct: float | None = Form(None),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     idea = await idea_service.get_idea(db, idea_id)
     if idea is None:
@@ -80,6 +82,7 @@ async def trade_update_sl(
     trade_id: uuid.UUID,
     sl_price: float = Form(...),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     result = await trade_service.update_trade(db, trade_id, sl_price=sl_price)
     if result is None:
@@ -89,7 +92,7 @@ async def trade_update_sl(
 
 
 @router.post("/{trade_id}/partial")
-async def trade_partial(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def trade_partial(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     result = await trade_service.take_partial(db, trade_id)
     if result is None:
         return RedirectResponse(url="/trades?msg=Trade+not+found&msg_type=error", status_code=303)
@@ -98,7 +101,7 @@ async def trade_partial(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/{trade_id}/be")
-async def trade_be(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def trade_be(trade_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     result = await trade_service.lock_be(db, trade_id)
     if result is None:
         return RedirectResponse(url="/trades?msg=Trade+not+found&msg_type=error", status_code=303)
@@ -111,6 +114,7 @@ async def trade_close(
     trade_id: uuid.UUID,
     exit_price: float = Form(...),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     trade = await trade_service.get_trade(db, trade_id)
     if trade is None:

@@ -3,13 +3,19 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.auth import AuthMiddleware
 from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, trades
+from app.routers.api.v1 import api_v1_auth_router, api_v1_router
+
+limiter = Limiter(key_func=get_remote_address)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,6 +34,8 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from app.config import settings as _settings
+    _settings.check_security()
     logger.info("Gatekeeper Core starting up")
     from app.tasks.background import start_background_tasks
     start_background_tasks(app)
@@ -37,6 +45,10 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Gatekeeper Core", docs_url=None, redoc_url=None, lifespan=lifespan)
+
+    # Rate limiting
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     app.state.version_info = _version_info
 
@@ -56,6 +68,19 @@ def create_app() -> FastAPI:
     # Static files
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
+    # Security headers middleware
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-XSS-Protection"] = "0"  # Modern browsers ignore; CSP is the control
+        # Only send HSTS when actually on HTTPS
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
     # Auth middleware
     app.add_middleware(AuthMiddleware)
 
@@ -71,6 +96,10 @@ def create_app() -> FastAPI:
     app.include_router(settings.router)
     app.include_router(reports.router)
 
+    # JSON API v1
+    app.include_router(api_v1_auth_router)
+    app.include_router(api_v1_router)
+
     return app
 
 
@@ -82,7 +111,10 @@ class _TemplateAdapter:
 
     def TemplateResponse(self, name: str, context: dict, status_code: int = 200):
         from starlette.responses import HTMLResponse
+        from app.csrf import generate_csrf_token
 
+        # Inject a fresh CSRF token for every HTML response
+        context.setdefault("csrf_token", generate_csrf_token())
         template = self.env.get_template(name)
         html = template.render(**context)
         return HTMLResponse(content=html, status_code=status_code)

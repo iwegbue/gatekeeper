@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
+from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import Direction, IdeaState
 from app.services import checklist_service, idea_service, plan_service, state_machine
@@ -46,6 +47,7 @@ async def idea_create(
     risk_pct: float | None = Form(None),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     idea = await idea_service.create_idea(
         db,
@@ -100,6 +102,7 @@ async def idea_edit(
     notes: str = Form(""),
     risk_pct: float | None = Form(None),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     await idea_service.update_idea(db, idea_id, notes=notes or None, risk_pct=risk_pct)
     await db.commit()
@@ -107,7 +110,7 @@ async def idea_edit(
 
 
 @router.post("/{idea_id}/delete")
-async def idea_delete(idea_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def idea_delete(idea_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     await idea_service.delete_idea(db, idea_id)
     await db.commit()
     return RedirectResponse(url="/ideas?msg=Idea+deleted", status_code=303)
@@ -123,6 +126,7 @@ async def check_toggle(
     checked: bool = Form(False),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     await checklist_service.toggle_check(db, check_id, checked, notes=notes or None)
     idea = await idea_service.get_idea(db, idea_id)
@@ -166,6 +170,7 @@ async def idea_advance(
     idea_id: uuid.UUID,
     reason: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     idea = await idea_service.get_idea(db, idea_id)
     if idea is None:
@@ -194,6 +199,7 @@ async def idea_regress(
     idea_id: uuid.UUID,
     reason: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     idea = await idea_service.get_idea(db, idea_id)
     if idea is None:
@@ -215,6 +221,7 @@ async def idea_invalidate(
     idea_id: uuid.UUID,
     reason: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     idea = await idea_service.get_idea(db, idea_id)
     if idea is None:

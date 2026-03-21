@@ -1,10 +1,15 @@
 import hmac
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Depends, Form, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from starlette.responses import RedirectResponse
 
 from app.auth import SESSION_COOKIE, MAX_SESSION_AGE, create_session_token
 from app.config import settings as app_settings
+from app.csrf import require_csrf
+
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
@@ -18,7 +23,8 @@ async def login_page(request: Request):
 
 
 @router.post("/login")
-async def login(request: Request, password: str = Form(...)):
+@limiter.limit("5/minute")
+async def login(request: Request, password: str = Form(...), _csrf: None = Depends(require_csrf)):
     if hmac.compare_digest(password, app_settings.ADMIN_PASSWORD):
         response = RedirectResponse(url="/", status_code=303)
         is_https = app_settings.APP_BASE_URL.startswith("https://")
@@ -26,7 +32,7 @@ async def login(request: Request, password: str = Form(...)):
             SESSION_COOKIE,
             create_session_token(),
             httponly=True,
-            samesite="lax",
+            samesite="strict",
             secure=is_https,
             max_age=MAX_SESSION_AGE,
         )

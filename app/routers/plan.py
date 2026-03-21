@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
+from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import PlanLayer, RuleType
 from app.services import plan_service
@@ -42,6 +43,7 @@ async def plan_update(
     name: str = Form(""),
     description: str = Form(""),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     await plan_service.update_plan(db, name=name or None, description=description or None)
     return RedirectResponse(url="/plan?msg=Plan+updated", status_code=303)
@@ -70,6 +72,7 @@ async def rule_create(
     rule_type: str = Form("REQUIRED"),
     weight: int = Form(1),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     plan = await plan_service.get_plan(db)
     await plan_service.create_rule(
@@ -112,6 +115,7 @@ async def rule_update(
     weight: int = Form(1),
     is_active: bool = Form(False),
     db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
 ):
     await plan_service.update_rule(
         db, rule_id,
@@ -122,6 +126,6 @@ async def rule_update(
 
 
 @router.post("/rules/{rule_id}/delete")
-async def rule_delete(rule_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def rule_delete(rule_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     await plan_service.delete_rule(db, rule_id)
     return RedirectResponse(url="/plan?msg=Rule+deleted", status_code=303)

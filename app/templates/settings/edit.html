@@ -4,6 +4,7 @@
 <h2>Settings</h2>
 
 <form method="post" action="/settings">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <h4>AI Provider (BYOK)</h4>
     <p class="muted" style="font-size:0.85rem;">Bring your own API key. Configure your preferred AI provider below.</p>
 
@@ -15,10 +16,16 @@
     </select>
 
     <label for="anthropic_api_key">Anthropic API Key</label>
-    <input type="password" id="anthropic_api_key" name="anthropic_api_key" value="{{ settings.anthropic_api_key }}" placeholder="sk-ant-...">
+    {% if settings.anthropic_api_key %}
+    <p class="muted" style="font-size:0.85rem; margin-bottom:0.25rem;">Key configured — leave blank to keep existing, or enter a new key to replace it.</p>
+    {% endif %}
+    <input type="password" id="anthropic_api_key" name="anthropic_api_key" value="" placeholder="{{ '••••••••' + settings.anthropic_api_key[-4:] if settings.anthropic_api_key else 'sk-ant-...' }}">
 
     <label for="openai_api_key">OpenAI API Key</label>
-    <input type="password" id="openai_api_key" name="openai_api_key" value="{{ settings.openai_api_key }}" placeholder="sk-...">
+    {% if settings.openai_api_key %}
+    <p class="muted" style="font-size:0.85rem; margin-bottom:0.25rem;">Key configured — leave blank to keep existing, or enter a new key to replace it.</p>
+    {% endif %}
+    <input type="password" id="openai_api_key" name="openai_api_key" value="" placeholder="{{ '••••••••' + settings.openai_api_key[-4:] if settings.openai_api_key else 'sk-...' }}">
 
     <label for="ollama_base_url">Ollama Base URL</label>
     <input type="text" id="ollama_base_url" name="ollama_base_url" value="{{ settings.ollama_base_url }}" placeholder="http://localhost:11434">
@@ -39,4 +46,43 @@
 
     <button type="submit">Save Settings</button>
 </form>
+
+<hr>
+<h4>API Access</h4>
+<p class="muted" style="font-size:0.85rem;">Generate a bearer token for CLI, MCP, or external agent access.</p>
+
+{% if settings.api_token_hash %}
+<p><strong>Status:</strong> Token configured</p>
+{% else %}
+<p><strong>Status:</strong> No token configured</p>
+{% endif %}
+
+<div id="api-token-section">
+    <form method="post" action="/settings/generate-token" id="token-form">
+        <button type="submit">{{ "Regenerate API Token" if settings.api_token_hash else "Generate API Token" }}</button>
+    </form>
+    <div id="token-display" style="display:none; margin-top:1rem;">
+        <p><strong>Your API token (shown once):</strong></p>
+        <code id="token-value" style="word-break:break-all;"></code>
+        <p class="muted" style="font-size:0.85rem; margin-top:0.5rem;">Copy this token now. It will not be shown again.</p>
+    </div>
+</div>
+
+<script>
+document.getElementById('token-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    const body = new URLSearchParams({ csrf_token: csrfToken });
+    const resp = await fetch('/settings/generate-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+    });
+    const data = await resp.json();
+    if (data.token) {
+        document.getElementById('token-value').textContent = data.token;
+        document.getElementById('token-display').style.display = 'block';
+    }
+});
+</script>
 {% endblock %}

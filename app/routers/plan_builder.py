@@ -1,6 +1,8 @@
 """
 Plan Builder — AI-powered multi-turn wizard for creating trading plan rules.
 """
+import logging
+
 from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
@@ -8,6 +10,8 @@ from starlette.responses import JSONResponse
 from app.database import get_db
 from app.services.ai import factory as ai_factory
 from app.services import ai_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/plan/builder")
 
@@ -50,6 +54,7 @@ async def builder_chat(
             "response": response,
             "history": json.dumps(conversation),
         })
-    except Exception as e:
+    except Exception:
+        logger.exception("AI plan builder error")
         await db.rollback()
-        return JSONResponse({"error": f"AI error: {str(e)}"}, status_code=500)
+        return JSONResponse({"error": "AI request failed. Please try again."}, status_code=500)
