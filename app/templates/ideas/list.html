@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Ideas — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Ideas</h2>
+    <div class="page-header-actions">
+        <a href="/ideas?{% if show_all %}{% else %}all=1{% endif %}" class="secondary outline">
+            {% if show_all %}Active only{% else %}Show all{% endif %}
+        </a>
+        <a href="/ideas/new" role="button">+ New Idea</a>
+    </div>
+</div>
+
+{% if ideas %}
+<div class="table-scroll">
+<table>
+    <thead>
+        <tr>
+            <th>Instrument</th>
+            <th>Direction</th>
+            <th>State</th>
+            <th>Grade</th>
+            <th>Score</th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for idea in ideas %}
+        <tr>
+            <td><strong>{{ idea.instrument }}</strong></td>
+            <td>
+                <span class="badge badge-{{ 'long' if idea.direction == 'LONG' else 'short' }}">
+                    {{ idea.direction }}
+                </span>
+            </td>
+            <td><span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ idea.state }}</span></td>
+            <td>
+                {% if idea.grade %}
+                    <span class="badge badge-grade-{{ idea.grade | lower }}">{{ idea.grade }}</span>
+                {% else %}
+                    <span class="muted">—</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if idea.checklist_score is not none %}
+                    {{ idea.checklist_score }}%
+                {% else %}
+                    <span class="muted">—</span>
+                {% endif %}
+            </td>
+            <td class="muted small">{{ idea.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td><a href="/ideas/{{ idea.id }}" class="secondary">View →</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<article class="empty-state">
+    <i data-lucide="lightbulb" style="width:48px;height:48px;opacity:0.3"></i>
+    <p>No ideas yet.</p>
+    <a href="/ideas/new" role="button">Create your first idea</a>
+</article>
+{% endif %}
+{% endblock %}

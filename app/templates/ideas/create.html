@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}New Idea — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>New Idea</h2>
+    <a href="/ideas" class="secondary outline">← Back</a>
+</div>
+
+{% if not has_rules %}
+<div class="flash flash-warning" role="alert">
+    Your trading plan has no rules yet.
+    <a href="/plan">Set up your plan</a> before creating ideas so the checklist is populated.
+</div>
+{% endif %}
+
+<article>
+    <form method="post" action="/ideas/new">
+        <div class="grid">
+            <label>
+                Instrument
+                <input type="text" name="instrument" placeholder="EURUSD" required autofocus
+                       style="text-transform:uppercase">
+            </label>
+            <label>
+                Direction
+                <select name="direction" required>
+                    {% for d in directions %}
+                    <option value="{{ d.value }}">{{ d.value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+
+        <label>
+            Risk % <small class="muted">(optional)</small>
+            <input type="number" name="risk_pct" step="0.01" min="0" max="100"
+                   placeholder="e.g. 1.0">
+        </label>
+
+        <label>
+            Notes <small class="muted">(optional)</small>
+            <textarea name="notes" rows="3" placeholder="Context, confluence, key levels…"></textarea>
+        </label>
+
+        <div class="form-actions">
+            <button type="submit">Create Idea</button>
+            <a href="/ideas" role="button" class="secondary outline">Cancel</a>
+        </div>
+    </form>
+</article>
+{% endblock %}

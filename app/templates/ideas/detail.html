@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ idea.instrument }} {{ idea.direction }} — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>
+            {{ idea.instrument }}
+            <span class="badge badge-{{ 'long' if idea.direction == 'LONG' else 'short' }}">{{ idea.direction }}</span>
+            <span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ idea.state }}</span>
+        </h2>
+        <small class="muted">Created {{ idea.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+    </div>
+    <div class="page-header-actions">
+        <a href="/ideas" class="secondary outline">← Ideas</a>
+    </div>
+</div>
+
+<div class="idea-layout">
+
+    {# ── Left: Checklist ──────────────────────────────────────────────── #}
+    <section class="idea-checklist">
+        <h3>Checklist</h3>
+        {% if checks_by_layer %}
+            {% include "ideas/_checklist.html" %}
+        {% else %}
+        <article class="empty-state">
+            <p>No rules defined in your trading plan yet.</p>
+            <a href="/plan">Set up your plan →</a>
+        </article>
+        {% endif %}
+    </section>
+
+    {# ── Right: Meta + Actions ────────────────────────────────────────── #}
+    <aside class="idea-sidebar">
+
+        {# Idea details card #}
+        <article>
+            <header><strong>Details</strong></header>
+            <dl>
+                <dt>Risk %</dt>
+                <dd>{% if idea.risk_pct %}{{ idea.risk_pct }}%{% else %}<span class="muted">—</span>{% endif %}</dd>
+                <dt>Entry window</dt>
+                <dd>
+                    {% if idea.entry_window_expires_at %}
+                        {{ idea.entry_window_expires_at.strftime('%Y-%m-%d %H:%M UTC') }}
+                    {% else %}
+                        <span class="muted">—</span>
+                    {% endif %}
+                </dd>
+                {% if idea.notes %}
+                <dt>Notes</dt>
+                <dd>{{ idea.notes }}</dd>
+                {% endif %}
+            </dl>
+        </article>
+
+        {# Edit form #}
+        <article>
+            <header><strong>Edit</strong></header>
+            <form method="post" action="/ideas/{{ idea.id }}/edit">
+                <label>
+                    Risk %
+                    <input type="number" name="risk_pct" step="0.01" min="0" max="100"
+                           value="{{ idea.risk_pct or '' }}">
+                </label>
+                <label>
+                    Notes
+                    <textarea name="notes" rows="3">{{ idea.notes or '' }}</textarea>
+                </label>
+                <button type="submit" class="secondary">Save</button>
+            </form>
+        </article>
+
+        {# State machine — invalidate #}
+        {% if actions.can_invalidate and idea.state not in ['IN_TRADE', 'MANAGED'] %}
+        <article class="danger-zone">
+            <header><strong>Invalidate</strong></header>
+            <form method="post" action="/ideas/{{ idea.id }}/invalidate">
+                <label>
+                    Reason <small class="muted">(optional)</small>
+                    <input type="text" name="reason" placeholder="e.g. Price tapped entry prematurely">
+                </label>
+                <button type="submit" class="contrast outline">Invalidate Idea</button>
+            </form>
+        </article>
+        {% endif %}
+
+        {# Danger: delete (only non-terminal, non-in-trade) #}
+        {% if idea.state in ['WATCHING', 'SETUP_VALID', 'CONFIRMED', 'ENTRY_PERMITTED', 'INVALIDATED'] %}
+        <article class="danger-zone">
+            <header><strong>Delete</strong></header>
+            <form method="post" action="/ideas/{{ idea.id }}/delete"
+                  onsubmit="return confirm('Delete this idea permanently?')">
+                <button type="submit" class="contrast outline small">Delete Idea</button>
+            </form>
+        </article>
+        {% endif %}
+
+    </aside>
+</div>
+{% endblock %}

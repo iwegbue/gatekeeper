@@ -1,0 +1,87 @@
+{# Checklist partial — rendered standalone for HTMX swaps #}
+<div id="checklist-panel">
+
+    {# Score header #}
+    <div class="checklist-score-bar">
+        <div class="score-info">
+            <span class="score-pct">{{ checked_score }}/{{ total_score }} pts</span>
+            {% if grade %}
+            <span class="badge badge-grade-{{ grade.value | lower }}">Grade {{ grade.value }}</span>
+            {% endif %}
+        </div>
+        {% if total_score > 0 %}
+        <progress value="{{ checked_score }}" max="{{ total_score }}"></progress>
+        {% endif %}
+    </div>
+
+    {# Layers #}
+    {% for layer in layers %}
+    {% set layer_checks = checks_by_layer.get(layer.value, []) %}
+    {% if layer_checks %}
+    <details class="layer-section" {% if layer_completion.get(layer.value) %}data-complete="true"{% endif %} open>
+        <summary>
+            <span class="layer-name">{{ layer.value }}</span>
+            {% if layer_completion.get(layer.value) %}
+            <span class="layer-badge layer-badge--complete">✓ Complete</span>
+            {% else %}
+            <span class="layer-badge layer-badge--pending">Pending</span>
+            {% endif %}
+        </summary>
+
+        <div class="layer-checks">
+        {% for check, rule in layer_checks %}
+        <div class="rule-check {% if check.checked %}rule-check--checked{% endif %}">
+            <form
+                method="post"
+                action="/ideas/{{ idea.id }}/checks/{{ check.id }}/toggle"
+                hx-post="/ideas/{{ idea.id }}/checks/{{ check.id }}/toggle"
+                hx-target="#checklist-panel"
+                hx-swap="outerHTML"
+            >
+                <label class="rule-check-label">
+                    <input
+                        type="checkbox"
+                        name="checked"
+                        value="true"
+                        {% if check.checked %}checked{% endif %}
+                        onchange="this.form.submit()"
+                    >
+                    <span class="rule-name">{{ rule.name }}</span>
+                    <span class="rule-meta">
+                        <span class="badge badge-type-{{ rule.rule_type | lower }}">{{ rule.rule_type }}</span>
+                        {% if rule.weight != 1 %}<span class="muted small">×{{ rule.weight }}</span>{% endif %}
+                    </span>
+                </label>
+                {% if rule.description %}
+                <p class="rule-description">{{ rule.description }}</p>
+                {% endif %}
+                {% if check.checked %}
+                <input type="hidden" name="checked" value="true">
+                {% endif %}
+            </form>
+            {% if check.notes %}
+            <p class="check-notes muted small">{{ check.notes }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+    </details>
+    {% endif %}
+    {% endfor %}
+
+    {# State actions #}
+    <div class="state-actions">
+        {% if actions.can_advance %}
+        <form method="post" action="/ideas/{{ idea.id }}/advance">
+            <input type="hidden" name="reason" value="">
+            <button type="submit" class="advance-btn">Advance → {{ idea.state }}</button>
+        </form>
+        {% endif %}
+        {% if actions.can_regress %}
+        <form method="post" action="/ideas/{{ idea.id }}/regress">
+            <input type="hidden" name="reason" value="">
+            <button type="submit" class="secondary outline small">← Regress</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
