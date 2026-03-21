@@ -36,7 +36,7 @@ def verify_session_token(token: str) -> bool:
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    EXEMPT_PATHS = {"/login", "/static", "/api/", "/version"}
+    EXEMPT_PATHS = {"/login", "/setup", "/static", "/api/", "/version"}
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
@@ -44,6 +44,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
         for exempt in self.EXEMPT_PATHS:
             if path.startswith(exempt):
                 return await call_next(request)
+
+        # Redirect to first-run wizard when no admin password has been set yet.
+        # app.state.needs_setup is populated in the lifespan handler and flipped
+        # to False by the setup router after a successful password submission.
+        if getattr(request.app.state, "needs_setup", False):
+            return RedirectResponse(url="/setup", status_code=302)
 
         token = request.cookies.get(SESSION_COOKIE)
         if token and verify_session_token(token):

@@ -60,10 +60,11 @@ The idea state machine in `app/services/state_machine.py` is the core domain con
 
 ### Security
 
-- **Never compare passwords/tokens with `==` or `!=`** — always use `hmac.compare_digest()`.
+- **Never compare passwords/tokens with `==` or `!=`** — use `hmac.compare_digest()` for secrets; plain `!=` is fine for non-secret equality (e.g. confirming two user-supplied fields match).
+- **Never store passwords in plaintext** — use `set_admin_password` / `verify_admin_password` in `settings_service.py` (scrypt hash stored in DB).
 - **Never render API keys or tokens into HTML** — mask or omit them.
 - **Never accept unconstrained URLs from user input** — validate against an allowlist (see `_validate_ollama_url`).
-- The startup guard in `app/config.py` rejects insecure defaults. Add `SKIP_SECURITY_CHECKS=1` to `.env` for local dev.
+- `app/config.py` auto-generates `SECRET_KEY` on first run (persisted to `/data/secret_key`). It logs a warning but never aborts if the key is ephemeral. Add `SKIP_SECURITY_CHECKS=1` to `.env` to silence the warning in dev/test.
 
 ---
 
@@ -71,7 +72,7 @@ The idea state machine in `app/services/state_machine.py` is the core domain con
 
 ### Branch and PR — always
 
-**Never commit directly to `main`.** Every change, no matter how small, goes through a feature branch and a pull request.
+**Never commit directly to `main`.** Every change, no matter how small, goes through a feature branch and a pull request. This applies to human contributors and AI agents alike — if you are an AI agent making changes, you must create a branch before touching any code.
 
 ```bash
 # Start every feature this way
@@ -145,16 +146,15 @@ Always implement both `upgrade()` and `downgrade()`.
 ### Local dev
 
 ```bash
-cp .env.example .env
-# Edit .env: set SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
-
+# Full stack — no .env editing required
 docker compose up -d
-uv run uvicorn app.main:app --reload
-```
+# Visit http://localhost — you'll be redirected to /setup on first run
 
-Or use the full stack:
-```bash
-docker compose up
+# Or: app on host, DB in Docker
+docker compose up -d db
+export DATABASE_URL=postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5432/gatekeeper
+export SKIP_SECURITY_CHECKS=1
+uv run uvicorn app.main:app --reload
 ```
 
 ---
