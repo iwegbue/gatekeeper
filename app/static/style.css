@@ -540,6 +540,94 @@ footer.container {
     opacity: 0.5;
 }
 
+/* ── Tooltips ────────────────────────────────────────────────────────── */
+
+.tip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    position: relative;
+}
+
+.tip-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+    background: rgba(99, 102, 241, 0.18);
+    color: #818cf8;
+    cursor: help;
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+    vertical-align: middle;
+    transition: background 0.15s;
+}
+
+.tip-trigger:hover,
+.tip-trigger:focus {
+    background: rgba(99, 102, 241, 0.35);
+    outline: none;
+}
+
+.tip-content {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    background: #1e293b;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 7px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--pico-color, #e5e7eb);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 50;
+    pointer-events: none;
+    text-align: left;
+    font-weight: 400;
+}
+
+.tip-content::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #374151;
+}
+
+.tip--active .tip-content,
+.tip-trigger:focus + .tip-content,
+.tip-trigger:hover + .tip-content {
+    display: block;
+}
+
+/* Inline mini tooltip badge used inside small legend text */
+.tip-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 50%;
+    font-size: 0.55rem;
+    font-weight: 700;
+    background: rgba(99, 102, 241, 0.18);
+    color: #818cf8;
+    cursor: help;
+    vertical-align: middle;
+}
+
 /* ── Setup Wizard ────────────────────────────────────────────────────── */
 
 .wizard-body {

@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="/static/style.css">
     {% block head_extra %}{% endblock %}
 </head>
+
+{# ── Tooltip macro — use: {{ tip("term", "explanation text") }} ── #}
+{% macro tip(label, text) %}
+<span class="tip">{{ label }}<button type="button" class="tip-trigger" aria-label="What is {{ label }}?">?</button><span class="tip-content">{{ text }}</span></span>
+{% endmacro %}
 <body class="wizard-body">
 
 <header class="wizard-header">
@@ -50,6 +55,26 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+<script>
+// Toggle tooltip on click (for touch + keyboard); close on outside click
+document.addEventListener('click', function(e) {
+    const trigger = e.target.closest('.tip-trigger');
+    if (trigger) {
+        const tip = trigger.closest('.tip');
+        const wasActive = tip.classList.contains('tip--active');
+        document.querySelectorAll('.tip--active').forEach(t => t.classList.remove('tip--active'));
+        if (!wasActive) tip.classList.add('tip--active');
+        e.stopPropagation();
+        return;
+    }
+    document.querySelectorAll('.tip--active').forEach(t => t.classList.remove('tip--active'));
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.tip--active').forEach(t => t.classList.remove('tip--active'));
+    }
+});
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

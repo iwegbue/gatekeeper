@@ -2,6 +2,7 @@
 {% block title %}Quick Tour{% endblock %}
 
 {% block content %}
+{% from "setup/base_wizard.html" import tip %}
 <hgroup>
     <h3>You're all set.</h3>
     <p>Here's a quick overview of how Gatekeeper works. Bookmark this flow — it's how disciplined traders operate.</p>
@@ -14,8 +15,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <div class="tour-step-content">
-            <strong>1. Spot an opportunity → create an idea</strong>
-            <p>Log a potential trade with the instrument and direction. It starts in the <em>Watching</em> state.</p>
+            <strong>1. Spot an opportunity → create an {{ tip("idea", "A potential trade you want to track and evaluate. An idea records the instrument, direction (Long/Short), and your notes — before you commit to entering.") }}</strong>
+            <p>Log a potential trade with the instrument and direction. It starts in the <em>{{ tip("Watching", "The initial state. You've identified something worth tracking, but haven't validated the setup yet.") }}</em> state.</p>
             <a href="/ideas/new" class="tour-link">Create your first idea →</a>
         </div>
     </div>
@@ -28,7 +29,7 @@
         </div>
         <div class="tour-step-content">
             <strong>2. Work through the 7-layer checklist</strong>
-            <p>Check off each rule across Context, Setup, Confirmation, Entry, Risk, Management, and Behavioral layers. Your idea advances state only when required rules are met.</p>
+            <p>Check off each rule across Context, Setup, Confirmation, Entry, Risk, Management, and Behavioral layers. Your idea {{ tip("advances state", "Each state transition is gated by one or more layers. E.g. Watching → Setup Valid requires the Context layer to be complete.") }} only when required rules are met.</p>
         </div>
     </div>
 
@@ -66,7 +67,7 @@
         </div>
         <div class="tour-step-content">
             <strong>5. Track progress in Reports</strong>
-            <p>Monitor your discipline score, win rate, average R, and plan adherence over time.</p>
+            <p>Monitor your {{ tip("discipline score", "A 0–100 score measuring how consistently you follow your plan — based on rule compliance, grade distribution, and win rate.") }}, win rate, {{ tip("average R", "R = Risk-Reward multiple. 1R means you made back exactly what you risked. Average R tells you your expected return per trade over time.") }}, and {{ tip("plan adherence", "The percentage of Required rules that were checked across all trades. High adherence = you're trading your plan consistently.") }} over time.</p>
             <a href="/reports" class="tour-link">View reports →</a>
         </div>
     </div>

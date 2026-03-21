@@ -2,9 +2,10 @@
 {% block title %}Watchlist{% endblock %}
 
 {% block content %}
+{% from "setup/base_wizard.html" import tip %}
 <hgroup>
     <h3>Build Your Watchlist</h3>
-    <p>Add the instruments you trade. You can add more, edit, or remove them anytime from the Instruments page.</p>
+    <p>Add the {{ tip("instruments", "The tradeable assets you follow — currency pairs, stocks, indices, futures, or crypto. Your watchlist is available when creating new ideas.") }} you trade. You can add more, edit, or remove them anytime from the Instruments page.</p>
 </hgroup>
 
 {# ── Add instrument form ──────────────────────────────────────────────────── #}
@@ -16,7 +17,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="instrument-add-row">
         <div>
-            <label for="symbol">Symbol</label>
+            <label for="symbol">{{ tip("Symbol", "The ticker or trading pair used by your broker — e.g. EURUSD, AAPL, BTC/USD. Always uppercase.") }}</label>
             <input type="text" id="symbol" name="symbol" required
                    placeholder="e.g. EURUSD" style="text-transform:uppercase;"
                    autocomplete="off">
@@ -27,7 +28,7 @@
                    placeholder="e.g. Euro / US Dollar" autocomplete="off">
         </div>
         <div>
-            <label for="asset_class">Asset class</label>
+            <label for="asset_class">{{ tip("Asset class", "The category of the instrument: FX (forex pairs), Stocks (equities), Indices (e.g. SPX, DAX), Futures (commodities, bonds), or Crypto.") }}</label>
             <select id="asset_class" name="asset_class">
                 {% for ac in asset_classes %}
                 <option value="{{ ac }}">{{ ac }}</option>

@@ -2,15 +2,16 @@
 {% block title %}AI Setup{% endblock %}
 
 {% block content %}
+{% from "setup/base_wizard.html" import tip %}
 <hgroup>
-    <h3>AI Provider</h3>
-    <p>Connect an AI provider to unlock plan building, idea review, and journal coaching. All optional — you can skip this and configure it later in Settings.</p>
+    <h3>AI Provider <span style="font-size:0.75rem; font-weight:400; color:var(--pico-muted-color);">(optional)</span></h3>
+    <p>Connect an AI provider to unlock {{ tip("plan building", "An AI-guided conversation that helps you define your trading rules layer by layer. Access it from the Plan Builder page after setup.") }}, {{ tip("idea review", "AI analysis of a trade idea's rule checklist — highlights gaps and strengths before you enter.") }}, and {{ tip("journal coaching", "AI feedback on your post-trade journal entries — what you did well, what to improve.") }}. You can skip this and configure it later in Settings.</p>
 </hgroup>
 
 <form method="post" action="/setup/ai" id="ai-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-    <label for="ai_provider">Provider</label>
+    <label for="ai_provider">{{ tip("Provider", "The AI service you want to use. Anthropic (Claude) and OpenAI (GPT) require an API key you supply. Ollama runs models locally on your machine — no API key needed.") }}</label>
     <select id="ai_provider" name="ai_provider" onchange="showProviderFields(this.value)">
         <option value="anthropic" {% if settings.ai_provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude)</option>
         <option value="openai" {% if settings.ai_provider == 'openai' %}selected{% endif %}>OpenAI (GPT)</option>

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +9,7 @@ from app.csrf import require_csrf
 from app.database import get_db
 from app.services import settings_service
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/settings")
 
 
@@ -56,3 +59,16 @@ async def generate_token(
 ):
     raw_token = await settings_service.generate_api_token(db)
     return JSONResponse({"token": raw_token})
+
+
+@router.post("/restart-setup")
+async def restart_setup(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    """Reset the onboarding wizard so it runs again on next page load."""
+    await settings_service.update_settings(db, setup_completed=False)
+    request.app.state.setup_completed = False
+    logger.info("Setup wizard reset via Settings")
+    return RedirectResponse(url="/setup/welcome", status_code=303)

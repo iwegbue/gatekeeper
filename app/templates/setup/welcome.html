@@ -2,6 +2,7 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
+{% from "setup/base_wizard.html" import tip %}
 <div class="wizard-welcome">
     <div class="wizard-logo-mark">
         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -10,8 +11,8 @@
     <p class="wizard-tagline">Your trading discipline platform.</p>
 
     <div class="wizard-intro">
-        <p>Gatekeeper enforces your personal trading plan through a 7-layer checklist before every trade — so you only take setups that meet your own criteria.</p>
-        <p>Every idea moves through layers: <strong>Context → Setup → Confirmation → Entry → Risk → Management → Behavioral</strong>. No shortcuts.</p>
+        <p>Gatekeeper enforces your personal trading plan through a {{ tip("7-layer checklist", "Seven sequential gate layers — Context, Setup, Confirmation, Entry, Risk, Management, Behavioral — that a trade idea must pass through before you're permitted to enter.") }} before every trade — so you only take setups that meet your own criteria.</p>
+        <p>Every {{ tip("idea", "A potential trade you're tracking. It starts in Watching and advances through layers as your criteria are met, eventually reaching Entry Permitted.") }} moves through layers: <strong>Context → Setup → Confirmation → Entry → Risk → Management → Behavioral</strong>. No shortcuts.</p>
     </div>
 
     <div class="wizard-what-to-expect">

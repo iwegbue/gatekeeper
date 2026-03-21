@@ -2,9 +2,10 @@
 {% block title %}Trading Plan{% endblock %}
 
 {% block content %}
+{% from "setup/base_wizard.html" import tip %}
 <hgroup>
     <h3>Your Trading Plan</h3>
-    <p>Choose a starter template to get a ready-made set of rules across all 7 layers, or start from scratch and build your own.</p>
+    <p>Choose a starter template to get a ready-made set of {{ tip("rules", "Each rule is a specific criterion your trade must meet. Rules belong to one of 7 layers and are either Required (must pass), Optional (improve score), or Advisory (reminder only).") }} across all {{ tip("7 layers", "Context: market conditions · Setup: structural setup · Confirmation: signal confirmation · Entry: entry trigger · Risk: position sizing & stop · Management: exits & targets · Behavioral: emotional checklist.") }}, or start from scratch and build your own.</p>
 </hgroup>
 
 <form method="post" action="/setup/plan" id="plan-form">
@@ -51,9 +52,12 @@
                     {% endfor %}
                     </ul>
                     <p class="template-preview-legend">
-                        <span class="template-rule-type-dot template-rule-type-dot--required"></span> Required &nbsp;
-                        <span class="template-rule-type-dot template-rule-type-dot--optional"></span> Optional &nbsp;
+                        <span class="template-rule-type-dot template-rule-type-dot--required"></span> Required
+                        <span class="tip-mini" title="Must be checked for the layer to count as complete. Blocks advancement if unchecked.">?</span> &nbsp;
+                        <span class="template-rule-type-dot template-rule-type-dot--optional"></span> Optional
+                        <span class="tip-mini" title="Counts toward your grade but does not block advancement.">?</span> &nbsp;
                         <span class="template-rule-type-dot template-rule-type-dot--advisory"></span> Advisory
+                        <span class="tip-mini" title="A reminder only — does not affect score or advancement.">?</span>
                     </p>
                 </div>
             </details>
@@ -96,6 +100,13 @@
 
 {% block scripts %}
 <script>
+const TEMPLATE_DATA = {
+    {% for tmpl in templates %}
+    "{{ tmpl.id }}": { name: {{ tmpl.name | tojson }}, description: {{ tmpl.description | tojson }} },
+    {% endfor %}
+    "scratch": { name: "My Trading Plan", description: "" }
+};
+
 function selectTemplate(id) {
     document.getElementById('template_id').value = id;
 
@@ -105,15 +116,9 @@ function selectTemplate(id) {
         card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
     });
 
-    // Pre-fill plan name from template data
-    const names = {{ templates | map(attribute='name') | list | tojson }};
-    const ids = {{ templates | map(attribute='id') | list | tojson }};
-    const idx = ids.indexOf(id);
-    if (idx >= 0) {
-        document.getElementById('plan_name').value = names[idx];
-    } else if (id === 'scratch') {
-        document.getElementById('plan_name').value = 'My Trading Plan';
-    }
+    const data = TEMPLATE_DATA[id] || TEMPLATE_DATA['scratch'];
+    document.getElementById('plan_name').value = data.name;
+    document.getElementById('plan_description').value = data.description;
 }
 
 // Select scratch by default on page load

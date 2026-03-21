@@ -68,6 +68,14 @@
     </div>
 </div>
 
+<hr>
+<h4>Onboarding</h4>
+<p class="muted" style="font-size:0.85rem;">Re-run the setup wizard to reconfigure your AI provider, trading plan, or watchlist.</p>
+<form method="post" action="/settings/restart-setup">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="secondary outline">Restart setup wizard</button>
+</form>
+
 <script>
 document.getElementById('token-form').addEventListener('submit', async function(e) {
     e.preventDefault();
