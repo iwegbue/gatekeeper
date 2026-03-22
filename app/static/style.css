@@ -14,6 +14,8 @@
     z-index: 100;
     display: flex;
     align-items: center;
+    flex-wrap: nowrap;
+    overflow: hidden;
     gap: 0.5rem;
     padding: 0 1rem;
     background: var(--pico-background-color, #11191f);
@@ -38,6 +40,7 @@
     align-items: center;
     gap: 0.1rem;
     margin-left: auto;
+    flex-shrink: 0;
 }
 
 .top-bar-icon {
@@ -1299,21 +1302,13 @@ footer.container {
     padding: 0;
 }
 
-.help-toc-title {
-    display: block;
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--pico-muted-color, #6b7280);
-    margin-bottom: 0.6rem;
-    padding-left: 0.75rem;
-}
 
 .help-toc ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .help-toc-link {
