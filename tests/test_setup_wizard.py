@@ -12,6 +12,7 @@ Covers:
 - Completed users bypass the wizard
 - Skip links (AI, watchlist) advance without saving
 """
+
 import pytest
 import pytest_asyncio
 from sqlalchemy import select
@@ -21,8 +22,8 @@ from app.csrf import generate_csrf_token
 from app.main import app
 from app.models.plan_rule import PlanRule
 from app.models.settings import Settings
-from app.services.settings_service import set_admin_password
 from app.services.plan_templates import get_template
+from app.services.settings_service import set_admin_password
 
 _TEST_PASSWORD = "wizardtest123"
 
@@ -320,6 +321,7 @@ async def test_instruments_delete_removes_instrument(wizard_client, db):
 
     # Get the instrument ID from the DB
     from app.services import instrument_service
+
     inst = await instrument_service.get_by_symbol(db, "XAUUSD")
     assert inst is not None
 

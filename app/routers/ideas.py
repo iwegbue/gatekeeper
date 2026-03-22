@@ -74,11 +74,13 @@ async def idea_detail(request: Request, idea_id: uuid.UUID, db: AsyncSession = D
 
     # Group checks by layer
     from collections import defaultdict
+
     checks_by_layer: dict = defaultdict(list)
     for check, rule in pairs:
         checks_by_layer[rule.layer].append((check, rule))
 
     from app.models.enums import PlanLayer
+
     return request.app.state.templates.TemplateResponse(
         "ideas/detail.html",
         {
@@ -118,6 +120,7 @@ async def idea_delete(idea_id: uuid.UUID, db: AsyncSession = Depends(get_db), _c
 
 # ── Checklist ─────────────────────────────────────────────────────────────────
 
+
 @router.post("/{idea_id}/checks/{check_id}/toggle")
 async def check_toggle(
     request: Request,
@@ -142,11 +145,13 @@ async def check_toggle(
     actions = state_machine.get_available_actions(idea.state) if idea else {}
 
     from collections import defaultdict
+
     checks_by_layer: dict = defaultdict(list)
     for check, rule in pairs:
         checks_by_layer[rule.layer].append((check, rule))
 
     from app.models.enums import PlanLayer
+
     return request.app.state.templates.TemplateResponse(
         "ideas/_checklist.html",
         {
@@ -164,6 +169,7 @@ async def check_toggle(
 
 
 # ── State transitions ──────────────────────────────────────────────────────────
+
 
 @router.post("/{idea_id}/advance")
 async def idea_advance(

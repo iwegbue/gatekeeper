@@ -1,24 +1,33 @@
 """
 Tests for report_service — trade stats, grade distribution, adherence, violations, discipline score.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import IdeaState, TradeState
-from app.services import checklist_service, journal_service, report_service, trade_service
-from tests.factories import create_idea, create_plan, create_rule, create_trade
+from app.models.enums import TradeState
+from app.services import journal_service, report_service
+from tests.factories import create_idea, create_trade
 
 
-async def _closed_trade(db, instrument="EURUSD", direction="LONG",
-                        entry=1.1000, sl=1.0950, exit_=1.1100, grade="A"):
+async def _closed_trade(db, instrument="EURUSD", direction="LONG", entry=1.1000, sl=1.0950, exit_=1.1100, grade="A"):
     """Helper: create a closed trade directly."""
     idea = await create_idea(db, instrument=instrument, direction=direction)
-    trade = await create_trade(db, idea.id, instrument=instrument, direction=direction,
-                               entry_price=entry, sl_price=sl, grade=grade,
-                               state=TradeState.CLOSED.value)
+    trade = await create_trade(
+        db,
+        idea.id,
+        instrument=instrument,
+        direction=direction,
+        entry_price=entry,
+        sl_price=sl,
+        grade=grade,
+        state=TradeState.CLOSED.value,
+    )
     # Set exit fields
-    from app.services.trade_service import _compute_r_multiple
     from datetime import datetime, timezone
+
+    from app.services.trade_service import _compute_r_multiple
+
     trade.exit_price = exit_
     trade.exit_time = datetime.now(timezone.utc)
     trade.r_multiple = _compute_r_multiple(direction, entry, exit_, sl)
@@ -27,6 +36,7 @@ async def _closed_trade(db, instrument="EURUSD", direction="LONG",
 
 
 # ── get_trade_stats ────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_trade_stats_empty_database(db: AsyncSession):
@@ -72,6 +82,7 @@ async def test_trade_stats_excludes_open_trades(db: AsyncSession):
 
 # ── get_grade_distribution ─────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_grade_distribution_empty(db: AsyncSession):
     dist = await report_service.get_grade_distribution(db)
@@ -92,6 +103,7 @@ async def test_grade_distribution_counts(db: AsyncSession):
 
 
 # ── get_plan_adherence_stats ───────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_adherence_stats_empty(db: AsyncSession):
@@ -116,6 +128,7 @@ async def test_adherence_stats_average(db: AsyncSession):
 
 # ── get_rule_violation_frequency ──────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_violation_frequency_empty(db: AsyncSession):
     violations = await report_service.get_rule_violation_frequency(db)
@@ -127,14 +140,16 @@ async def test_violation_frequency_counts(db: AsyncSession):
     idea = await create_idea(db)
     trade = await create_trade(db, idea.id, state=TradeState.CLOSED.value)
     await journal_service.create_draft(
-        db, trade,
+        db,
+        trade,
         rule_violations=["Rule A", "Rule B", "Rule A"],
     )
 
     idea2 = await create_idea(db)
     trade2 = await create_trade(db, idea2.id, state=TradeState.CLOSED.value)
     await journal_service.create_draft(
-        db, trade2,
+        db,
+        trade2,
         rule_violations=["Rule A"],
     )
 
@@ -150,14 +165,16 @@ async def test_violation_frequency_sorted_desc(db: AsyncSession):
     idea = await create_idea(db)
     trade = await create_trade(db, idea.id, state=TradeState.CLOSED.value)
     await journal_service.create_draft(
-        db, trade,
+        db,
+        trade,
         rule_violations=["Rule Z"],
     )
     for i in range(3):
         idea_i = await create_idea(db)
         trade_i = await create_trade(db, idea_i.id, state=TradeState.CLOSED.value)
         await journal_service.create_draft(
-            db, trade_i,
+            db,
+            trade_i,
             rule_violations=["Rule A"],
         )
 
@@ -167,6 +184,7 @@ async def test_violation_frequency_sorted_desc(db: AsyncSession):
 
 
 # ── get_discipline_score ───────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_discipline_score_no_data(db: AsyncSession):
@@ -195,6 +213,7 @@ async def test_discipline_score_bounded_0_100(db: AsyncSession):
 
 # ── get_consistency_trend ─────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_consistency_trend_empty(db: AsyncSession):
     trend = await report_service.get_consistency_trend(db)
@@ -215,6 +234,7 @@ async def test_consistency_trend_format(db: AsyncSession):
 
 
 # ── get_r_multiple_by_grade ───────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_r_by_grade_empty(db: AsyncSession):

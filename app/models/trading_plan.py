@@ -13,6 +13,7 @@ class TradingPlan(Base):
     User's trading plan — singleton pattern (one plan per instance).
     Rules are stored in the plan_rules table, linked by plan_id.
     """
+
     __tablename__ = "trading_plans"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

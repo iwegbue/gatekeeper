@@ -1,8 +1,9 @@
 """Tests for plan_service: plan CRUD + rule CRUD/reorder/completeness."""
+
 import pytest
 
-from app.services import plan_service
 from app.models.enums import PlanLayer
+from app.services import plan_service
 from tests.factories import create_plan, create_rule
 
 
@@ -87,6 +88,7 @@ async def test_delete_rule(db):
 @pytest.mark.asyncio
 async def test_delete_nonexistent_rule(db):
     import uuid
+
     result = await plan_service.delete_rule(db, uuid.uuid4())
     assert result is False
 
@@ -102,7 +104,9 @@ async def test_reorder_rules(db):
     await plan_service.reorder_rules(db, plan.id, "RISK", [r3.id, r1.id, r2.id])
 
     from sqlalchemy import select
+
     from app.models.plan_rule import PlanRule
+
     result = await db.execute(select(PlanRule).where(PlanRule.id == r3.id))
     assert result.scalar_one().order == 0
 
@@ -110,7 +114,6 @@ async def test_reorder_rules(db):
 @pytest.mark.asyncio
 async def test_all_seven_layers_exist(db):
     """Each PlanLayer enum value should be a valid layer."""
-    from app.models.enums import PlanLayer
     plan = await create_plan(db)
     for layer in PlanLayer:
         rule = await create_rule(db, plan.id, layer=layer.value, name=f"Test {layer.value}")

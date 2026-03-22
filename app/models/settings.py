@@ -2,6 +2,7 @@
 Application settings model — singleton pattern for runtime configuration.
 BYOK-focused: users configure their own AI provider keys from the UI.
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -55,5 +56,7 @@ class Settings(Base):
     setup_completed: Mapped[bool] = mapped_column(Boolean, default=False)
 
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), onupdate=lambda: datetime.now(timezone.utc),
+        DateTime(timezone=True),
+        server_default=text("now()"),
+        onupdate=lambda: datetime.now(timezone.utc),
     )

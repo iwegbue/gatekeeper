@@ -8,8 +8,8 @@ Please read this document and `CLAUDE.md` before opening a PR.
 ## Development Setup
 
 ```bash
-git clone https://github.com/iwegbue/gatekeeper-core
-cd gatekeeper-core
+git clone https://github.com/iwegbue/gatekeeper
+cd gatekeeper
 uv sync
 cp .env.example .env
 # Edit .env — set SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD

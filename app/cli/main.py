@@ -28,6 +28,7 @@ Usage:
   gk mcp [--transport stdio|sse] [--port 3001]
   gk config set --url http://localhost:8000 --token gk_xxx
 """
+
 import json as _json
 from typing import Annotated, Optional
 
@@ -70,6 +71,7 @@ def _dump(data, as_json: bool) -> None:
 
 
 # ── status ──────────────────────────────────────────────────────────────────
+
 
 @app.command()
 def status(
@@ -513,6 +515,7 @@ def ai_coach(
 
 # ── mcp ──────────────────────────────────────────────────────────────────────
 
+
 @app.command()
 def mcp(
     transport: Annotated[str, typer.Option("--transport", help="Transport: stdio or sse")] = "stdio",
@@ -542,6 +545,7 @@ def mcp(
       }
     """
     from app.mcp import create_mcp_server
+
     server = create_mcp_server()
     if transport == "stdio":
         server.run(transport="stdio")

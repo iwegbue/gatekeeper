@@ -5,6 +5,7 @@ Resources are fetched by URI and returned as structured text/JSON.
 They are designed to be included in an agent's context window before
 it decides which tools to call.
 """
+
 import json
 import logging
 
@@ -24,6 +25,7 @@ def register(mcp: FastMCP) -> None:
         """
         from app.database import AsyncSessionFactory
         from app.services import plan_service
+
         async with AsyncSessionFactory() as db:
             plan = await plan_service.get_plan(db)
             # get_plan auto-creates a plan row if none exists; commit so it persists
@@ -56,21 +58,24 @@ def register(mcp: FastMCP) -> None:
         """
         from app.database import AsyncSessionFactory
         from app.services import idea_service
+
         async with AsyncSessionFactory() as db:
             ideas = await idea_service.list_ideas(db, active_only=True)
             if not ideas:
                 return "No active ideas."
             rows = []
             for i in ideas:
-                rows.append({
-                    "id": str(i.id),
-                    "instrument": i.instrument,
-                    "direction": i.direction,
-                    "state": i.state,
-                    "grade": i.grade,
-                    "checklist_score": i.checklist_score,
-                    "notes": i.notes,
-                })
+                rows.append(
+                    {
+                        "id": str(i.id),
+                        "instrument": i.instrument,
+                        "direction": i.direction,
+                        "state": i.state,
+                        "grade": i.grade,
+                        "checklist_score": i.checklist_score,
+                        "notes": i.notes,
+                    }
+                )
             return json.dumps(rows, indent=2)
 
     @mcp.resource("gatekeeper://trades/open")
@@ -81,27 +86,30 @@ def register(mcp: FastMCP) -> None:
         """
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trades = await trade_service.list_trades(db, open_only=True)
             if not trades:
                 return "No open trades."
             rows = []
             for t in trades:
-                rows.append({
-                    "id": str(t.id),
-                    "idea_id": str(t.idea_id),
-                    "instrument": t.instrument,
-                    "direction": t.direction,
-                    "entry_price": t.entry_price,
-                    "sl_price": t.sl_price,
-                    "tp_price": t.tp_price,
-                    "lot_size": t.lot_size,
-                    "risk_pct": t.risk_pct,
-                    "grade": t.grade,
-                    "partials_taken": t.partials_taken,
-                    "be_locked": t.be_locked,
-                    "entry_time": t.entry_time.isoformat() if t.entry_time else None,
-                })
+                rows.append(
+                    {
+                        "id": str(t.id),
+                        "idea_id": str(t.idea_id),
+                        "instrument": t.instrument,
+                        "direction": t.direction,
+                        "entry_price": t.entry_price,
+                        "sl_price": t.sl_price,
+                        "tp_price": t.tp_price,
+                        "lot_size": t.lot_size,
+                        "risk_pct": t.risk_pct,
+                        "grade": t.grade,
+                        "partials_taken": t.partials_taken,
+                        "be_locked": t.be_locked,
+                        "entry_time": t.entry_time.isoformat() if t.entry_time else None,
+                    }
+                )
             return json.dumps(rows, indent=2)
 
     @mcp.resource("gatekeeper://discipline")
@@ -112,6 +120,7 @@ def register(mcp: FastMCP) -> None:
         """
         from app.database import AsyncSessionFactory
         from app.services import report_service
+
         async with AsyncSessionFactory() as db:
             score = await report_service.get_discipline_score(db)
             stats = await report_service.get_trade_stats(db)

@@ -8,7 +8,7 @@ from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import PlanLayer, RuleType
 from app.services import plan_service
-from app.services.plan_templates import list_templates, get_template
+from app.services.plan_templates import get_template, list_templates
 
 router = APIRouter(prefix="/plan")
 
@@ -17,12 +17,14 @@ router = APIRouter(prefix="/plan")
 async def plan_index(request: Request, db: AsyncSession = Depends(get_db)):
     plan = await plan_service.get_plan(db)
     rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id)
+    total_rules = sum(len(v) for v in rules_by_layer.values())
     return request.app.state.templates.TemplateResponse(
         "plan/index.html",
         {
             "request": request,
             "plan": plan,
             "rules_by_layer": rules_by_layer,
+            "total_rules": total_rules,
             "layers": PlanLayer,
             "rule_types": RuleType,
         },
@@ -119,9 +121,14 @@ async def rule_update(
     _csrf: None = Depends(require_csrf),
 ):
     await plan_service.update_rule(
-        db, rule_id,
-        layer=layer, name=name, description=description or None,
-        rule_type=rule_type, weight=weight, is_active=is_active,
+        db,
+        rule_id,
+        layer=layer,
+        name=name,
+        description=description or None,
+        rule_type=rule_type,
+        weight=weight,
+        is_active=is_active,
     )
     return RedirectResponse(url=f"/plan?msg=Rule+updated#{layer}", status_code=303)
 

@@ -5,6 +5,7 @@ Reads configuration from the DB settings singleton. Both channels check the
 master `notifications_enabled` flag and their own per-channel flag before
 sending. All public functions gracefully no-op when not configured.
 """
+
 import asyncio
 import logging
 import smtplib

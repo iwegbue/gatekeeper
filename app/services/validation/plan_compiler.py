@@ -9,6 +9,7 @@ Responsibilities:
   5. Compute interpretability score.
   6. Persist CompiledPlan + ValidationRun artifacts.
 """
+
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── Plan snapshot ─────────────────────────────────────────────────────────────
+
 
 def _build_plan_snapshot(plan, rules) -> dict:
     """Freeze the plan state at compile time for reproducibility."""
@@ -70,6 +72,7 @@ def _build_plan_context_text(plan, rules_by_layer: dict) -> str:
 
 # ── Interpretability score ────────────────────────────────────────────────────
 
+
 def _compute_interpretability_score(compiled_rules: list[dict]) -> float:
     """
     Percentage of rules that are TESTABLE or APPROXIMATED.
@@ -77,20 +80,19 @@ def _compute_interpretability_score(compiled_rules: list[dict]) -> float:
     only when they are BEHAVIORAL — non-behavioral NOT_TESTABLE rules
     still count against the score.
     """
-    scoreable = [
-        r for r in compiled_rules
-        if r["layer"] != PlanLayer.BEHAVIORAL.value
-    ]
+    scoreable = [r for r in compiled_rules if r["layer"] != PlanLayer.BEHAVIORAL.value]
     if not scoreable:
         return 100.0
     passing = sum(
-        1 for r in scoreable
+        1
+        for r in scoreable
         if r["status"] in (InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value)
     )
     return round(passing * 100 / len(scoreable), 2)
 
 
 # ── Coherence checks ──────────────────────────────────────────────────────────
+
 
 def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
     """
@@ -104,7 +106,8 @@ def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
     layer_testable: dict[str, int] = {layer.value: 0 for layer in PlanLayer if layer != PlanLayer.BEHAVIORAL}
     for r in non_behavioral:
         if r["rule_type"] == "REQUIRED" and r["status"] in (
-            InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value
+            InterpretationStatus.TESTABLE.value,
+            InterpretationStatus.APPROXIMATED.value,
         ):
             layer_testable[r["layer"]] = layer_testable.get(r["layer"], 0) + 1
 
@@ -116,9 +119,7 @@ def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
         )
 
     # 2. Underfiltering — fewer than 3 layers have any required rules at all
-    layers_with_required = {
-        r["layer"] for r in non_behavioral if r["rule_type"] == "REQUIRED"
-    }
+    layers_with_required = {r["layer"] for r in non_behavioral if r["rule_type"] == "REQUIRED"}
     if len(layers_with_required) < 3:
         warnings.append(
             f"Only {len(layers_with_required)} layer(s) have required rules. "
@@ -169,6 +170,7 @@ def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
 
 
 # ── Main compile function ─────────────────────────────────────────────────────
+
 
 async def compile_plan(
     db: AsyncSession,
@@ -233,9 +235,8 @@ async def confirm_compiled_rule(
     Returns None if compiled_plan_id or rule_id not found.
     """
     from sqlalchemy import select
-    result = await db.execute(
-        select(CompiledPlan).where(CompiledPlan.id == compiled_plan_id)
-    )
+
+    result = await db.execute(select(CompiledPlan).where(CompiledPlan.id == compiled_plan_id))
     compiled_plan = result.scalar_one_or_none()
     if compiled_plan is None:
         return None
@@ -250,7 +251,8 @@ async def confirm_compiled_rule(
             if status is not None:
                 rule["status"] = status
             if proxy_type is not None:
-                from app.services.validation.rule_interpreter import PROXY_VOCABULARY, _resolve_feature_dependencies
+                from app.services.validation.rule_interpreter import _resolve_feature_dependencies
+
                 params = proxy_params or {}
                 rule["proxy"] = None if proxy_type == "not_testable" else {"type": proxy_type, "params": params}
                 rule["feature_dependencies"] = _resolve_feature_dependencies(proxy_type, params)
@@ -274,19 +276,20 @@ async def confirm_compiled_rule(
 
 async def get_compiled_plan(db: AsyncSession, compiled_plan_id: uuid.UUID) -> CompiledPlan | None:
     from sqlalchemy import select
+
     result = await db.execute(select(CompiledPlan).where(CompiledPlan.id == compiled_plan_id))
     return result.scalar_one_or_none()
 
 
 async def list_validation_runs(db: AsyncSession) -> list[ValidationRun]:
     from sqlalchemy import select
-    result = await db.execute(
-        select(ValidationRun).order_by(ValidationRun.created_at.desc())
-    )
+
+    result = await db.execute(select(ValidationRun).order_by(ValidationRun.created_at.desc()))
     return list(result.scalars().all())
 
 
 async def get_validation_run(db: AsyncSession, run_id: uuid.UUID) -> ValidationRun | None:
     from sqlalchemy import select
+
     result = await db.execute(select(ValidationRun).where(ValidationRun.id == run_id))
     return result.scalar_one_or_none()

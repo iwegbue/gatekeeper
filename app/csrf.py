@@ -9,10 +9,11 @@ Usage:
 
 Token lifetime: 1 hour. Tokens are per-session (signed with SECRET_KEY).
 """
+
 import logging
 from typing import Annotated
 
-from fastapi import Depends, Form, HTTPException, Request
+from fastapi import Form, HTTPException, Request
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadSignature, SignatureExpired
 

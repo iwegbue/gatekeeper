@@ -12,6 +12,7 @@ class PlanRule(Base):
     """
     A single rule within a trading plan, belonging to one of the 7 layers.
     """
+
     __tablename__ = "plan_rules"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

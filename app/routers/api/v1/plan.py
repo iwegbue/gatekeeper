@@ -20,8 +20,7 @@ async def get_plan(db: AsyncSession = Depends(get_db)):
         name=plan.name,
         description=plan.description,
         rules_by_layer={
-            layer: [PlanRuleResponse.model_validate(r) for r in rules]
-            for layer, rules in rules_by_layer.items()
+            layer: [PlanRuleResponse.model_validate(r) for r in rules] for layer, rules in rules_by_layer.items()
         },
     )
 

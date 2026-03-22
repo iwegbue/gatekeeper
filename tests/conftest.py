@@ -7,15 +7,15 @@ never pollute each other, no teardown needed.
 Usage:
     TEST_DATABASE_URL=postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5433/gatekeeper_test pytest
 """
+
 import os
 
-import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.models.base import Base
 import app.models  # noqa: F401 — register all models
+from app.models.base import Base
 
 TEST_DATABASE_URL = (
     os.environ.get("TEST_DATABASE_URL")
@@ -42,15 +42,15 @@ async def db():
         yield session
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(lambda c: Base.metadata.drop_all(c, tables=reversed(Base.metadata.sorted_tables)))
     await engine.dispose()
 
 
 @pytest_asyncio.fixture
 async def client(db):
     """Test HTTP client with DB dependency overridden."""
-    from app.main import app
     from app.database import get_db
+    from app.main import app
 
     async def override_get_db():
         yield db

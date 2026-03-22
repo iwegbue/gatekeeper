@@ -9,9 +9,9 @@ This is the output layer for Phase 1 (interpretability). It produces:
   - Replay readiness assessment
   - Actionable refinement suggestions
 """
+
 from app.models.enums import InterpretationStatus, PlanLayer
 from app.models.validation.compiled_plan import CompiledPlan
-
 
 _REPLAY_READY = "READY"
 _REPLAY_PARTIAL = "PARTIAL"
@@ -43,15 +43,17 @@ def _layer_breakdown(compiled_rules: list[dict]) -> dict:
         else:
             breakdown[layer]["not_testable"] += 1
 
-        breakdown[layer]["rules"].append({
-            "name": rule["name"],
-            "rule_type": rule["rule_type"],
-            "status": status,
-            "proxy_type": rule["proxy"]["type"] if rule.get("proxy") else None,
-            "confidence": rule.get("confidence"),
-            "interpretation_notes": rule.get("interpretation_notes", ""),
-            "user_confirmed": rule.get("user_confirmed", False),
-        })
+        breakdown[layer]["rules"].append(
+            {
+                "name": rule["name"],
+                "rule_type": rule["rule_type"],
+                "status": status,
+                "proxy_type": rule["proxy"]["type"] if rule.get("proxy") else None,
+                "confidence": rule.get("confidence"),
+                "interpretation_notes": rule.get("interpretation_notes", ""),
+                "user_confirmed": rule.get("user_confirmed", False),
+            }
+        )
 
     return breakdown
 
@@ -68,14 +70,13 @@ def _assess_replay_readiness(compiled_rules: list[dict]) -> str:
         return _REPLAY_NOT_READY
 
     testable_count = sum(
-        1 for r in non_behavioral
+        1
+        for r in non_behavioral
         if r["status"] in (InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value)
     )
 
     risk_rules = [r for r in compiled_rules if r["layer"] == PlanLayer.RISK.value]
-    has_testable_risk = any(
-        r["status"] != InterpretationStatus.NOT_TESTABLE.value for r in risk_rules
-    )
+    has_testable_risk = any(r["status"] != InterpretationStatus.NOT_TESTABLE.value for r in risk_rules)
 
     if testable_count == 0:
         return _REPLAY_NOT_READY

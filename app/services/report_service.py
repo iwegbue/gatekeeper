@@ -4,27 +4,32 @@ Report service — discipline metrics, trade stats, rule analysis.
 Queries run against journal_entries and trades to produce discipline
 analytics for the reports page.
 """
+
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import TradeState
 from app.models.journal import JournalEntry
 from app.models.trade import Trade
-from app.models.enums import TradeState
 
 
 async def get_trade_stats(db: AsyncSession) -> dict:
     """Basic trade stats: total, wins, losses, avg R, best/worst R."""
-    result = await db.execute(
-        select(Trade).where(Trade.state == TradeState.CLOSED.value)
-    )
+    result = await db.execute(select(Trade).where(Trade.state == TradeState.CLOSED.value))
     trades = list(result.scalars().all())
 
     if not trades:
         return {
-            "total": 0, "wins": 0, "losses": 0, "breakeven": 0,
-            "win_rate": 0.0, "avg_r": 0.0, "best_r": None, "worst_r": None,
+            "total": 0,
+            "wins": 0,
+            "losses": 0,
+            "breakeven": 0,
+            "win_rate": 0.0,
+            "avg_r": 0.0,
+            "best_r": None,
+            "worst_r": None,
             "expectancy": 0.0,
         }
 
@@ -95,10 +100,7 @@ async def get_rule_violation_frequency(db: AsyncSession, limit: int = 10) -> lis
     Most frequently violated required rules (from journal entries).
     Returns list of {rule_name: str, count: int} sorted by count desc.
     """
-    result = await db.execute(
-        select(JournalEntry.rule_violations)
-        .where(JournalEntry.rule_violations.is_not(None))
-    )
+    result = await db.execute(select(JournalEntry.rule_violations).where(JournalEntry.rule_violations.is_not(None)))
     rows = result.scalars().all()
 
     counts: dict[str, int] = {}
@@ -141,8 +143,7 @@ async def get_discipline_score(db: AsyncSession) -> float:
 async def get_r_multiple_by_grade(db: AsyncSession) -> dict[str, list[float]]:
     """R-multiples grouped by setup grade, for scatter/box plots."""
     result = await db.execute(
-        select(Trade.grade, Trade.r_multiple)
-        .where(
+        select(Trade.grade, Trade.r_multiple).where(
             Trade.state == TradeState.CLOSED.value,
             Trade.r_multiple.is_not(None),
         )

@@ -2,17 +2,17 @@
 Checklist service — manages idea rule checks, computes scores/grades,
 and determines layer completion for the state machine.
 """
+
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import PlanLayer, RuleType, SetupGrade
+from app.models.idea import Idea
 from app.models.idea_rule_check import IdeaRuleCheck
 from app.models.plan_rule import PlanRule
-from app.models.idea import Idea
-from app.models.enums import PlanLayer, RuleType, SetupGrade
-
 
 # ── Grade thresholds ─────────────────────────────────────────────────────
 GRADE_A_THRESHOLD = 85  # >= 85% → A
@@ -43,9 +43,7 @@ async def initialize_checks(db: AsyncSession, idea_id: uuid.UUID, plan_id: uuid.
 
 
 async def get_checks(db: AsyncSession, idea_id: uuid.UUID) -> list[IdeaRuleCheck]:
-    result = await db.execute(
-        select(IdeaRuleCheck).where(IdeaRuleCheck.idea_id == idea_id)
-    )
+    result = await db.execute(select(IdeaRuleCheck).where(IdeaRuleCheck.idea_id == idea_id))
     return list(result.scalars().all())
 
 
@@ -60,7 +58,9 @@ async def get_checks_with_rules(db: AsyncSession, idea_id: uuid.UUID) -> list[tu
     return list(result.all())
 
 
-async def toggle_check(db: AsyncSession, check_id: uuid.UUID, checked: bool, notes: str | None = None) -> IdeaRuleCheck | None:
+async def toggle_check(
+    db: AsyncSession, check_id: uuid.UUID, checked: bool, notes: str | None = None
+) -> IdeaRuleCheck | None:
     result = await db.execute(select(IdeaRuleCheck).where(IdeaRuleCheck.id == check_id))
     check = result.scalar_one_or_none()
     if check is None:

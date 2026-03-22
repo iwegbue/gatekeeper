@@ -18,13 +18,12 @@ Backward regression is allowed between pre-trade states:
   CONFIRMED → SETUP_VALID, SETUP_VALID → WATCHING
   Not allowed once IN_TRADE or beyond.
 """
-import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import IdeaState
 from app.models.idea import Idea
 from app.models.state_transition import StateTransition
-from app.models.enums import IdeaState
 from app.services import checklist_service
 
 

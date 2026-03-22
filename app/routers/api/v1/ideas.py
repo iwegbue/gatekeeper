@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.schemas.base import ErrorResponse, SuccessResponse
+from app.schemas.base import SuccessResponse
 from app.schemas.checklist import ChecklistItemResponse, CheckToggleRequest
 from app.schemas.ideas import (
     IdeaCreate,

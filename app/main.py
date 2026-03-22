@@ -55,11 +55,13 @@ _mcp_app = _mcp_server.http_app(path="/")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.config import settings as _settings
+
     _settings.check_security()  # logs a warning if SECRET_KEY is still ephemeral
 
     # Seed admin password from env var if provided and no hash exists in the DB yet
     from app.database import AsyncSessionFactory
     from app.services.settings_service import admin_password_is_set, get_settings, set_admin_password
+
     async with AsyncSessionFactory() as db:
         password_set = await admin_password_is_set(db)
         if not password_set and _settings.ADMIN_PASSWORD:
@@ -73,6 +75,7 @@ async def lifespan(app: FastAPI):
 
     logger.info("Gatekeeper Core starting up")
     from app.tasks.background import start_background_tasks
+
     start_background_tasks(app)
     async with _mcp_app.lifespan(app):
         yield

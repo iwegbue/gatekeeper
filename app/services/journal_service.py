@@ -5,6 +5,7 @@ Journal entries are auto-created when a trade is closed. The user
 fills in the structured review (what_went_well, lessons_learned, etc.)
 and can add tags.
 """
+
 import uuid
 
 from sqlalchemy import select
@@ -13,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.journal import JournalEntry, JournalTag
 from app.models.trade import Trade
 
-
 # ── Journal entries ────────────────────────────────────────────────────────────
+
 
 async def get_entry(db: AsyncSession, entry_id: uuid.UUID) -> JournalEntry | None:
     result = await db.execute(select(JournalEntry).where(JournalEntry.id == entry_id))
@@ -27,9 +28,7 @@ async def get_entry_for_trade(db: AsyncSession, trade_id: uuid.UUID) -> JournalE
 
 
 async def list_entries(db: AsyncSession) -> list[JournalEntry]:
-    result = await db.execute(
-        select(JournalEntry).order_by(JournalEntry.created_at.desc())
-    )
+    result = await db.execute(select(JournalEntry).order_by(JournalEntry.created_at.desc()))
     return list(result.scalars().all())
 
 
@@ -78,8 +77,7 @@ async def update_entry(
     entry = await get_entry(db, entry_id)
     if entry is None:
         return None
-    protected = ("id", "trade_id", "idea_id", "trade_summary", "plan_adherence_pct",
-                 "rule_violations", "created_at")
+    protected = ("id", "trade_id", "idea_id", "trade_summary", "plan_adherence_pct", "rule_violations", "created_at")
     for key, value in kwargs.items():
         if hasattr(entry, key) and key not in protected:
             setattr(entry, key, value)
@@ -107,6 +105,7 @@ async def delete_entry(db: AsyncSession, entry_id: uuid.UUID) -> bool:
 
 
 # ── Tags ───────────────────────────────────────────────────────────────────────
+
 
 async def get_all_tags(db: AsyncSession) -> list[JournalTag]:
     result = await db.execute(select(JournalTag).order_by(JournalTag.name))

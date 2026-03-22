@@ -4,6 +4,7 @@ MCP tools — operations that read or mutate Gatekeeper state.
 All tools open their own DB session and commit on success.
 Errors are returned as plain strings (MCP surfaces them to the agent).
 """
+
 import logging
 import uuid
 from typing import Annotated
@@ -26,6 +27,7 @@ def register(mcp: FastMCP) -> None:
         """List trading ideas, optionally filtered by status or instrument."""
         from app.database import AsyncSessionFactory
         from app.services import idea_service
+
         async with AsyncSessionFactory() as db:
             ideas = await idea_service.list_ideas(db, active_only=active_only, instrument=instrument)
             return [_idea_summary(i) for i in ideas]
@@ -37,6 +39,7 @@ def register(mcp: FastMCP) -> None:
         """Get full detail for a single idea including its checklist state and grade."""
         from app.database import AsyncSessionFactory
         from app.services import checklist_service, idea_service
+
         async with AsyncSessionFactory() as db:
             idea = await idea_service.get_idea(db, uuid.UUID(idea_id))
             if idea is None:
@@ -68,6 +71,7 @@ def register(mcp: FastMCP) -> None:
         """Create a new trading idea in WATCHING state with a fresh checklist."""
         from app.database import AsyncSessionFactory
         from app.services import idea_service
+
         async with AsyncSessionFactory() as db:
             direction_upper = direction.upper()
             if direction_upper not in ("LONG", "SHORT"):
@@ -91,6 +95,7 @@ def register(mcp: FastMCP) -> None:
         """Toggle a rule check on an idea's checklist."""
         from app.database import AsyncSessionFactory
         from app.services import checklist_service
+
         async with AsyncSessionFactory() as db:
             check = await checklist_service.toggle_check(db, uuid.UUID(check_id), checked=checked, notes=notes)
             if check is None:
@@ -110,6 +115,7 @@ def register(mcp: FastMCP) -> None:
         from app.database import AsyncSessionFactory
         from app.services import idea_service, state_machine
         from app.services.state_machine import GuardError, TransitionError
+
         async with AsyncSessionFactory() as db:
             idea = await idea_service.get_idea(db, uuid.UUID(idea_id))
             if idea is None:
@@ -130,6 +136,7 @@ def register(mcp: FastMCP) -> None:
         from app.database import AsyncSessionFactory
         from app.services import idea_service, state_machine
         from app.services.state_machine import TransitionError
+
         async with AsyncSessionFactory() as db:
             idea = await idea_service.get_idea(db, uuid.UUID(idea_id))
             if idea is None:
@@ -150,6 +157,7 @@ def register(mcp: FastMCP) -> None:
         from app.database import AsyncSessionFactory
         from app.services import idea_service, state_machine
         from app.services.state_machine import TransitionError
+
         async with AsyncSessionFactory() as db:
             idea = await idea_service.get_idea(db, uuid.UUID(idea_id))
             if idea is None:
@@ -170,6 +178,7 @@ def register(mcp: FastMCP) -> None:
         """List trades, optionally filtered to open trades only."""
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trades = await trade_service.list_trades(db, open_only=open_only)
             return [_trade_summary(t) for t in trades]
@@ -181,6 +190,7 @@ def register(mcp: FastMCP) -> None:
         """Get full detail for a single trade."""
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trade = await trade_service.get_trade(db, uuid.UUID(trade_id))
             if trade is None:
@@ -199,13 +209,15 @@ def register(mcp: FastMCP) -> None:
         """Open a trade from an ENTRY_PERMITTED idea. The idea must be in ENTRY_PERMITTED state."""
         from app.database import AsyncSessionFactory
         from app.services import idea_service, trade_service
+
         async with AsyncSessionFactory() as db:
             idea = await idea_service.get_idea(db, uuid.UUID(idea_id))
             if idea is None:
                 return {"error": f"Idea {idea_id} not found"}
             try:
                 trade = await trade_service.open_trade(
-                    db, idea,
+                    db,
+                    idea,
                     entry_price=entry_price,
                     sl_price=sl_price,
                     tp_price=tp_price,
@@ -216,6 +228,7 @@ def register(mcp: FastMCP) -> None:
                 return _trade_summary(trade)
             except (ValueError, Exception) as e:
                 from app.services.state_machine import GuardError, TransitionError
+
                 if isinstance(e, (ValueError, GuardError, TransitionError)):
                     return {"error": str(e)}
                 raise
@@ -228,6 +241,7 @@ def register(mcp: FastMCP) -> None:
         """Close an open trade and compute the R-multiple. Auto-creates a journal draft."""
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trade = await trade_service.get_trade(db, uuid.UUID(trade_id))
             if trade is None:
@@ -247,6 +261,7 @@ def register(mcp: FastMCP) -> None:
         """Update the stop loss on an open trade."""
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trade = await trade_service.update_trade(db, uuid.UUID(trade_id), sl_price=sl_price)
             if trade is None:
@@ -261,6 +276,7 @@ def register(mcp: FastMCP) -> None:
         """Record a partial close on an open trade."""
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trade = await trade_service.take_partial(db, uuid.UUID(trade_id))
             if trade is None:
@@ -275,6 +291,7 @@ def register(mcp: FastMCP) -> None:
         """Lock breakeven on an open trade (moves SL to entry price)."""
         from app.database import AsyncSessionFactory
         from app.services import trade_service
+
         async with AsyncSessionFactory() as db:
             trade = await trade_service.lock_be(db, uuid.UUID(trade_id))
             if trade is None:
@@ -291,6 +308,7 @@ def register(mcp: FastMCP) -> None:
         """List journal entries."""
         from app.database import AsyncSessionFactory
         from app.services import journal_service
+
         async with AsyncSessionFactory() as db:
             entries = await journal_service.list_entries(db)
             if completed_only:
@@ -304,6 +322,7 @@ def register(mcp: FastMCP) -> None:
         """Get full detail for a single journal entry."""
         from app.database import AsyncSessionFactory
         from app.services import journal_service
+
         async with AsyncSessionFactory() as db:
             entry = await journal_service.get_entry(db, uuid.UUID(entry_id))
             if entry is None:
@@ -322,14 +341,19 @@ def register(mcp: FastMCP) -> None:
         """Update the reflective fields on a journal entry."""
         from app.database import AsyncSessionFactory
         from app.services import journal_service
+
         async with AsyncSessionFactory() as db:
-            kwargs = {k: v for k, v in {
-                "what_went_well": what_went_well,
-                "what_went_wrong": what_went_wrong,
-                "lessons_learned": lessons_learned,
-                "emotions": emotions,
-                "would_take_again": would_take_again,
-            }.items() if v is not None}
+            kwargs = {
+                k: v
+                for k, v in {
+                    "what_went_well": what_went_well,
+                    "what_went_wrong": what_went_wrong,
+                    "lessons_learned": lessons_learned,
+                    "emotions": emotions,
+                    "would_take_again": would_take_again,
+                }.items()
+                if v is not None
+            }
             entry = await journal_service.update_entry(db, uuid.UUID(entry_id), **kwargs)
             if entry is None:
                 return {"error": f"Journal entry {entry_id} not found"}
@@ -343,6 +367,7 @@ def register(mcp: FastMCP) -> None:
         """Mark a journal entry as complete (locks it from further edits)."""
         from app.database import AsyncSessionFactory
         from app.services import journal_service
+
         async with AsyncSessionFactory() as db:
             entry = await journal_service.complete_entry(db, uuid.UUID(entry_id))
             if entry is None:
@@ -360,12 +385,14 @@ def register(mcp: FastMCP) -> None:
         from app.database import AsyncSessionFactory
         from app.services import ai_service
         from app.services.ai.factory import AIConfigError, get_provider_from_db
+
         async with AsyncSessionFactory() as db:
             try:
                 provider = await get_provider_from_db(db)
             except AIConfigError as e:
                 return {"error": f"AI not configured: {e}"}
             from app.services import idea_service
+
             if await idea_service.get_idea(db, uuid.UUID(idea_id)) is None:
                 return {"error": f"Idea {idea_id} not found"}
             content = await ai_service.idea_review(db, provider, uuid.UUID(idea_id))
@@ -380,12 +407,14 @@ def register(mcp: FastMCP) -> None:
         from app.database import AsyncSessionFactory
         from app.services import ai_service
         from app.services.ai.factory import AIConfigError, get_provider_from_db
+
         async with AsyncSessionFactory() as db:
             try:
                 provider = await get_provider_from_db(db)
             except AIConfigError as e:
                 return {"error": f"AI not configured: {e}"}
             from app.services import journal_service
+
             if await journal_service.get_entry(db, uuid.UUID(entry_id)) is None:
                 return {"error": f"Journal entry {entry_id} not found"}
             content = await ai_service.journal_coach(db, provider, uuid.UUID(entry_id))
@@ -399,6 +428,7 @@ def register(mcp: FastMCP) -> None:
         """Get app health, version, and counts of active ideas and open trades."""
         from app.database import AsyncSessionFactory
         from app.services import idea_service, trade_service
+
         async with AsyncSessionFactory() as db:
             active_ideas = await idea_service.list_ideas(db, active_only=True)
             open_trades = await trade_service.list_trades(db, open_only=True)
@@ -411,6 +441,7 @@ def register(mcp: FastMCP) -> None:
 
 # ── Serialisation helpers ───────────────────────────────────────────────────
 
+
 def _idea_summary(idea) -> dict:
     return {
         "id": str(idea.id),
@@ -421,9 +452,7 @@ def _idea_summary(idea) -> dict:
         "checklist_score": idea.checklist_score,
         "notes": idea.notes,
         "created_at": idea.created_at.isoformat() if idea.created_at else None,
-        "entry_window_expires_at": (
-            idea.entry_window_expires_at.isoformat() if idea.entry_window_expires_at else None
-        ),
+        "entry_window_expires_at": (idea.entry_window_expires_at.isoformat() if idea.entry_window_expires_at else None),
     }
 
 
@@ -463,12 +492,14 @@ def _journal_summary(entry) -> dict:
 
 def _journal_detail(entry) -> dict:
     result = _journal_summary(entry)
-    result.update({
-        "what_went_well": entry.what_went_well,
-        "what_went_wrong": entry.what_went_wrong,
-        "lessons_learned": entry.lessons_learned,
-        "emotions": entry.emotions,
-        "trade_summary": entry.trade_summary,
-        "rule_violations": entry.rule_violations,
-    })
+    result.update(
+        {
+            "what_went_well": entry.what_went_well,
+            "what_went_wrong": entry.what_went_wrong,
+            "lessons_learned": entry.lessons_learned,
+            "emotions": entry.emotions,
+            "trade_summary": entry.trade_summary,
+            "rule_violations": entry.rule_violations,
+        }
+    )
     return result

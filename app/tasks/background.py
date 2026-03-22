@@ -1,6 +1,7 @@
 """
 Background tasks — entry window expiry, journal reminders.
 """
+
 import asyncio
 import logging
 from datetime import datetime, timezone
@@ -32,9 +33,7 @@ async def check_expired_entry_windows() -> None:
             for idea in expired:
                 try:
                     await state_machine.invalidate(db, idea, reason="Entry window expired")
-                    await notification_service.notify_idea_expired(
-                        db, idea.instrument, idea.direction
-                    )
+                    await notification_service.notify_idea_expired(db, idea.instrument, idea.direction)
                     logger.info("Invalidated expired idea: %s %s", idea.instrument, idea.direction)
                 except Exception as e:
                     logger.error("Error invalidating idea %s: %s", idea.id, e)
@@ -56,6 +55,7 @@ async def _run_loop(coro_func, interval_seconds: int) -> None:
 def start_background_tasks(app) -> None:
     """Start all background loops. Called from app lifespan."""
     import asyncio
+
     loop = asyncio.get_event_loop()
     loop.create_task(_run_loop(check_expired_entry_windows, interval_seconds=300))
     logger.info("Background tasks started")

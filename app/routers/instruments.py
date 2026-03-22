@@ -78,7 +78,8 @@ async def instrument_update(
     _csrf: None = Depends(require_csrf),
 ):
     await instrument_service.update_instrument(
-        db, instrument_id,
+        db,
+        instrument_id,
         symbol=symbol.upper().strip(),
         display_name=display_name.strip(),
         asset_class=asset_class,
@@ -90,6 +91,8 @@ async def instrument_update(
 
 
 @router.post("/{instrument_id}/delete")
-async def instrument_delete(instrument_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
+async def instrument_delete(
+    instrument_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)
+):
     await instrument_service.delete_instrument(db, instrument_id)
     return RedirectResponse(url="/instruments?msg=Instrument+deleted", status_code=303)

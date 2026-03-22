@@ -1,6 +1,7 @@
 """
 Tests for idea_service — CRUD, active filtering, checklist initialization.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,12 +9,12 @@ from app.models.enums import IdeaState
 from app.services import checklist_service, idea_service
 from tests.factories import create_idea, create_plan, create_rule
 
-
 # ── create_idea ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_idea_defaults(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="GBPUSD", direction="SHORT")
     assert idea.id is not None
     assert idea.instrument == "GBPUSD"
@@ -23,14 +24,14 @@ async def test_create_idea_defaults(db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_create_idea_upcases_instrument(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="eurusd", direction="LONG")
     assert idea.instrument == "EURUSD"
 
 
 @pytest.mark.asyncio
 async def test_create_idea_strips_whitespace(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="  XAUUSD  ", direction="LONG")
     assert idea.instrument == "XAUUSD"
 
@@ -48,14 +49,14 @@ async def test_create_idea_initializes_checks(db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_create_idea_sets_entry_window(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="EURUSD", direction="LONG")
     assert idea.entry_window_expires_at is not None
 
 
 @pytest.mark.asyncio
 async def test_create_idea_with_notes_and_risk(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(
         db,
         instrument="AUDUSD",
@@ -70,6 +71,7 @@ async def test_create_idea_with_notes_and_risk(db: AsyncSession):
 
 # ── get_idea ───────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_idea_returns_correct(db: AsyncSession):
     idea = await create_idea(db, instrument="USDJPY")
@@ -82,11 +84,13 @@ async def test_get_idea_returns_correct(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_get_idea_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await idea_service.get_idea(db, uuid.uuid4())
     assert result is None
 
 
 # ── list_ideas ─────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_list_ideas_returns_all(db: AsyncSession):
@@ -133,6 +137,7 @@ async def test_list_ideas_instrument_filter_case_insensitive(db: AsyncSession):
 
 # ── update_idea ────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_update_idea_fields(db: AsyncSession):
     idea = await create_idea(db)
@@ -154,11 +159,13 @@ async def test_update_idea_cannot_change_state_via_kwargs(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_update_idea_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await idea_service.update_idea(db, uuid.uuid4(), notes="x")
     assert result is None
 
 
 # ── delete_idea ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_delete_idea_removes_it(db: AsyncSession):
@@ -172,5 +179,6 @@ async def test_delete_idea_removes_it(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_delete_idea_returns_false_for_missing(db: AsyncSession):
     import uuid
+
     result = await idea_service.delete_idea(db, uuid.uuid4())
     assert result is False

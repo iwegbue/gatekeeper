@@ -2,6 +2,7 @@
 AI provider factory — selects and instantiates the correct provider
 based on DB settings, with env var fallback for Anthropic.
 """
+
 import os
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
 
 class AIConfigError(Exception):
     """Raised when AI cannot be configured (no key, wrong provider, etc.)"""
+
     pass
 
 
@@ -33,22 +35,23 @@ def configure(
     if provider == "anthropic":
         key = anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY", "")
         if not key:
-            raise AIConfigError(
-                "Anthropic API key not configured. Set it in Settings or ANTHROPIC_API_KEY env var."
-            )
+            raise AIConfigError("Anthropic API key not configured. Set it in Settings or ANTHROPIC_API_KEY env var.")
         from app.services.ai.anthropic_provider import AnthropicProvider
+
         return AnthropicProvider(api_key=key, model=model)
 
     if provider == "openai":
         if not openai_api_key:
             raise AIConfigError("OpenAI API key not configured. Set it in Settings.")
         from app.services.ai.openai_provider import OpenAIProvider
+
         return OpenAIProvider(api_key=openai_api_key, model=model)
 
     if provider == "ollama":
         url = ollama_base_url or "http://localhost:11434"
         _validate_ollama_url(url)
         from app.services.ai.ollama_provider import OllamaProvider
+
         return OllamaProvider(base_url=url, model=model)
 
     raise AIConfigError(f"Unknown AI provider: {provider!r}. Choose anthropic, openai, or ollama.")
@@ -68,8 +71,7 @@ def _validate_ollama_url(url: str) -> None:
 
     if host not in _OLLAMA_ALLOWED_HOSTS:
         raise AIConfigError(
-            f"Ollama base URL must point to a local host (got {host!r}). "
-            f"Allowed: {sorted(_OLLAMA_ALLOWED_HOSTS)}"
+            f"Ollama base URL must point to a local host (got {host!r}). Allowed: {sorted(_OLLAMA_ALLOWED_HOSTS)}"
         )
 
 
@@ -79,6 +81,7 @@ async def get_provider_from_db(db) -> "AIProvider":
     This is the primary entrypoint used by routers.
     """
     from app.services.settings_service import get_settings
+
     s = await get_settings(db)
     return configure(
         provider=s.ai_provider,

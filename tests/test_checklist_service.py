@@ -1,16 +1,16 @@
 """
 Tests for checklist_service — scoring, grading, layer completion, blockers.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import PlanLayer, RuleType, SetupGrade
-from app.models.idea_rule_check import IdeaRuleCheck
+from app.models.enums import RuleType, SetupGrade
 from app.services import checklist_service
 from tests.factories import create_idea, create_plan, create_rule
 
-
 # ── initialize_checks ──────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_initialize_checks_creates_one_per_active_rule(db: AsyncSession):
@@ -38,10 +38,11 @@ async def test_initialize_checks_all_unchecked_by_default(db: AsyncSession):
 
 # ── toggle_check ───────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_toggle_check_marks_checked(db: AsyncSession):
     plan = await create_plan(db)
-    rule = await create_rule(db, plan.id)
+    await create_rule(db, plan.id)
     idea = await create_idea(db)
     checks = await checklist_service.initialize_checks(db, idea.id, plan.id)
 
@@ -80,11 +81,13 @@ async def test_toggle_check_saves_notes(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_toggle_check_returns_none_for_invalid_id(db: AsyncSession):
     import uuid
+
     result = await checklist_service.toggle_check(db, uuid.uuid4(), True)
     assert result is None
 
 
 # ── compute_score ──────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_score_empty_returns_zero(db: AsyncSession):
@@ -99,7 +102,7 @@ async def test_score_empty_returns_zero(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_score_with_weights(db: AsyncSession):
     plan = await create_plan(db)
-    r1 = await create_rule(db, plan.id, name="Light", weight=1)
+    await create_rule(db, plan.id, name="Light", weight=1)
     r2 = await create_rule(db, plan.id, name="Heavy", weight=2)
     idea = await create_idea(db)
     checks = await checklist_service.initialize_checks(db, idea.id, plan.id)
@@ -131,6 +134,7 @@ async def test_advisory_rules_excluded_from_score(db: AsyncSession):
 
 
 # ── compute_grade ──────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_grade_none_when_no_scoreable_rules(db: AsyncSession):
@@ -194,6 +198,7 @@ async def test_grade_c_below_65(db: AsyncSession):
 
 # ── get_layer_completion ───────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_layer_completion_all_complete_when_no_required_rules(db: AsyncSession):
     """A layer with no REQUIRED rules is considered complete."""
@@ -230,7 +235,9 @@ async def test_layer_completion_true_when_all_required_checked(db: AsyncSession)
     # Check only the REQUIRED ones (leave optional unchecked)
     for check in checks:
         from sqlalchemy import select
+
         from app.models.plan_rule import PlanRule
+
         result = await db.execute(select(PlanRule).where(PlanRule.id == check.rule_id))
         rule = result.scalar_one()
         if rule.rule_type == RuleType.REQUIRED:
@@ -253,6 +260,7 @@ async def test_layer_completion_ignores_advisory_rules(db: AsyncSession):
 
 
 # ── get_layer_blockers ─────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_layer_blockers_returns_unchecked_required(db: AsyncSession):
@@ -292,6 +300,7 @@ async def test_layer_blockers_excludes_optional_and_advisory(db: AsyncSession):
 
 
 # ── update_idea_score ──────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_update_idea_score_persists_to_idea(db: AsyncSession):

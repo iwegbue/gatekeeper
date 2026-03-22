@@ -4,16 +4,51 @@
 <div class="page-header">
     <h2>{{ plan.name }}</h2>
     <div class="flex-row">
+        {% if total_rules > 0 %}
         <a href="/plan/builder" class="small secondary" role="button">AI Plan Builder</a>
+        {% endif %}
         <a href="/plan/edit" class="small secondary" role="button">Edit Plan</a>
         <a href="/plan/reset" class="small contrast" role="button">Reset Plan</a>
     </div>
 </div>
 
-{% if plan.description %}
+{% if plan.description and total_rules > 0 %}
 <p class="muted">{{ plan.description }}</p>
 {% endif %}
 
+{% if total_rules == 0 %}
+
+{# ── Empty state: onboarding view ──────────────────────────────────────── #}
+<div class="plan-hero">
+    <div class="plan-hero-icon">
+        <i data-lucide="bot"></i>
+    </div>
+    <h3>Build your trading plan</h3>
+    <p class="muted">
+        Describe your strategy in plain language — what markets you trade, what setups you look for,
+        how you manage risk. The AI will structure it into rules across the 7 layers.
+    </p>
+    <a href="/plan/builder" role="button" class="plan-hero-cta">Start AI Plan Builder →</a>
+</div>
+
+<div class="plan-divider"><span>or build manually</span></div>
+
+<div class="plan-manual-layers">
+    {% for layer in layers %}
+    <div class="plan-layer-row">
+        <span class="plan-layer-name">{{ layer.value }}</span>
+        <a href="/plan/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
+    </div>
+    {% endfor %}
+</div>
+
+<p class="muted" style="font-size: 0.8rem; margin-top: 1.5rem;">
+    Want a head start? <a href="/plan/reset">Load a starter template →</a>
+</p>
+
+{% else %}
+
+{# ── Has-rules state: management view ─────────────────────────────────── #}
 <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; align-items: center;">
     <a href="/plan/rules/new" role="button" class="small">+ Add Rule</a>
     <a href="/validation" role="button" class="small secondary">
@@ -22,43 +57,55 @@
 </div>
 
 {% for layer in layers %}
-<section id="{{ layer.value }}" style="margin-bottom: 1.5rem;">
-    <div class="section-header">
-        <h4>{{ layer.value }}
-            <span class="count-badge">{{ rules_by_layer[layer.value] | length }}</span>
-        </h4>
-        <a href="/plan/rules/new?layer={{ layer.value }}" class="small" role="button" style="font-size:0.75rem;">+ Add</a>
-    </div>
-
-    {% if rules_by_layer[layer.value] %}
-    <table>
-        <thead>
-            <tr>
-                <th>Rule</th>
-                <th>Type</th>
-                <th>Weight</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for rule in rules_by_layer[layer.value] %}
-            <tr{% if not rule.is_active %} style="opacity: 0.5;"{% endif %}>
-                <td>
-                    <strong>{{ rule.name }}</strong>
-                    {% if rule.description %}<br><small class="muted">{{ rule.description }}</small>{% endif %}
-                </td>
-                <td><span class="badge {% if rule.rule_type == 'REQUIRED' %}grade-a{% elif rule.rule_type == 'OPTIONAL' %}grade-b{% else %}state-watch{% endif %}">{{ rule.rule_type }}</span></td>
-                <td>{{ rule.weight }}</td>
-                <td>
-                    <a href="/plan/rules/{{ rule.id }}/edit" class="small">Edit</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% set layer_rules = rules_by_layer[layer.value] %}
+<section id="{{ layer.value }}" style="margin-bottom: 0.75rem;">
+    {% if layer_rules %}
+    <details open>
+        <summary class="plan-layer-summary">
+            <span>
+                {{ layer.value }}
+                <span class="count-badge">{{ layer_rules | length }}</span>
+            </span>
+            <a href="/plan/rules/new?layer={{ layer.value }}" class="small" role="button"
+               style="font-size:0.75rem;" onclick="event.stopPropagation()">+ Add</a>
+        </summary>
+        <table style="margin-top: 0.5rem;">
+            <thead>
+                <tr>
+                    <th>Rule</th>
+                    <th>Type</th>
+                    <th>Weight</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in layer_rules %}
+                <tr{% if not rule.is_active %} style="opacity: 0.5;"{% endif %}>
+                    <td>
+                        <strong>{{ rule.name }}</strong>
+                        {% if rule.description %}<br><small class="muted">{{ rule.description }}</small>{% endif %}
+                    </td>
+                    <td><span class="badge {% if rule.rule_type == 'REQUIRED' %}grade-a{% elif rule.rule_type == 'OPTIONAL' %}grade-b{% else %}state-watch{% endif %}">{{ rule.rule_type }}</span></td>
+                    <td>{{ rule.weight }}</td>
+                    <td>
+                        <a href="/plan/rules/{{ rule.id }}/edit" class="small">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </details>
     {% else %}
-    <p class="muted" style="font-size: 0.85rem;">No rules defined for this layer yet.</p>
+    <div class="plan-layer-row plan-layer-row--empty">
+        <span class="plan-layer-name">
+            {{ layer.value }}
+            <span class="count-badge">0</span>
+        </span>
+        <a href="/plan/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
+    </div>
     {% endif %}
 </section>
 {% endfor %}
+
+{% endif %}
 {% endblock %}
