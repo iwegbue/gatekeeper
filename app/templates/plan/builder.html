@@ -140,7 +140,26 @@
             <i data-lucide="send"></i>
         </button>
     </div>
+    <div class="builder-done-row">
+        <button type="button" id="done-btn" class="builder-done-btn outline secondary small">
+            <i data-lucide="check-circle"></i> Done — I have my rules
+        </button>
+    </div>
 </form>
+
+<div id="builder-complete" class="builder-complete" style="display:none;">
+    <div class="builder-complete-icon"><i data-lucide="check-circle-2"></i></div>
+    <div class="builder-complete-body">
+        <strong>Plan ready to build</strong>
+        <p>Add the rules above to your Trading Plan — one rule per layer. You can come back here any time to review the conversation.</p>
+        <div class="builder-complete-actions">
+            <a href="/plan" role="button">Go to Trading Plan →</a>
+            <form method="post" action="/plan/builder/clear" style="margin:0;">
+                <button type="submit" class="outline secondary small">Start over</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
 (function() {
@@ -167,14 +186,27 @@
     }
 
     var layerTracker = document.getElementById('layer-tracker');
+    var doneBtn = document.getElementById('done-btn');
+    var completePanel = document.getElementById('builder-complete');
+
+    function showComplete() {
+        form.style.display = 'none';
+        completePanel.style.display = 'flex';
+        lucide.createIcons();
+    }
 
     function showChat() {
         suggestPanel.style.display = 'none';
         layerTracker.style.display = 'flex';
         chatContainer.style.display = 'block';
         form.style.display = 'block';
+        if (doneBtn) doneBtn.style.display = 'none';
         messageInput.focus();
         lucide.createIcons();
+    }
+
+    function revealDoneBtn() {
+        if (doneBtn) doneBtn.style.display = 'inline-flex';
     }
 
     function updateLayers(coveredLayers) {
@@ -258,6 +290,7 @@
                 appendMessage('assistant', data.response);
                 historyField.value = data.history;
                 updateLayers(data.covered_layers);
+                revealDoneBtn();
             }
         } catch(err) {
             hideThinking();
@@ -280,6 +313,7 @@
                 appendMessage(turn.role, turn.content);
             });
             chatContainer.scrollTop = chatContainer.scrollHeight;
+            revealDoneBtn();
         } catch(e) {
             // Malformed history — start fresh
         }
@@ -333,6 +367,10 @@
 
     if (suggestSkip) {
         suggestSkip.addEventListener('click', showChat);
+    }
+
+    if (doneBtn) {
+        doneBtn.addEventListener('click', showComplete);
     }
 
     // ── Chat form ────────────────────────────────────────────────────────

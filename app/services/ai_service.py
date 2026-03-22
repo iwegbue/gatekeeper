@@ -104,7 +104,10 @@ async def plan_builder_chat(
         "When moving to a new layer, briefly name it so the user knows where they are. "
         "Keep each message focused and concise — no lists of multiple questions. "
         "Avoid vague criteria like 'good setup'. "
-        "When all layers are covered, offer to summarize the rules in a structured list."
+        "When all layers are covered, offer to summarize the rules in a structured list. "
+        "After delivering the summary, end with a short closing message telling the user "
+        "to add the rules to their Trading Plan in Gatekeeper — do not offer to produce "
+        "a desk checklist or ask further refinement questions."
     )
     response = await provider.chat(system=system, messages=conversation)
     await _save_analysis(db, trigger="plan_builder", reasoning=response)
