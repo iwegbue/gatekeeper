@@ -106,12 +106,92 @@ async def plan_builder_chat(
         "Avoid vague criteria like 'good setup'. "
         "When all layers are covered, offer to summarize the rules in a structured list. "
         "After delivering the summary, end with a short closing message telling the user "
-        "to add the rules to their Trading Plan in Gatekeeper — do not offer to produce "
-        "a desk checklist or ask further refinement questions."
+        "they can click 'Done — add rules to my plan' to import the rules automatically — "
+        "do not offer to produce a desk checklist or ask further refinement questions."
     )
     response = await provider.chat(system=system, messages=conversation)
     await _save_analysis(db, trigger="plan_builder", reasoning=response)
     return response
+
+
+async def extract_rules_from_conversation(
+    db: AsyncSession,
+    provider: "AIProvider",
+    conversation: list[dict],
+) -> list[dict]:
+    """
+    One-shot extraction pass: takes the full Plan Builder conversation and
+    returns a clean list of rule dicts ready for plan_service.create_rule().
+
+    Returns [] if the conversation has no extractable rules or if the model
+    returns malformed output — callers must handle the empty case gracefully.
+    """
+    import json as _json
+
+    valid_layers = {"CONTEXT", "SETUP", "CONFIRMATION", "ENTRY", "RISK", "MANAGEMENT", "BEHAVIORAL"}
+    valid_types = {"REQUIRED", "OPTIONAL", "ADVISORY"}
+
+    system = (
+        "You are a rule extractor. Given a trading plan conversation, return ONLY a JSON array. "
+        "Each element must have exactly these keys:\n"
+        '  "layer": one of CONTEXT, SETUP, CONFIRMATION, ENTRY, RISK, MANAGEMENT, BEHAVIORAL\n'
+        '  "name": short imperative string, max 100 characters\n'
+        '  "description": what exactly to check, 1-2 sentences\n'
+        '  "rule_type": one of REQUIRED, OPTIONAL, ADVISORY\n'
+        '  "weight": integer 1, 2, or 3\n\n'
+        "Return [] if no rules can be extracted. "
+        "No markdown fences, no explanation — raw JSON array only."
+    )
+
+    try:
+        raw = await provider.chat(system=system, messages=conversation)
+        await _save_analysis(db, trigger="plan_builder_extract", reasoning=raw)
+    except Exception:
+        return []
+
+    # Strip accidental markdown fences the model may add despite instructions
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("```")[1]
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+    cleaned = cleaned.strip()
+
+    try:
+        parsed = _json.loads(cleaned)
+    except (_json.JSONDecodeError, ValueError):
+        return []
+
+    if not isinstance(parsed, list):
+        return []
+
+    rules = []
+    for item in parsed:
+        if not isinstance(item, dict):
+            continue
+        layer = str(item.get("layer", "")).upper()
+        rule_type = str(item.get("rule_type", "REQUIRED")).upper()
+        name = str(item.get("name", "")).strip()[:200]
+        description = str(item.get("description", "")).strip() or None
+        try:
+            weight = max(1, min(3, int(item.get("weight", 1))))
+        except (TypeError, ValueError):
+            weight = 1
+
+        if layer not in valid_layers or rule_type not in valid_types or not name:
+            continue
+
+        rules.append(
+            {
+                "layer": layer,
+                "name": name,
+                "description": description,
+                "rule_type": rule_type,
+                "weight": weight,
+            }
+        )
+
+    return rules
 
 
 async def idea_review(

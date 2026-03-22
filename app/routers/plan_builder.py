@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 from app.database import get_db
 from app.services import ai_service
 from app.services import plan_builder_service as pb_service
+from app.services import plan_service
 from app.services.plan_builder_service import LAYERS
 from app.services.ai import factory as ai_factory
 
@@ -74,6 +75,60 @@ async def builder_chat(
         logger.exception("AI plan builder error")
         await db.rollback()
         return JSONResponse({"error": "AI request failed. Please try again."}, status_code=500)
+
+
+@router.post("/done")
+async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
+    """Extract rules from the saved conversation and write them to the trading plan."""
+    session = await pb_service.get_session(db)
+    if not session or not session.conversation:
+        return RedirectResponse(
+            "/plan?msg=No conversation found — start the Plan Builder first&msg_type=warning",
+            status_code=303,
+        )
+
+    try:
+        provider = await ai_factory.get_provider_from_db(db)
+    except ai_factory.AIConfigError as e:
+        return RedirectResponse(
+            f"/plan?msg={e}&msg_type=error",
+            status_code=303,
+        )
+
+    try:
+        rules = await ai_service.extract_rules_from_conversation(db, provider, session.conversation)
+    except Exception:
+        logger.exception("Rule extraction failed")
+        await db.rollback()
+        return RedirectResponse(
+            "/plan?msg=Could not extract rules — add them manually from the conversation&msg_type=error",
+            status_code=303,
+        )
+
+    if not rules:
+        return RedirectResponse(
+            "/plan?msg=No rules could be extracted — the conversation may need a summary first&msg_type=warning",
+            status_code=303,
+        )
+
+    plan = await plan_service.get_plan(db)
+    for rule in rules:
+        await plan_service.create_rule(
+            db,
+            plan.id,
+            layer=rule["layer"],
+            name=rule["name"],
+            description=rule["description"],
+            rule_type=rule["rule_type"],
+            weight=rule["weight"],
+        )
+
+    await db.commit()
+    count = len(rules)
+    return RedirectResponse(
+        f"/plan?msg={count} rule{'s' if count != 1 else ''} added from Plan Builder&msg_type=success",
+        status_code=303,
+    )
 
 
 @router.post("/clear")
