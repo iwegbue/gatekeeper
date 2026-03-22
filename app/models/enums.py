@@ -64,3 +64,22 @@ class AssetClass(str, enum.Enum):
     INDICES = "INDICES"
     FUTURES = "FUTURES"
     CRYPTO = "CRYPTO"
+
+
+class InterpretationStatus(str, enum.Enum):
+    TESTABLE = "TESTABLE"
+    APPROXIMATED = "APPROXIMATED"
+    NOT_TESTABLE = "NOT_TESTABLE"
+
+
+class ValidationRunStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    COMPILING = "COMPILING"
+    REPLAYING = "REPLAYING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class ValidationMode(str, enum.Enum):
+    INTERPRETABILITY = "INTERPRETABILITY"
+    REPLAY = "REPLAY"

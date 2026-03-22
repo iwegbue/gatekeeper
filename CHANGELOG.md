@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Plan Validation Engine (Phase 1 — Interpretability)** — AI-assisted compilation of trading plan rules into machine-testable proxies
+  - `POST /api/v1/validation/compile` — compile the active plan; each rule is mapped to a proxy from a fixed vocabulary (16 proxy types across all 7 layers) using the configured AI provider; BEHAVIORAL rules auto-classified as NOT_TESTABLE without an AI call
+  - `GET /api/v1/validation/runs` — list past validation runs
+  - `GET /api/v1/validation/runs/{id}` — get run detail with compiled plan and feedback report
+  - `PUT /api/v1/validation/compiled-plans/{id}/rules/{rule_id}/confirm` — user reviews and can override AI-proposed interpretations
+  - HTML routes at `/validation` (history) and `/validation/runs/{id}` (report) with "Validate Plan" sidebar link
+  - Interpretability score (% of non-behavioral rules that are testable or approximated)
+  - Deterministic coherence checks: gap detection, underfiltering/overfiltering warnings, redundancy detection
+  - Structured feedback report with per-layer rule breakdowns, replay readiness assessment (`READY / PARTIAL / NOT_READY`), and actionable refinement suggestions
+  - `CompiledPlan` and `ValidationRun` models; migration `003_add_validation_tables`
+  - 58 new tests across `test_rule_interpreter`, `test_plan_compiler`, `test_feedback_service`, `test_validation_api`
+
 - **SMTP email notifications** — replaced SendGrid with standard SMTP (Python `smtplib`); works with Gmail, Proton Mail Bridge, Mailhog, self-hosted Postfix, and any SMTP relay; configurable from Settings UI
 - **Telegram notifications** — bot token and chat ID now stored in DB and configurable from the UI instead of environment variables only
 - **Notifications settings card** — new collapsible "Notifications" card in Settings with SMTP config, Telegram config, per-channel enable toggles, and one-click test-send buttons for both channels

@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.auth import AuthMiddleware
-from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, setup, trades
+from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, setup, trades, validation
 from app.routers.api.v1 import api_v1_auth_router, api_v1_router
 
 limiter = Limiter(key_func=get_remote_address)
@@ -111,6 +111,7 @@ def create_app() -> FastAPI:
     app.include_router(instruments.router)
     app.include_router(settings.router)
     app.include_router(reports.router)
+    app.include_router(validation.router)
 
     # JSON API v1
     app.include_router(api_v1_auth_router)

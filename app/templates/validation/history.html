@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Validate Plan — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Plan Validation</h2>
+    <p class="muted">Compile your trading plan to analyse which rules are historically testable and receive coherence feedback.</p>
+</div>
+
+<form method="post" action="/validation/compile">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn-primary">
+        <i data-lucide="play-circle"></i> Compile &amp; Validate Plan
+    </button>
+</form>
+
+{% if runs %}
+<h3 style="margin-top: 2rem;">Previous Runs</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Mode</th>
+            <th>Status</th>
+            <th>Interpretability</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for run in runs %}
+        <tr>
+            <td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ run.mode }}</td>
+            <td>
+                <span class="badge badge--{{ 'success' if run.status == 'COMPLETED' else 'warning' if run.status in ('PENDING', 'COMPILING') else 'error' }}">
+                    {{ run.status }}
+                </span>
+            </td>
+            <td>
+                {% if run.feedback %}
+                    {{ run.feedback.interpretability_score }}%
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+            <td><a href="/validation/runs/{{ run.id }}">View Report</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<article class="empty-state" style="margin-top: 2rem;">
+    <p>No validation runs yet. Compile your plan to get started.</p>
+</article>
+{% endif %}
+
+{% endblock %}
