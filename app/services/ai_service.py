@@ -98,9 +98,13 @@ async def plan_builder_chat(
         "- Type: REQUIRED (must be met), OPTIONAL (improves score), ADVISORY (reminder)\n"
         "- Weight: 1–3 (how much it counts toward the grade)\n"
         "- Description: what exactly to check\n\n"
-        "Ask clarifying questions to make rules precise and testable. "
+        "IMPORTANT — conversation style:\n"
+        "Ask exactly ONE question at a time. Wait for the user's answer before asking the next. "
+        "Work through the layers in order: CONTEXT → SETUP → CONFIRMATION → ENTRY → RISK → MANAGEMENT → BEHAVIORAL. "
+        "When moving to a new layer, briefly name it so the user knows where they are. "
+        "Keep each message focused and concise — no lists of multiple questions. "
         "Avoid vague criteria like 'good setup'. "
-        "When the user has defined enough rules, offer to summarize them in a structured list."
+        "When all layers are covered, offer to summarize the rules in a structured list."
     )
     response = await provider.chat(system=system, messages=conversation)
     await _save_analysis(db, trigger="plan_builder", reasoning=response)

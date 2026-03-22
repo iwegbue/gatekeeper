@@ -2310,6 +2310,72 @@ details.plan-layer-details {
     padding: 0.5rem 1rem;
 }
 
+/* Layer progress tracker */
+
+.builder-layers {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--pico-card-background-color, #141e26);
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.builder-layer {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    padding: 0.25rem 0.5rem;
+}
+
+/* connector line between layers */
+.builder-layer + .builder-layer::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 1rem;
+    background: var(--pico-muted-border-color, #374151);
+}
+
+.builder-layer-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--pico-muted-border-color, #374151);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.builder-layer-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pico-muted-color, #6b7280);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+
+.builder-layer--done .builder-layer-dot {
+    background: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.builder-layer--done .builder-layer-name {
+    color: #c4b5fd;
+}
+
 /* Chat area */
 
 .builder-chat {
@@ -2558,6 +2624,16 @@ details.plan-layer-details {
 /* ── Plan Builder responsive ─────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+    .builder-layers {
+        gap: 0;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .builder-layer-name {
+        font-size: 0.6rem;
+        letter-spacing: 0.03em;
+    }
+
     .builder-suggest {
         padding: 1.25rem;
     }

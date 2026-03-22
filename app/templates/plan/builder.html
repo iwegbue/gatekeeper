@@ -107,6 +107,16 @@
     </div>
 </div>
 
+{# ── Layer progress tracker ── #}
+<div id="layer-tracker" class="builder-layers" {% if not has_history %}style="display:none;"{% endif %}>
+    {% for layer in layers %}
+    <div class="builder-layer {% if layer in covered_layers %}builder-layer--done{% endif %}" data-layer="{{ layer }}">
+        <span class="builder-layer-dot"></span>
+        <span class="builder-layer-name">{{ layer | title }}</span>
+    </div>
+    {% endfor %}
+</div>
+
 {# ── Chat area — shown when there is a saved conversation or after skip ── #}
 <div id="chat-container" class="builder-chat" {% if not has_history %}style="display:none;"{% endif %}>
     <div id="chat-messages" class="builder-messages">
@@ -114,7 +124,7 @@
         <div class="builder-msg builder-msg--ai">
             <div class="builder-msg-avatar"><i data-lucide="bot"></i></div>
             <div class="builder-msg-body">
-                <p>Hello! I'm here to help you build your trading plan. Tell me about your trading strategy — what markets do you trade, what setups do you look for, and how do you manage risk?</p>
+                <p>Hello! I'm here to help you build your trading plan. Tell me about your trading strategy — what markets do you trade, what setups you look for, and how you manage risk?</p>
             </div>
         </div>
         {% endif %}
@@ -156,12 +166,23 @@
         return container;
     }
 
+    var layerTracker = document.getElementById('layer-tracker');
+
     function showChat() {
         suggestPanel.style.display = 'none';
+        layerTracker.style.display = 'flex';
         chatContainer.style.display = 'block';
         form.style.display = 'block';
         messageInput.focus();
         lucide.createIcons();
+    }
+
+    function updateLayers(coveredLayers) {
+        if (!coveredLayers || !coveredLayers.length) return;
+        coveredLayers.forEach(function(layer) {
+            var el = layerTracker.querySelector('[data-layer="' + layer + '"]');
+            if (el) el.classList.add('builder-layer--done');
+        });
     }
 
     function appendMessage(role, content) {
@@ -236,6 +257,7 @@
             } else {
                 appendMessage('assistant', data.response);
                 historyField.value = data.history;
+                updateLayers(data.covered_layers);
             }
         } catch(err) {
             hideThinking();

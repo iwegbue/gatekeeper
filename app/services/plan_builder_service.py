@@ -59,3 +59,24 @@ async def clear_session(db: AsyncSession) -> None:
 
 def conversation_to_json(session: PlanBuilderSession) -> str:
     return json.dumps(session.conversation)
+
+
+# Layer names in display order — matches the 7-layer state machine.
+LAYERS = ["CONTEXT", "SETUP", "CONFIRMATION", "ENTRY", "RISK", "MANAGEMENT", "BEHAVIORAL"]
+
+
+def covered_layers(conversation: list[dict]) -> list[str]:
+    """
+    Return the set of layers mentioned in assistant messages so far.
+    A layer is considered 'covered' once the assistant has explicitly
+    named it — which the system prompt instructs it to do when moving
+    to each new layer.
+    """
+    mentioned: set[str] = set()
+    for turn in conversation:
+        if turn.get("role") == "assistant":
+            text = turn.get("content", "").upper()
+            for layer in LAYERS:
+                if layer in text:
+                    mentioned.add(layer)
+    return [l for l in LAYERS if l in mentioned]
