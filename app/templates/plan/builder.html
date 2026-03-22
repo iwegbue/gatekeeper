@@ -209,7 +209,7 @@
         div.appendChild(avatar);
         div.appendChild(body);
         messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
         lucide.createIcons();
     }
 
@@ -229,7 +229,7 @@
         div.appendChild(avatar);
         div.appendChild(body);
         messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
         lucide.createIcons();
     }
 
@@ -279,8 +279,7 @@
             turns.forEach(function(turn) {
                 appendMessage(turn.role, turn.content);
             });
-            // Scroll to bottom after restore
-            messages.scrollTop = messages.scrollHeight;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         } catch(e) {
             // Malformed history — start fresh
         }
