@@ -14,22 +14,22 @@
 {# ── Score row ─────────────────────────────────────────────────────────────── #}
 <div class="kpi-row" style="margin-top: 1.5rem;">
     <article class="kpi-card">
-        <small class="muted">Interpretability Score</small>
+        <small class="muted"><span class="tip-trigger-text">Interpretability Score<span class="tip-content">Percentage of your rules that are either directly testable or approximated via a proxy. Higher = more of your plan can be machine-validated.</span></span></small>
         <strong class="kpi-big">{{ feedback.interpretability_score }}%</strong>
         <small class="muted">rules testable or approximated</small>
     </article>
     <article class="kpi-card">
-        <small class="muted">Testable Rules</small>
+        <small class="muted"><span class="tip-trigger-text">Testable Rules<span class="tip-content">Rules that can be checked directly against market data with no approximation needed.</span></span></small>
         <strong class="kpi-big">{{ feedback.rule_counts.testable }}</strong>
         <small class="muted">directly machine-testable</small>
     </article>
     <article class="kpi-card">
-        <small class="muted">Approximated</small>
+        <small class="muted"><span class="tip-trigger-text">Approximated<span class="tip-content">Rules that cannot be tested exactly but are mapped to a similar proxy signal for testing purposes.</span></span></small>
         <strong class="kpi-big">{{ feedback.rule_counts.approximated }}</strong>
         <small class="muted">mapped with proxies</small>
     </article>
     <article class="kpi-card">
-        <small class="muted">Replay Readiness</small>
+        <small class="muted"><span class="tip-trigger-text">Replay Readiness<span class="tip-content">Whether enough rules are testable or approximated to run a meaningful historical replay of your plan against market data.</span></span></small>
         <strong class="kpi-big {{ 'positive' if feedback.replay_readiness == 'READY' else '' }}">
             {{ feedback.replay_readiness }}
         </strong>
@@ -78,7 +78,7 @@
         <strong>{{ layer_name }}</strong>
         &nbsp;
         <small class="muted">
-            {{ layer_data.testable }}T &middot; {{ layer_data.approximated }}A &middot; {{ layer_data.not_testable }}N
+            {{ layer_data.testable }}<span class="tip-trigger-text">T<span class="tip-content">Testable — checked directly against market data.</span></span> &middot; {{ layer_data.approximated }}<span class="tip-trigger-text">A<span class="tip-content">Approximated — tested via a proxy when no exact signal exists.</span></span> &middot; {{ layer_data.not_testable }}<span class="tip-trigger-text">N<span class="tip-content">Not testable — requires manual judgment; cannot be machine-checked.</span></span>
             {% if layer_data.behavioral %}(live enforcement only){% endif %}
         </small>
     </summary>
@@ -87,10 +87,10 @@
         <thead>
             <tr>
                 <th>Rule</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Proxy</th>
-                <th>Confidence</th>
+                <th><span class="tip-trigger-text">Type<span class="tip-content"><strong>REQUIRED</strong> — must be met before acting.<br><strong>OPTIONAL</strong> — improves score if met.<br><strong>ADVISORY</strong> — reminder only.</span></span></th>
+                <th><span class="tip-trigger-text">Status<span class="tip-content"><strong>TESTABLE</strong> — verified directly against data.<br><strong>APPROXIMATED</strong> — tested via a proxy.<br><strong>NOT_TESTABLE</strong> — manual judgment required.</span></span></th>
+                <th><span class="tip-trigger-text">Proxy<span class="tip-content">The approximate signal used when the rule cannot be tested exactly against market data.</span></span></th>
+                <th><span class="tip-trigger-text">Confidence<span class="tip-content">How closely the proxy matches the original rule's intent. Higher % = more reliable approximation.</span></span></th>
                 <th>Notes</th>
             </tr>
         </thead>
@@ -100,9 +100,7 @@
                 <td>{{ rule.name }}</td>
                 <td><small>{{ rule.rule_type }}</small></td>
                 <td>
-                    <span class="badge badge--{{ 'success' if rule.status == 'TESTABLE' else 'warning' if rule.status == 'APPROXIMATED' else 'error' }}">
-                        {{ rule.status }}
-                    </span>
+                    <span class="badge badge--{{ 'success' if rule.status == 'TESTABLE' else 'warning' if rule.status == 'APPROXIMATED' else 'error' }} tip-trigger-badge">{{ rule.status }}<span class="tip-content">{% if rule.status == 'TESTABLE' %}Can be checked directly against market data.{% elif rule.status == 'APPROXIMATED' %}No exact signal exists; tested via a similar proxy rule.{% else %}Cannot be machine-checked; requires manual judgment.{% endif %}</span></span>
                     {% if rule.user_confirmed %}
                     <span class="badge badge--info" title="Confirmed by you">&#10003;</span>
                     {% endif %}

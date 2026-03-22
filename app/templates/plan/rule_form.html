@@ -5,7 +5,7 @@
 <h2>{% if rule %}Edit Rule{% else %}New Rule{% endif %}</h2>
 
 <form method="post" action="{% if rule %}/plan/rules/{{ rule.id }}/edit{% else %}/plan/rules/new{% endif %}">
-    <label for="layer">Layer</label>
+    <label for="layer"><span class="tip-trigger-text">Layer<span class="tip-content">Which of the 7 gates this rule belongs to: CONTEXT → SETUP → CONFIRMATION → ENTRY → RISK → MANAGEMENT → BEHAVIORAL. Ideas must pass each layer in order.</span></span></label>
     <select id="layer" name="layer" required>
         {% for l in layers %}
         <option value="{{ l.value }}" {% if (rule and rule.layer == l.value) or (not rule and layer == l.value) %}selected{% endif %}>{{ l.value }}</option>
@@ -20,7 +20,7 @@
 
     <div class="grid">
         <div>
-            <label for="rule_type">Type</label>
+            <label for="rule_type"><span class="tip-trigger-text">Type<span class="tip-content"><strong>REQUIRED</strong> — must be met before acting.<br><strong>OPTIONAL</strong> — improves the checklist score if met.<br><strong>ADVISORY</strong> — a reminder only; does not affect score.</span></span></label>
             <select id="rule_type" name="rule_type">
                 {% for rt in rule_types %}
                 <option value="{{ rt.value }}" {% if rule and rule.rule_type == rt.value %}selected{% endif %}>{{ rt.value }}</option>
@@ -28,7 +28,7 @@
             </select>
         </div>
         <div>
-            <label for="weight">Weight</label>
+            <label for="weight"><span class="tip-trigger-text">Weight<span class="tip-content">How many points this rule contributes to the checklist score. <strong>1</strong> = minor, <strong>2</strong> = moderate, <strong>3</strong> = critical.</span></span></label>
             <input type="number" id="weight" name="weight" value="{{ rule.weight if rule else 1 }}" min="0" max="10">
         </div>
     </div>
@@ -36,7 +36,7 @@
     {% if rule %}
     <label>
         <input type="checkbox" name="is_active" value="true" {% if rule.is_active %}checked{% endif %}>
-        Active
+        <span class="tip-trigger-text">Active<span class="tip-content">When checked, this rule appears in idea checklists and counts toward scores. Uncheck to retire a rule without deleting it.</span></span>
     </label>
     {% endif %}
 

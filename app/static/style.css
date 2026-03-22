@@ -724,6 +724,28 @@ footer.container {
     display: block;
 }
 
+/* Dashed-underline text trigger — the label IS the trigger */
+.tip-trigger-text {
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    cursor: help;
+    position: relative;
+    display: inline-block;
+}
+
+/* Badge trigger — cursor:help only, no underline */
+.tip-trigger-badge {
+    cursor: help;
+    position: relative;
+}
+
+.tip-trigger-text:hover .tip-content,
+.tip-trigger-text:focus .tip-content,
+.tip-trigger-badge:hover .tip-content,
+.tip-trigger-badge:focus .tip-content {
+    display: block;
+}
+
 /* Inline mini tooltip badge used inside small legend text */
 .tip-mini {
     display: inline-flex;

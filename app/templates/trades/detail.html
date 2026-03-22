@@ -23,22 +23,22 @@
             <header><strong>Position</strong></header>
             <dl class="dl-grid">
                 <dt>Entry</dt><dd>{{ trade.entry_price }}</dd>
-                <dt>SL (current)</dt><dd>{{ trade.sl_price }}</dd>
-                <dt>Initial SL</dt><dd>{{ trade.initial_sl_price or '—' }}</dd>
-                <dt>TP</dt><dd>{{ trade.tp_price or '—' }}</dd>
-                <dt>Risk %</dt><dd>{{ trade.risk_pct }}%</dd>
+                <dt><span class="tip-trigger-text">SL (current)<span class="tip-content">Stop loss — the price at which this trade will be exited at a controlled loss.</span></span></dt><dd>{{ trade.sl_price }}</dd>
+                <dt><span class="tip-trigger-text">Initial SL<span class="tip-content">The original stop loss set at entry. Used to calculate your R-multiple when the trade closes.</span></span></dt><dd>{{ trade.initial_sl_price or '—' }}</dd>
+                <dt><span class="tip-trigger-text">TP<span class="tip-content">Take profit — your target exit price where you plan to close the trade at a gain.</span></span></dt><dd>{{ trade.tp_price or '—' }}</dd>
+                <dt><span class="tip-trigger-text">Risk %<span class="tip-content">Percentage of your account risked on this trade, based on entry price and stop loss distance.</span></span></dt><dd>{{ trade.risk_pct }}%</dd>
                 <dt>Lot size</dt><dd>{{ trade.lot_size or '—' }}</dd>
                 {% if trade.exit_price %}
                 <dt>Exit</dt><dd>{{ trade.exit_price }}</dd>
-                <dt>R-multiple</dt>
+                <dt><span class="tip-trigger-text">R-multiple<span class="tip-content">How many times your initial risk you made or lost. 1R = exactly your risk. 2R = twice your risk. Negative values = a loss.</span></span></dt>
                 <dd>
                     <span class="{% if trade.r_multiple > 0 %}positive{% elif trade.r_multiple < 0 %}negative{% endif %}">
                         {{ "%.2f" | format(trade.r_multiple) }}R
                     </span>
                 </dd>
                 {% endif %}
-                <dt>BE locked</dt><dd>{% if trade.be_locked %}Yes{% else %}No{% endif %}</dd>
-                <dt>Partials</dt><dd>{% if trade.partials_taken %}Yes{% else %}No{% endif %}</dd>
+                <dt><span class="tip-trigger-text">BE locked<span class="tip-content">Breakeven locked — stop loss has been moved to the entry price, eliminating risk on this trade.</span></span></dt><dd>{% if trade.be_locked %}Yes{% else %}No{% endif %}</dd>
+                <dt><span class="tip-trigger-text">Partials<span class="tip-content">Whether you have scaled out of part of this position at a target level.</span></span></dt><dd>{% if trade.partials_taken %}Yes{% else %}No{% endif %}</dd>
             </dl>
         </article>
 
@@ -83,12 +83,12 @@
             <div class="button-row">
                 {% if not trade.partials_taken %}
                 <form method="post" action="/trades/{{ trade.id }}/partial">
-                    <button type="submit" class="secondary outline">Take Partial</button>
+                    <button type="submit" class="secondary outline" title="Scale out of part of your position at a target level. Marks partials as taken.">Take Partial</button>
                 </form>
                 {% endif %}
                 {% if not trade.be_locked %}
                 <form method="post" action="/trades/{{ trade.id }}/be">
-                    <button type="submit" class="secondary outline">Lock BE</button>
+                    <button type="submit" class="secondary outline" title="Move your stop loss to the entry price (breakeven), eliminating risk on this trade.">Lock BE</button>
                 </form>
                 {% endif %}
             </div>
