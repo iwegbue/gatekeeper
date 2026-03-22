@@ -206,6 +206,78 @@ async def extract_rules_from_conversation(
     return rules
 
 
+async def extract_instruments_from_conversation(
+    db: AsyncSession,
+    provider: "AIProvider",
+    conversation: list[dict],
+) -> list[dict]:
+    """
+    One-shot extraction pass: returns instruments/markets mentioned in the
+    Plan Builder conversation as dicts ready for instrument_service.create().
+
+    Returns [] if no specific instruments are mentioned or on model error.
+    """
+    import json as _json
+
+    valid_asset_classes = {"FX", "STOCKS", "INDICES", "FUTURES", "CRYPTO"}
+
+    system = (
+        "You are an instrument extractor. Given a trading plan conversation, return ONLY a JSON array "
+        "of the specific instruments or markets the trader mentioned trading. "
+        "Each element must have exactly these keys:\n"
+        '  "symbol": ticker symbol, uppercase, no spaces (e.g. EURUSD, AAPL, BTCUSD, NAS100)\n'
+        '  "display_name": human-readable name, max 50 characters (e.g. Euro / US Dollar, Apple Inc)\n'
+        '  "asset_class": one of FX, STOCKS, INDICES, FUTURES, CRYPTO\n\n'
+        "Return [] if no specific instruments are mentioned. "
+        "Do not include broad categories like 'forex' or 'equities' — only specific tradeable symbols. "
+        "No markdown fences, no explanation — raw JSON array only."
+    )
+
+    last_assistant = next(
+        (t["content"] for t in reversed(conversation) if t.get("role") == "assistant"),
+        None,
+    )
+    if not last_assistant:
+        return []
+
+    extraction_messages = [{"role": "user", "content": last_assistant}]
+
+    try:
+        raw = await provider.chat(system=system, messages=extraction_messages)
+        await _save_analysis(db, trigger="plan_builder_instruments", reasoning=raw)
+    except Exception:
+        import logging as _logging
+        _logging.getLogger(__name__).exception("extract_instruments_from_conversation: provider call failed")
+        return []
+
+    import re as _re
+    cleaned = _re.sub(r"^```[a-z]*\s*", "", raw.strip(), flags=_re.IGNORECASE)
+    cleaned = _re.sub(r"\s*```$", "", cleaned).strip()
+
+    try:
+        parsed = _json.loads(cleaned)
+    except (_json.JSONDecodeError, ValueError):
+        return []
+
+    if not isinstance(parsed, list):
+        return []
+
+    instruments = []
+    for item in parsed:
+        if not isinstance(item, dict):
+            continue
+        symbol = str(item.get("symbol", "")).strip().upper()[:30]
+        display_name = str(item.get("display_name", symbol)).strip()[:50] or symbol
+        asset_class = str(item.get("asset_class", "FX")).upper()
+        if not symbol:
+            continue
+        if asset_class not in valid_asset_classes:
+            asset_class = "FX"
+        instruments.append({"symbol": symbol, "display_name": display_name, "asset_class": asset_class})
+
+    return instruments
+
+
 async def idea_review(
     db: AsyncSession,
     provider: "AIProvider",

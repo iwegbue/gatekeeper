@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 
 from app.database import get_db
 from app.services import ai_service
+from app.services import instrument_service
 from app.services import plan_builder_service as pb_service
 from app.services import plan_service
 from app.services.plan_builder_service import LAYERS
@@ -98,13 +99,14 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
 
     try:
         rules = await ai_service.extract_rules_from_conversation(db, provider, session.conversation)
-        await db.commit()  # persist the AIAnalysis log record regardless of rule count
+        instruments = await ai_service.extract_instruments_from_conversation(db, provider, session.conversation)
+        await db.commit()  # persist both AIAnalysis log records
     except Exception:
-        logger.exception("Rule extraction failed")
+        logger.exception("Plan Builder extraction failed")
         await db.rollback()
-        return redirect("Could not extract rules — add them manually from the conversation", "error")
+        return redirect("Could not extract plan data — add rules manually from the conversation", "error")
 
-    if not rules:
+    if not rules and not instruments:
         return redirect("No rules could be extracted — the conversation may need a summary first", "warning")
 
     plan = await plan_service.get_plan(db)
@@ -119,9 +121,26 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
             weight=rule["weight"],
         )
 
+    new_instrument_count = 0
+    for inst in instruments:
+        existing = await instrument_service.get_by_symbol(db, inst["symbol"])
+        if existing is None:
+            await instrument_service.create(
+                db,
+                symbol=inst["symbol"],
+                display_name=inst["display_name"],
+                asset_class=inst["asset_class"],
+            )
+            new_instrument_count += 1
+
     await db.commit()
-    count = len(rules)
-    return redirect(f"{count} rule{'s' if count != 1 else ''} added from Plan Builder")
+
+    parts = []
+    if rules:
+        parts.append(f"{len(rules)} rule{'s' if len(rules) != 1 else ''}")
+    if new_instrument_count:
+        parts.append(f"{new_instrument_count} instrument{'s' if new_instrument_count != 1 else ''}")
+    return redirect(f"{' and '.join(parts)} added from Plan Builder")
 
 
 @router.post("/clear")
