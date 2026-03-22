@@ -7,6 +7,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Reset Plan** — new `/plan/reset` page lets you wipe all existing rules and optionally load a starter template (Trend Following, Mean Reversion) or start from scratch; plan name and description can be updated at the same time
+
 - **Plan Validation Engine (Phase 1 — Interpretability)** — AI-assisted compilation of trading plan rules into machine-testable proxies
   - `POST /api/v1/validation/compile` — compile the active plan; each rule is mapped to a proxy from a fixed vocabulary (16 proxy types across all 7 layers) using the configured AI provider; BEHAVIORAL rules auto-classified as NOT_TESTABLE without an AI call
   - `GET /api/v1/validation/runs` — list past validation runs

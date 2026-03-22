@@ -8,6 +8,7 @@ from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import PlanLayer, RuleType
 from app.services import plan_service
+from app.services.plan_templates import list_templates, get_template
 
 router = APIRouter(prefix="/plan")
 
@@ -129,3 +130,51 @@ async def rule_update(
 async def rule_delete(rule_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     await plan_service.delete_rule(db, rule_id)
     return RedirectResponse(url="/plan?msg=Rule+deleted", status_code=303)
+
+
+@router.get("/reset")
+async def plan_reset_confirm(request: Request, db: AsyncSession = Depends(get_db)):
+    plan = await plan_service.get_plan(db)
+    rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id)
+    total_rules = sum(len(v) for v in rules_by_layer.values())
+    return request.app.state.templates.TemplateResponse(
+        "plan/reset.html",
+        {
+            "request": request,
+            "plan": plan,
+            "total_rules": total_rules,
+            "templates": list_templates(),
+        },
+    )
+
+
+@router.post("/reset")
+async def plan_reset(
+    request: Request,
+    template_id: str = Form("scratch"),
+    plan_name: str = Form(""),
+    plan_description: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    plan = await plan_service.get_plan(db)
+    await plan_service.clear_rules(db, plan.id)
+
+    if plan_name:
+        await plan_service.update_plan(db, name=plan_name, description=plan_description or None)
+
+    if template_id and template_id != "scratch":
+        tmpl = get_template(template_id)
+        if tmpl:
+            for rule in tmpl["rules"]:
+                await plan_service.create_rule(
+                    db,
+                    plan.id,
+                    layer=rule["layer"],
+                    name=rule["name"],
+                    description=rule.get("description"),
+                    rule_type=rule["rule_type"],
+                    weight=rule["weight"],
+                )
+
+    return RedirectResponse(url="/plan?msg=Plan+reset+successfully", status_code=303)
