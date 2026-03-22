@@ -266,12 +266,25 @@
 
     // ── Suggestion chips ─────────────────────────────────────────────────
 
+    var CHECK_SVG = '<svg class="builder-chip-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,8 6.5,12 13.5,4"/></svg>';
+
+    function activateChip(chip) {
+        chip.classList.add('builder-chip--active');
+        if (!chip.querySelector('.builder-chip-check')) {
+            chip.insertAdjacentHTML('afterbegin', CHECK_SVG);
+        }
+    }
+
+    function deactivateChip(chip) {
+        chip.classList.remove('builder-chip--active');
+        var check = chip.querySelector('.builder-chip-check');
+        if (check) check.remove();
+    }
+
     document.querySelectorAll('.builder-chip[data-prompt]').forEach(function(chip) {
         chip.addEventListener('click', function() {
-            document.querySelectorAll('.builder-chip[data-prompt]').forEach(function(c) {
-                c.classList.remove('builder-chip--active');
-            });
-            chip.classList.add('builder-chip--active');
+            document.querySelectorAll('.builder-chip[data-prompt]').forEach(deactivateChip);
+            activateChip(chip);
             selectedStrategy = chip.getAttribute('data-prompt');
             updateGoButton();
         });
@@ -280,13 +293,11 @@
     document.querySelectorAll('.builder-chip[data-tag]').forEach(function(chip) {
         chip.addEventListener('click', function() {
             var tag = chip.getAttribute('data-tag');
-            document.querySelectorAll('.builder-chip[data-tag="' + tag + '"]').forEach(function(s) {
-                s.classList.remove('builder-chip--active');
-            });
+            document.querySelectorAll('.builder-chip[data-tag="' + tag + '"]').forEach(deactivateChip);
             if (selectedTags[tag] === chip.getAttribute('data-value')) {
                 delete selectedTags[tag];
             } else {
-                chip.classList.add('builder-chip--active');
+                activateChip(chip);
                 selectedTags[tag] = chip.getAttribute('data-value');
             }
             updateGoButton();

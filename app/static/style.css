@@ -2235,6 +2235,12 @@ details.plan-layer-details {
     flex-shrink: 0;
 }
 
+.builder-chip-check {
+    width: 0.8rem;
+    height: 0.8rem;
+    flex-shrink: 0;
+}
+
 .builder-chip:hover {
     border-color: rgba(139, 92, 246, 0.5);
     background: rgba(139, 92, 246, 0.06);
@@ -2243,9 +2249,15 @@ details.plan-layer-details {
 
 .builder-chip--active {
     border-color: #8b5cf6;
-    background: rgba(139, 92, 246, 0.15);
-    color: #e0d4fc;
-    box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);
+    background: #8b5cf6;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35);
+}
+
+.builder-chip--active:hover {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #fff;
 }
 
 .builder-chip--sm {
