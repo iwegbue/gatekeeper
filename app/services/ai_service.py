@@ -163,13 +163,11 @@ async def extract_rules_from_conversation(
         _logging.getLogger(__name__).exception("extract_rules_from_conversation: provider call failed")
         return []
 
-    # Strip accidental markdown fences the model may add despite instructions
-    cleaned = raw.strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.split("```")[1]
-        if cleaned.startswith("json"):
-            cleaned = cleaned[4:]
-    cleaned = cleaned.strip()
+    # Strip accidental markdown fences the model may add despite instructions.
+    # Use a regex so leading whitespace and optional language tag are handled.
+    import re as _re
+    cleaned = _re.sub(r"^```[a-z]*\s*", "", raw.strip(), flags=_re.IGNORECASE)
+    cleaned = _re.sub(r"\s*```$", "", cleaned).strip()
 
     try:
         parsed = _json.loads(cleaned)
