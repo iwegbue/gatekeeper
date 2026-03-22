@@ -98,6 +98,7 @@ The foundation is solid. The immediate priority is releasing the substantial bod
 - SMTP + Telegram notifications
 - Help section
 - Plan reset with template loading
+- Multiple trading plans (plan list, plan detail, plan-scoped rules, delete guard)
 
 Once v0.3.0 is shipped, the next focus areas are:
 

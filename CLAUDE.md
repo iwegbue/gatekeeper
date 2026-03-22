@@ -222,7 +222,7 @@ API routers: raise `HTTPException` with appropriate status codes:
 - [ ] API router updated (with schema)
 - [ ] Pydantic schema added/updated
 - [ ] `CHANGELOG.md` updated
-- [ ] All 300+ tests still pass
+- [ ] All 303+ tests still pass
 - [ ] **Help section reviewed** — if the feature adds or changes UI, update `app/templates/help/index.html` to reflect it
 - [ ] **VISION.md reviewed** — if the feature affects product direction, roadmap status, or Core/Pro boundaries, update `VISION.md` to reflect it
 
