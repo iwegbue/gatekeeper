@@ -8,12 +8,11 @@ from app.models.enums import IdeaState
 from app.services import checklist_service, idea_service
 from tests.factories import create_idea, create_plan, create_rule
 
-
 # ── create_idea ────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
 async def test_create_idea_defaults(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="GBPUSD", direction="SHORT")
     assert idea.id is not None
     assert idea.instrument == "GBPUSD"
@@ -23,14 +22,14 @@ async def test_create_idea_defaults(db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_create_idea_upcases_instrument(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="eurusd", direction="LONG")
     assert idea.instrument == "EURUSD"
 
 
 @pytest.mark.asyncio
 async def test_create_idea_strips_whitespace(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="  XAUUSD  ", direction="LONG")
     assert idea.instrument == "XAUUSD"
 
@@ -48,14 +47,14 @@ async def test_create_idea_initializes_checks(db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_create_idea_sets_entry_window(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(db, instrument="EURUSD", direction="LONG")
     assert idea.entry_window_expires_at is not None
 
 
 @pytest.mark.asyncio
 async def test_create_idea_with_notes_and_risk(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await idea_service.create_idea(
         db,
         instrument="AUDUSD",

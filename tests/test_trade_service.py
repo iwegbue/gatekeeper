@@ -8,7 +8,6 @@ from app.models.enums import IdeaState, TradeState
 from app.services import checklist_service, trade_service
 from tests.factories import create_idea, create_plan, create_rule, create_trade
 
-
 # ── open_trade ─────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
@@ -32,7 +31,7 @@ async def test_open_trade_creates_trade(db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_open_trade_advances_idea_to_in_trade(db: AsyncSession):
-    plan = await create_plan(db)
+    await create_plan(db)
     idea = await create_idea(db, state=IdeaState.ENTRY_PERMITTED.value)
     await trade_service.open_trade(db, idea, entry_price=1.1000, sl_price=1.0950)
     assert idea.state == IdeaState.IN_TRADE.value
@@ -161,8 +160,8 @@ async def test_r_multiple_short_loss(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_plan_adherence_all_required_checked(db: AsyncSession):
     plan = await create_plan(db)
-    rule1 = await create_rule(db, plan.id, name="Rule 1", rule_type="REQUIRED")
-    rule2 = await create_rule(db, plan.id, name="Rule 2", rule_type="REQUIRED")
+    await create_rule(db, plan.id, name="Rule 1", rule_type="REQUIRED")
+    await create_rule(db, plan.id, name="Rule 2", rule_type="REQUIRED")
     idea = await create_idea(db)
     checks = await checklist_service.initialize_checks(db, idea.id, plan.id)
     for check in checks:
@@ -199,6 +198,7 @@ async def test_plan_adherence_optional_rules_not_counted_as_violations(db: Async
     # Check only the required rule
     for check in checks:
         from sqlalchemy import select
+
         from app.models.plan_rule import PlanRule
         result = await db.execute(select(PlanRule).where(PlanRule.id == check.rule_id))
         rule = result.scalar_one()

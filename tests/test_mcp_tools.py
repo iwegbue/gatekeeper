@@ -7,10 +7,9 @@ isolated schema.
 """
 import pytest
 from fastmcp import Client
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.factories import create_plan, create_rule, create_idea, create_idea_with_checks, create_trade
-
+from tests.factories import create_idea, create_idea_with_checks, create_plan, create_rule, create_trade
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -19,19 +18,12 @@ def _patch_session_factory(db: AsyncSession):
     Patch AsyncSessionFactory so MCP tools use the test session.
     Returns a context manager that restores the original on exit.
     """
+
     import app.database as db_module
-    from contextlib import asynccontextmanager
 
     original = db_module.AsyncSessionFactory
 
     class _FakeFactory:
-        def __aenter__(self_inner):
-            return db.__aenter__()
-
-        def __aexit__(self_inner, *args):
-            # Don't close — the test fixture owns the session lifecycle
-            return db.__aexit__(*args)
-
         async def __aenter__(self_inner):
             return db
 
@@ -186,7 +178,7 @@ async def test_toggle_check(db, mcp_server):
 @pytest.mark.anyio
 async def test_list_ideas_active_filter(db, mcp_server):
     from app.models.enums import IdeaState
-    plan = await create_plan(db)
+    await create_plan(db)
     active = await create_idea(db, state=IdeaState.WATCHING.value)
     closed = await create_idea(db, state=IdeaState.CLOSED.value)
     await db.flush()
