@@ -24,9 +24,9 @@ if TYPE_CHECKING:
 
 async def _build_plan_context(db: AsyncSession) -> str:
     """Summarize the trading plan and its rules for AI context."""
-    from app.services.plan_service import get_plan, get_rules_by_layer
+    from app.services.plan_service import get_active_plan, get_rules_by_layer
 
-    plan = await get_plan(db)
+    plan = await get_active_plan(db)
     rules_by_layer = await get_rules_by_layer(db, plan.id)
 
     lines = [f"Trading Plan: {plan.name}"]

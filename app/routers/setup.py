@@ -140,7 +140,7 @@ async def setup_ai_submit(
 async def setup_plan_page(request: Request, db: AsyncSession = Depends(get_db)):
     if _already_completed(request):
         return RedirectResponse(url="/", status_code=302)
-    plan = await plan_service.get_plan(db)
+    plan = await plan_service.get_active_plan(db)
     templates = list_templates()
     return request.app.state.templates.TemplateResponse(
         "setup/plan.html",

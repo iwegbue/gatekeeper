@@ -109,7 +109,7 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
     if not rules and not instruments:
         return redirect("No rules could be extracted — the conversation may need a summary first", "warning")
 
-    plan = await plan_service.get_plan(db)
+    plan = await plan_service.get_active_plan(db)
     for rule in rules:
         await plan_service.create_rule(
             db,

@@ -1,14 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Trading Plan - Gatekeeper{% endblock %}
+{% block title %}{{ plan.name }} - Gatekeeper{% endblock %}
 {% block content %}
+<a href="/plan" class="back-link">&larr; All Plans</a>
+
 <div class="page-header">
-    <h2>{{ plan.name }}</h2>
+    <div>
+        <h2>{{ plan.name }}</h2>
+        {% if plan.is_active %}
+        <span class="badge grade-a">Active</span>
+        {% else %}
+        <span class="badge state-watch">Inactive</span>
+        {% endif %}
+    </div>
     <div class="flex-row">
         {% if total_rules > 0 %}
         <a href="/plan/builder" class="small secondary" role="button">Plan Builder</a>
         {% endif %}
-        <a href="/plan/edit" class="small secondary" role="button">Edit Plan</a>
-        <a href="/plan/reset" class="small contrast" role="button">Reset Plan</a>
+        <a href="/plan/{{ plan.id }}/edit" class="small secondary" role="button">Edit Plan</a>
+        <a href="/plan/{{ plan.id }}/reset" class="small contrast" role="button">Reset Plan</a>
     </div>
 </div>
 
@@ -37,20 +46,20 @@
     {% for layer in layers %}
     <div class="plan-layer-row">
         <span class="plan-layer-name">{{ layer.value }}</span>
-        <a href="/plan/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
+        <a href="/plan/{{ plan.id }}/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
     </div>
     {% endfor %}
 </div>
 
 <p class="muted" style="font-size: 0.8rem; margin-top: 1.5rem;">
-    Want a head start? <a href="/plan/reset">Load a starter template →</a>
+    Want a head start? <a href="/plan/{{ plan.id }}/reset">Load a starter template →</a>
 </p>
 
 {% else %}
 
 {# ── Has-rules state: management view ─────────────────────────────────── #}
 <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; align-items: center;">
-    <a href="/plan/rules/new" role="button" class="small">+ Add Rule</a>
+    <a href="/plan/{{ plan.id }}/rules/new" role="button" class="small">+ Add Rule</a>
     <a href="/validation" role="button" class="small secondary">
         <i data-lucide="flask-conical"></i> Validate Plan
     </a>
@@ -66,7 +75,7 @@
                 {{ layer.value }}
                 <span class="count-badge">{{ layer_rules | length }}</span>
             </span>
-            <a href="/plan/rules/new?layer={{ layer.value }}" class="small" role="button"
+            <a href="/plan/{{ plan.id }}/rules/new?layer={{ layer.value }}" class="small" role="button"
                style="font-size:0.75rem;" onclick="event.stopPropagation()">+ Add</a>
         </summary>
         <table style="margin-top: 0.5rem;">
@@ -88,7 +97,7 @@
                     <td><span class="badge {% if rule.rule_type == 'REQUIRED' %}grade-a{% elif rule.rule_type == 'OPTIONAL' %}grade-b{% else %}state-watch{% endif %}">{{ rule.rule_type }}</span></td>
                     <td>{{ rule.weight }}</td>
                     <td>
-                        <a href="/plan/rules/{{ rule.id }}/edit" class="small">Edit</a>
+                        <a href="/plan/{{ plan.id }}/rules/{{ rule.id }}/edit" class="small">Edit</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -101,7 +110,7 @@
             {{ layer.value }}
             <span class="count-badge">0</span>
         </span>
-        <a href="/plan/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
+        <a href="/plan/{{ plan.id }}/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
     </div>
     {% endif %}
 </section>

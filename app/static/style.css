@@ -2663,6 +2663,58 @@ details.plan-layer-details {
     height: 1.1rem;
 }
 
+/* ── Plan Cards (multi-plan list) ─────────────────────────────────────── */
+
+.plan-cards {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.plan-card {
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    margin: 0;
+}
+
+.plan-card--active {
+    border-color: var(--pico-primary);
+    border-width: 2px;
+}
+
+.plan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.plan-card-title {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.plan-card-title a {
+    text-decoration: none;
+}
+
+.plan-card-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+}
+
+.plan-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: none;
+    margin-top: 0.5rem;
+}
+
 /* ── Plan Builder responsive ─────────────────────────────────────────── */
 
 @media (max-width: 768px) {

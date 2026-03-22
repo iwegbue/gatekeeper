@@ -43,10 +43,15 @@ async def create_idea(
     notes: str | None = None,
     plan_id: uuid.UUID | None = None,
 ) -> Idea:
+    if plan_id is None:
+        plan = await plan_service.get_active_plan(db)
+        plan_id = plan.id
+
     idea = Idea(
         instrument=instrument.upper().strip(),
         direction=direction,
         state=IdeaState.WATCHING.value,
+        plan_id=plan_id,
         risk_pct=risk_pct,
         notes=notes,
     )
@@ -57,10 +62,6 @@ async def create_idea(
     s = await settings_service.get_settings(db)
     idea.entry_window_expires_at = datetime.now(timezone.utc) + timedelta(hours=s.entry_window_hours)
 
-    # Initialize checklist if plan_id provided
-    if plan_id is None:
-        plan = await plan_service.get_plan(db)
-        plan_id = plan.id
     await checklist_service.initialize_checks(db, idea.id, plan_id)
 
     await db.flush()

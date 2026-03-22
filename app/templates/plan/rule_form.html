@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{% if rule %}Edit Rule{% else %}New Rule{% endif %} - Gatekeeper{% endblock %}
 {% block content %}
-<a href="/plan" class="back-link">&larr; Back to Plan</a>
+<a href="/plan/{{ plan.id }}" class="back-link">&larr; Back to Plan</a>
 <h2>{% if rule %}Edit Rule{% else %}New Rule{% endif %}</h2>
 
-<form method="post" action="{% if rule %}/plan/rules/{{ rule.id }}/edit{% else %}/plan/rules/new{% endif %}">
+<form method="post" action="{% if rule %}/plan/{{ plan.id }}/rules/{{ rule.id }}/edit{% else %}/plan/{{ plan.id }}/rules/new{% endif %}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <label for="layer"><span class="tip-trigger-text">Layer<span class="tip-content">Which of the 7 gates this rule belongs to: CONTEXT → SETUP → CONFIRMATION → ENTRY → RISK → MANAGEMENT → BEHAVIORAL. Ideas must pass each layer in order.</span></span></label>
     <select id="layer" name="layer" required>
         {% for l in layers %}
@@ -44,8 +45,9 @@
 
     {% if rule %}
     <div style="margin-top: 1rem;">
-        <form method="post" action="/plan/rules/{{ rule.id }}/delete" style="display:inline;"
+        <form method="post" action="/plan/{{ plan.id }}/rules/{{ rule.id }}/delete" style="display:inline;"
               onsubmit="return confirm('Delete this rule?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn-danger small">Delete Rule</button>
         </form>
     </div>

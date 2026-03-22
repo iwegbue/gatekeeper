@@ -182,7 +182,7 @@ async def compile_plan(
     Returns (compiled_plan, validation_run) — both already flushed to DB.
     The caller (router / get_db context) handles commit.
     """
-    plan = await plan_service.get_plan(db)
+    plan = await plan_service.get_active_plan(db)
     rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id, active_only=True)
     all_rules = [r for rules in rules_by_layer.values() for r in rules]
 

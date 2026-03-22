@@ -9,6 +9,7 @@ class IdeaCreate(BaseModel):
     direction: str
     risk_pct: float | None = None
     notes: str | None = None
+    plan_id: uuid.UUID | None = None
 
 
 class IdeaUpdate(BaseModel):
@@ -23,6 +24,7 @@ class IdeaResponse(BaseModel):
     instrument: str
     direction: str
     state: str
+    plan_id: uuid.UUID | None = None
     checklist_score: int | None = None
     grade: str | None = None
     risk_pct: float | None = None

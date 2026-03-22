@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header">
     <h2>Reset Trading Plan</h2>
-    <a href="/plan" role="button" class="small secondary">Cancel</a>
+    <a href="/plan/{{ plan.id }}" role="button" class="small secondary">Cancel</a>
 </div>
 
 <div class="help-info-box" style="margin-bottom: 1.5rem;">
@@ -11,7 +11,7 @@
     You can optionally load a starter template or start from scratch and add rules manually.
 </div>
 
-<form method="post" action="/plan/reset">
+<form method="post" action="/plan/{{ plan.id }}/reset">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="template_id" id="template_id" value="scratch">
 
@@ -90,7 +90,7 @@
     </div>
 
     <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-        <a href="/plan" role="button" class="secondary outline">Cancel</a>
+        <a href="/plan/{{ plan.id }}" role="button" class="secondary outline">Cancel</a>
         <button type="submit" class="danger">Reset Plan</button>
     </div>
 </form>

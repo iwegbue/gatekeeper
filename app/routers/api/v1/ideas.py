@@ -36,6 +36,7 @@ async def create_idea(body: IdeaCreate, db: AsyncSession = Depends(get_db)):
         direction=body.direction,
         risk_pct=body.risk_pct,
         notes=body.notes,
+        plan_id=body.plan_id,
     )
     return IdeaResponse.model_validate(idea)
 

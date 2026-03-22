@@ -37,7 +37,7 @@ Everything in Gatekeeper serves this loop:
 
 | Phase | What Gatekeeper does |
 |-------|---------------------|
-| **Define** | 7-layer plan structure. AI-assisted plan builder. Starter templates. |
+| **Define** | 7-layer plan structure. Multiple plans (one active at a time). AI-assisted plan builder. Starter templates. |
 | **Enforce** | Layer-gated state machine. You cannot open a trade until every required rule is satisfied. |
 | **Measure** | Auto-journal on close. Plan adherence %. Discipline score. Grade distribution. Violation tracking. |
 | **Refine** | AI journal coaching. Rule clarity checks. Plan validation (rule → testable proxy compilation). |

@@ -28,7 +28,7 @@ async def idea_list(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/new")
 async def idea_new(request: Request, db: AsyncSession = Depends(get_db)):
-    plan = await plan_service.get_plan(db)
+    plan = await plan_service.get_active_plan(db)
     has_rules = bool(await plan_service.get_rules_by_layer(db, plan.id))
     return request.app.state.templates.TemplateResponse(
         "ideas/create.html",

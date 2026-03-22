@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Multiple Trading Plans** — create, duplicate, and switch between multiple trading plans; only one plan is active at a time and new ideas use the active plan; existing ideas keep the plan they were created with
+  - Plan list page at `/plan` with activate, duplicate, and delete actions
+  - Plan detail page at `/plan/{id}` with full rule management
+  - New plan creation with optional template pre-fill
+  - Plan duplication copies all rules to a new inactive plan
+  - API endpoints: `GET/POST /api/v1/plans`, `GET/PATCH/DELETE /api/v1/plans/{id}`, `POST /api/v1/plans/{id}/activate`, `POST /api/v1/plans/{id}/duplicate`
+  - Backward-compatible `/api/v1/plan` endpoints still work (operate on the active plan)
+  - Ideas now store `plan_id` to track which plan they were created under
+  - Migration `008_multiple_trading_plans` with backfill for existing data
+  - 16 new tests in `test_multi_plan.py`
+
 - **Plan Builder UX overhaul** — strategy archetype suggestion chips (breakouts, pullbacks, mean reversion, momentum, range, supply & demand) with timeframe and market selectors so new users can start without a blank page; AI responses now render as formatted HTML (markdown via marked.js); animated thinking indicator while the AI responds; user and AI messages are visually distinct with avatars and differentiated bubble styles
 
 - **Settings / AI** — `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` env vars (e.g. Docker `.env`) are now seeded into the database on first boot, identical to entering them via the UI; `OPENAI_API_KEY` is also wired into `app/config.py` and `docker-compose.yml` for parity with Anthropic

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, Numeric, String, Text, text
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,6 +15,11 @@ class Idea(Base):
     instrument: Mapped[str] = mapped_column(String, nullable=False)
     direction: Mapped[str] = mapped_column(String, nullable=False)  # Direction enum
     state: Mapped[str] = mapped_column(String, default="WATCHING")  # IdeaState enum
+
+    # Which trading plan this idea was created under (immutable after creation)
+    plan_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("trading_plans.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Scoring & grade (computed from rule checks)
     checklist_score: Mapped[int | None] = mapped_column(Integer, nullable=True)

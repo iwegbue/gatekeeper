@@ -39,8 +39,31 @@ class PlanRuleResponse(BaseModel):
     updated_at: datetime
 
 
+class PlanCreate(BaseModel):
+    name: str
+    description: str | None = None
+    activate: bool = False
+
+
+class PlanUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
+class PlanSummaryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    description: str | None = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+
 class PlanResponse(BaseModel):
     id: uuid.UUID
     name: str
     description: str | None = None
+    is_active: bool = True
     rules_by_layer: dict[str, list[PlanRuleResponse]] = {}
