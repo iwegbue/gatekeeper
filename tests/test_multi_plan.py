@@ -71,23 +71,36 @@ async def test_activate_nonexistent_plan(db):
 async def test_delete_inactive_plan(db):
     await create_plan(db, name="Active", is_active=True)
     inactive = await create_plan(db, name="Inactive", is_active=False)
-    deleted = await plan_service.delete_plan(db, inactive.id)
-    assert deleted is True
+    error = await plan_service.delete_plan(db, inactive.id)
+    assert error is None
     assert await plan_service.get_plan_by_id(db, inactive.id) is None
 
 
 @pytest.mark.asyncio
 async def test_cannot_delete_active_plan(db):
     active = await create_plan(db, name="Active", is_active=True)
-    deleted = await plan_service.delete_plan(db, active.id)
-    assert deleted is False
+    error = await plan_service.delete_plan(db, active.id)
+    assert error == "active"
     assert await plan_service.get_plan_by_id(db, active.id) is not None
 
 
 @pytest.mark.asyncio
 async def test_delete_nonexistent_plan(db):
-    result = await plan_service.delete_plan(db, uuid.uuid4())
-    assert result is False
+    error = await plan_service.delete_plan(db, uuid.uuid4())
+    assert error is None
+
+
+@pytest.mark.asyncio
+async def test_cannot_delete_plan_with_ideas(db):
+    from tests.factories import create_idea
+
+    await create_plan(db, name="Active", is_active=True)
+    inactive = await create_plan(db, name="Inactive", is_active=False)
+    await create_idea(db, plan_id=inactive.id)
+
+    error = await plan_service.delete_plan(db, inactive.id)
+    assert error == "has_ideas"
+    assert await plan_service.get_plan_by_id(db, inactive.id) is not None
 
 
 @pytest.mark.asyncio

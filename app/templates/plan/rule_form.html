@@ -42,15 +42,13 @@
     {% endif %}
 
     <button type="submit">{% if rule %}Update{% else %}Create{% endif %} Rule</button>
-
-    {% if rule %}
-    <div style="margin-top: 1rem;">
-        <form method="post" action="/plan/{{ plan.id }}/rules/{{ rule.id }}/delete" style="display:inline;"
-              onsubmit="return confirm('Delete this rule?');">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button type="submit" class="btn-danger small">Delete Rule</button>
-        </form>
-    </div>
-    {% endif %}
 </form>
+
+{% if rule %}
+<form method="post" action="/plan/{{ plan.id }}/rules/{{ rule.id }}/delete" style="margin-top: 1rem;"
+      onsubmit="return confirm('Delete this rule?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn-danger small">Delete Rule</button>
+</form>
+{% endif %}
 {% endblock %}

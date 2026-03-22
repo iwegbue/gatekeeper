@@ -140,7 +140,11 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
         parts.append(f"{len(rules)} rule{'s' if len(rules) != 1 else ''}")
     if new_instrument_count:
         parts.append(f"{new_instrument_count} instrument{'s' if new_instrument_count != 1 else ''}")
-    return redirect(f"{' and '.join(parts)} added from Plan Builder")
+
+    return RedirectResponse(
+        f"/plan/{plan.id}?msg={quote(' and '.join(parts) + ' added from Plan Builder')}",
+        status_code=303,
+    )
 
 
 @router.post("/clear")

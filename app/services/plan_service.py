@@ -65,13 +65,14 @@ async def update_plan(
     plan_id: uuid.UUID | None = None,
     name: str | None = None,
     description: str | None = None,
-) -> TradingPlan:
-    """Update plan metadata. If plan_id is None, updates the active plan."""
+) -> TradingPlan | None:
+    """Update plan metadata. If plan_id is None, updates the active plan.
+    Returns None if a specific plan_id was given but not found."""
     if plan_id is not None:
         plan = await get_plan_by_id(db, plan_id)
+        if plan is None:
+            return None
     else:
-        plan = await get_active_plan(db)
-    if plan is None:
         plan = await get_active_plan(db)
     if name is not None:
         plan.name = name
@@ -92,16 +93,29 @@ async def activate_plan(db: AsyncSession, plan_id: uuid.UUID) -> TradingPlan | N
     return plan
 
 
-async def delete_plan(db: AsyncSession, plan_id: uuid.UUID) -> bool:
-    """Delete a plan. Cannot delete the active plan."""
+async def delete_plan(db: AsyncSession, plan_id: uuid.UUID) -> str | None:
+    """Delete a plan. Returns None on success, or an error reason string.
+
+    Blocked if:
+    - Plan not found → None (treat as already gone)
+    - Plan is active → 'active'
+    - Plan has ideas referencing it → 'has_ideas'
+    """
+    from app.models.idea import Idea
+
     plan = await get_plan_by_id(db, plan_id)
     if plan is None:
-        return False
+        return None
     if plan.is_active:
-        return False
+        return "active"
+    idea_count_result = await db.execute(
+        select(func.count()).select_from(Idea).where(Idea.plan_id == plan_id)
+    )
+    if (idea_count_result.scalar() or 0) > 0:
+        return "has_ideas"
     await db.delete(plan)
     await db.flush()
-    return True
+    return None
 
 
 async def duplicate_plan(
@@ -176,6 +190,14 @@ async def get_rules_by_layer(
 
 async def get_rule(db: AsyncSession, rule_id: uuid.UUID) -> PlanRule | None:
     result = await db.execute(select(PlanRule).where(PlanRule.id == rule_id))
+    return result.scalar_one_or_none()
+
+
+async def get_rule_for_plan(db: AsyncSession, rule_id: uuid.UUID, plan_id: uuid.UUID) -> PlanRule | None:
+    """Return a rule only if it belongs to the given plan."""
+    result = await db.execute(
+        select(PlanRule).where(PlanRule.id == rule_id, PlanRule.plan_id == plan_id)
+    )
     return result.scalar_one_or_none()
 
 

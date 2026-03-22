@@ -85,9 +85,13 @@ async def plan_delete(
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
-    deleted = await plan_service.delete_plan(db, plan_id)
-    if not deleted:
-        return RedirectResponse(url="/plan?msg=Cannot+delete+active+plan&msg_type=error", status_code=303)
+    error = await plan_service.delete_plan(db, plan_id)
+    if error == "active":
+        return RedirectResponse(url="/plan?msg=Cannot+delete+the+active+plan&msg_type=error", status_code=303)
+    if error == "has_ideas":
+        return RedirectResponse(
+            url="/plan?msg=Cannot+delete+a+plan+that+has+ideas&msg_type=error", status_code=303
+        )
     return RedirectResponse(url="/plan?msg=Plan+deleted", status_code=303)
 
 
@@ -146,7 +150,9 @@ async def plan_update(
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
-    await plan_service.update_plan(db, plan_id=plan_id, name=name or None, description=description or None)
+    result = await plan_service.update_plan(db, plan_id=plan_id, name=name or None, description=description or None)
+    if result is None:
+        return RedirectResponse(url="/plan?msg=Plan+not+found&msg_type=error", status_code=303)
     return RedirectResponse(url=f"/plan/{plan_id}?msg=Plan+updated", status_code=303)
 
 
@@ -200,9 +206,9 @@ async def rule_edit(
     request: Request, plan_id: uuid.UUID, rule_id: uuid.UUID, db: AsyncSession = Depends(get_db)
 ):
     plan = await plan_service.get_plan_by_id(db, plan_id)
-    rule = await plan_service.get_rule(db, rule_id)
+    rule = await plan_service.get_rule_for_plan(db, rule_id, plan_id)
     if not plan or not rule:
-        return RedirectResponse(url="/plan?msg=Not+found&msg_type=error", status_code=303)
+        return RedirectResponse(url=f"/plan/{plan_id}?msg=Rule+not+found&msg_type=error", status_code=303)
     return request.app.state.templates.TemplateResponse(
         "plan/rule_form.html",
         {
@@ -230,6 +236,9 @@ async def rule_update(
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
+    rule = await plan_service.get_rule_for_plan(db, rule_id, plan_id)
+    if rule is None:
+        return RedirectResponse(url=f"/plan/{plan_id}?msg=Rule+not+found&msg_type=error", status_code=303)
     await plan_service.update_rule(
         db,
         rule_id,
@@ -250,6 +259,9 @@ async def rule_delete(
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
+    rule = await plan_service.get_rule_for_plan(db, rule_id, plan_id)
+    if rule is None:
+        return RedirectResponse(url=f"/plan/{plan_id}?msg=Rule+not+found&msg_type=error", status_code=303)
     await plan_service.delete_rule(db, rule_id)
     return RedirectResponse(url=f"/plan/{plan_id}?msg=Rule+deleted", status_code=303)
 

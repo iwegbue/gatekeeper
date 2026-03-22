@@ -73,6 +73,8 @@ async def update_plan(plan_id: uuid.UUID, body: PlanUpdate, db: AsyncSession = D
     plan = await plan_service.update_plan(
         db, plan_id=plan_id, name=body.name, description=body.description
     )
+    if plan is None:
+        raise HTTPException(status_code=404, detail="Plan not found")
     return PlanSummaryResponse.model_validate(plan)
 
 
@@ -86,9 +88,11 @@ async def activate_plan(plan_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 
 @router.delete("/{plan_id}", response_model=SuccessResponse)
 async def delete_plan(plan_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    deleted = await plan_service.delete_plan(db, plan_id)
-    if not deleted:
-        raise HTTPException(status_code=409, detail="Cannot delete active plan")
+    error = await plan_service.delete_plan(db, plan_id)
+    if error == "active":
+        raise HTTPException(status_code=409, detail="Cannot delete the active plan")
+    if error == "has_ideas":
+        raise HTTPException(status_code=409, detail="Cannot delete a plan that has ideas")
     return SuccessResponse(message="Plan deleted")
 
 
@@ -142,18 +146,20 @@ async def update_rule(
     body: PlanRuleUpdate,
     db: AsyncSession = Depends(get_db),
 ):
+    scoped = await plan_service.get_rule_for_plan(db, rule_id, plan_id)
+    if scoped is None:
+        raise HTTPException(status_code=404, detail="Rule not found")
     update_data = body.model_dump(exclude_unset=True)
     rule = await plan_service.update_rule(db, rule_id, **update_data)
-    if rule is None:
-        raise HTTPException(status_code=404, detail="Rule not found")
     return PlanRuleResponse.model_validate(rule)
 
 
 @router.delete("/{plan_id}/rules/{rule_id}", response_model=SuccessResponse)
 async def delete_rule(plan_id: uuid.UUID, rule_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    deleted = await plan_service.delete_rule(db, rule_id)
-    if not deleted:
+    scoped = await plan_service.get_rule_for_plan(db, rule_id, plan_id)
+    if scoped is None:
         raise HTTPException(status_code=404, detail="Rule not found")
+    await plan_service.delete_rule(db, rule_id)
     return SuccessResponse(message="Rule deleted")
 
 
@@ -202,16 +208,20 @@ async def compat_update_rule(
     body: PlanRuleUpdate,
     db: AsyncSession = Depends(get_db),
 ):
+    active = await plan_service.get_active_plan(db)
+    scoped = await plan_service.get_rule_for_plan(db, rule_id, active.id)
+    if scoped is None:
+        raise HTTPException(status_code=404, detail="Rule not found")
     update_data = body.model_dump(exclude_unset=True)
     rule = await plan_service.update_rule(db, rule_id, **update_data)
-    if rule is None:
-        raise HTTPException(status_code=404, detail="Rule not found")
     return PlanRuleResponse.model_validate(rule)
 
 
 @compat_router.delete("/rules/{rule_id}", response_model=SuccessResponse)
 async def compat_delete_rule(rule_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    deleted = await plan_service.delete_rule(db, rule_id)
-    if not deleted:
+    active = await plan_service.get_active_plan(db)
+    scoped = await plan_service.get_rule_for_plan(db, rule_id, active.id)
+    if scoped is None:
         raise HTTPException(status_code=404, detail="Rule not found")
+    await plan_service.delete_rule(db, rule_id)
     return SuccessResponse(message="Rule deleted")
