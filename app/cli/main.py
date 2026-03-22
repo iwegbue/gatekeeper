@@ -280,14 +280,14 @@ def trades_open(
 ):
     """Open a trade from an ENTRY_PERMITTED idea."""
     c = _client(url, token)
-    payload: dict = {"entry_price": entry, "sl_price": sl}
+    payload: dict = {"idea_id": idea_id, "entry_price": entry, "sl_price": sl}
     if tp is not None:
         payload["tp_price"] = tp
     if size is not None:
         payload["lot_size"] = size
     if risk is not None:
         payload["risk_pct"] = risk
-    data = c.post(f"/api/v1/ideas/{idea_id}/trade", json=payload)
+    data = c.post("/api/v1/trades", json=payload)
     _dump(data, output_json)
 
 
@@ -362,7 +362,7 @@ def journal_list(
     c = _client(url, token)
     data = c.get("/api/v1/journal")
     if completed:
-        data = [e for e in data if e.get("completed")]
+        data = [e for e in data if e.get("status") == "COMPLETED"]
     if output_json:
         typer.echo(_json.dumps(data, indent=2))
         return
@@ -372,7 +372,7 @@ def journal_list(
             e["id"][:8],
             e.get("trade_id", "")[:8],
             str(e.get("plan_adherence_pct") or "-"),
-            "✓" if e.get("completed") else "✗",
+            "✓" if e.get("status") == "COMPLETED" else "✗",
             str(e.get("would_take_again") or "-"),
         )
     console.print(table)

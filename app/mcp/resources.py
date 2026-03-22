@@ -26,6 +26,8 @@ def register(mcp: FastMCP) -> None:
         from app.services import plan_service
         async with AsyncSessionFactory() as db:
             plan = await plan_service.get_plan(db)
+            # get_plan auto-creates a plan row if none exists; commit so it persists
+            await db.commit()
             rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id)
 
             lines = [f"# Trading Plan: {plan.name}"]
@@ -96,7 +98,7 @@ def register(mcp: FastMCP) -> None:
                     "lot_size": t.lot_size,
                     "risk_pct": t.risk_pct,
                     "grade": t.grade,
-                    "partial_taken": t.partial_taken,
+                    "partials_taken": t.partials_taken,
                     "be_locked": t.be_locked,
                     "entry_time": t.entry_time.isoformat() if t.entry_time else None,
                 })

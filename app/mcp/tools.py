@@ -214,8 +214,11 @@ def register(mcp: FastMCP) -> None:
                 )
                 await db.commit()
                 return _trade_summary(trade)
-            except ValueError as e:
-                return {"error": str(e)}
+            except (ValueError, Exception) as e:
+                from app.services.state_machine import GuardError, TransitionError
+                if isinstance(e, (ValueError, GuardError, TransitionError)):
+                    return {"error": str(e)}
+                raise
 
     @mcp.tool
     async def close_trade(
@@ -226,10 +229,11 @@ def register(mcp: FastMCP) -> None:
         from app.database import AsyncSessionFactory
         from app.services import trade_service
         async with AsyncSessionFactory() as db:
+            trade = await trade_service.get_trade(db, uuid.UUID(trade_id))
+            if trade is None:
+                return {"error": f"Trade {trade_id} not found"}
             try:
-                trade = await trade_service.close_trade(db, uuid.UUID(trade_id), exit_price=exit_price)
-                if trade is None:
-                    return {"error": f"Trade {trade_id} not found"}
+                trade = await trade_service.close_trade(db, trade, exit_price=exit_price)
                 await db.commit()
                 return _trade_summary(trade)
             except ValueError as e:
@@ -290,7 +294,7 @@ def register(mcp: FastMCP) -> None:
         async with AsyncSessionFactory() as db:
             entries = await journal_service.list_entries(db)
             if completed_only:
-                entries = [e for e in entries if e.completed]
+                entries = [e for e in entries if e.status == "COMPLETED"]
             return [_journal_summary(e) for e in entries]
 
     @mcp.tool
@@ -361,6 +365,9 @@ def register(mcp: FastMCP) -> None:
                 provider = await get_provider_from_db(db)
             except AIConfigError as e:
                 return {"error": f"AI not configured: {e}"}
+            from app.services import idea_service
+            if await idea_service.get_idea(db, uuid.UUID(idea_id)) is None:
+                return {"error": f"Idea {idea_id} not found"}
             content = await ai_service.idea_review(db, provider, uuid.UUID(idea_id))
             await db.commit()
             return {"review": content}
@@ -378,6 +385,9 @@ def register(mcp: FastMCP) -> None:
                 provider = await get_provider_from_db(db)
             except AIConfigError as e:
                 return {"error": f"AI not configured: {e}"}
+            from app.services import journal_service
+            if await journal_service.get_entry(db, uuid.UUID(entry_id)) is None:
+                return {"error": f"Journal entry {entry_id} not found"}
             content = await ai_service.journal_coach(db, provider, uuid.UUID(entry_id))
             await db.commit()
             return {"coaching": content}
@@ -443,7 +453,8 @@ def _journal_summary(entry) -> dict:
     return {
         "id": str(entry.id),
         "trade_id": str(entry.trade_id),
-        "completed": entry.completed,
+        "status": entry.status,
+        "completed": entry.status == "COMPLETED",
         "plan_adherence_pct": entry.plan_adherence_pct,
         "would_take_again": entry.would_take_again,
         "created_at": entry.created_at.isoformat() if entry.created_at else None,

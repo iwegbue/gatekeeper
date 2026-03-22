@@ -46,7 +46,8 @@ else:
 
 
 _mcp_server = create_mcp_server()
-_mcp_app = _mcp_server.http_app(path="/mcp")
+# path="/" because we mount the sub-app at /mcp — avoids a /mcp/mcp double-prefix
+_mcp_app = _mcp_server.http_app(path="/")
 
 
 @asynccontextmanager
