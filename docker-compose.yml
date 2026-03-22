@@ -29,6 +29,7 @@ services:
       # You can override it here to skip the wizard (useful for scripted deployments).
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
       SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-}
       NOTIFY_EMAIL: ${NOTIFY_EMAIL:-}
