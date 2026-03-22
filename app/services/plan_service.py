@@ -119,6 +119,16 @@ async def delete_rule(db: AsyncSession, rule_id: uuid.UUID) -> bool:
     return True
 
 
+async def clear_rules(db: AsyncSession, plan_id: uuid.UUID) -> int:
+    """Delete all rules for a plan. Returns the count of deleted rules."""
+    result = await db.execute(select(PlanRule).where(PlanRule.plan_id == plan_id))
+    rules = list(result.scalars().all())
+    for rule in rules:
+        await db.delete(rule)
+    await db.flush()
+    return len(rules)
+
+
 async def reorder_rules(db: AsyncSession, plan_id: uuid.UUID, layer: str, rule_ids: list[uuid.UUID]) -> None:
     for idx, rid in enumerate(rule_ids):
         result = await db.execute(
