@@ -12,7 +12,20 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.auth import AuthMiddleware
-from app.routers import auth, dashboard, ideas, instruments, journal, plan, plan_builder, reports, settings, setup, trades
+from app.mcp import create_mcp_server
+from app.routers import (
+    auth,
+    dashboard,
+    ideas,
+    instruments,
+    journal,
+    plan,
+    plan_builder,
+    reports,
+    settings,
+    setup,
+    trades,
+)
 from app.routers.api.v1 import api_v1_auth_router, api_v1_router
 
 limiter = Limiter(key_func=get_remote_address)
@@ -32,6 +45,10 @@ else:
     _version_info = {"version": "dev", "commit": "local"}
 
 
+_mcp_server = create_mcp_server()
+_mcp_app = _mcp_server.http_app(path="/mcp")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.config import settings as _settings
@@ -39,7 +56,7 @@ async def lifespan(app: FastAPI):
 
     # Seed admin password from env var if provided and no hash exists in the DB yet
     from app.database import AsyncSessionFactory
-    from app.services.settings_service import admin_password_is_set, set_admin_password, get_settings
+    from app.services.settings_service import admin_password_is_set, get_settings, set_admin_password
     async with AsyncSessionFactory() as db:
         password_set = await admin_password_is_set(db)
         if not password_set and _settings.ADMIN_PASSWORD:
@@ -54,7 +71,8 @@ async def lifespan(app: FastAPI):
     logger.info("Gatekeeper Core starting up")
     from app.tasks.background import start_background_tasks
     start_background_tasks(app)
-    yield
+    async with _mcp_app.lifespan(app):
+        yield
     logger.info("Gatekeeper Core shutting down")
 
 
@@ -116,6 +134,9 @@ def create_app() -> FastAPI:
     app.include_router(api_v1_auth_router)
     app.include_router(api_v1_router)
 
+    # MCP server (StreamableHTTP at /mcp)
+    app.mount("/mcp", _mcp_app)
+
     return app
 
 
@@ -127,6 +148,7 @@ class _TemplateAdapter:
 
     def TemplateResponse(self, name: str, context: dict, status_code: int = 200):
         from starlette.responses import HTMLResponse
+
         from app.csrf import generate_csrf_token
 
         # Inject a fresh CSRF token for every HTML response
