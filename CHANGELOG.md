@@ -101,7 +101,7 @@ Initial release.
 - **Weighted checklist grading** — A (≥85%), B (65–84%), C (<65%); advisory rules visible but non-blocking
 - **Trade management** — open from ENTRY_PERMITTED, partial/BE management, R-multiple on close
 - **Auto-journal** — draft created on trade close with plan adherence % and rule violations
-- **AI plan builder** — multi-turn wizard (BYOK: Anthropic, OpenAI, Ollama)
+- **Plan Builder** — multi-turn wizard (BYOK: Anthropic, OpenAI, Ollama)
 - **AI idea review** — checklist analysis against plan
 - **AI journal coach** — behavioral pattern identification
 - **AI rule clarity check** — push vague rules toward precision
