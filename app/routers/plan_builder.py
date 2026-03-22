@@ -4,6 +4,7 @@ Plan Builder — AI-powered multi-turn wizard for creating trading plan rules.
 
 import json
 import logging
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,36 +81,31 @@ async def builder_chat(
 @router.post("/done")
 async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
     """Extract rules from the saved conversation and write them to the trading plan."""
-    session = await pb_service.get_session(db)
-    if not session or not session.conversation:
+    def redirect(msg: str, msg_type: str = "success") -> RedirectResponse:
         return RedirectResponse(
-            "/plan?msg=No conversation found — start the Plan Builder first&msg_type=warning",
+            f"/plan?msg={quote(msg)}&msg_type={msg_type}",
             status_code=303,
         )
+
+    session = await pb_service.get_session(db)
+    if not session or not session.conversation:
+        return redirect("No conversation found — start the Plan Builder first", "warning")
 
     try:
         provider = await ai_factory.get_provider_from_db(db)
     except ai_factory.AIConfigError as e:
-        return RedirectResponse(
-            f"/plan?msg={e}&msg_type=error",
-            status_code=303,
-        )
+        return redirect(str(e), "error")
 
     try:
         rules = await ai_service.extract_rules_from_conversation(db, provider, session.conversation)
+        await db.commit()  # persist the AIAnalysis log record regardless of rule count
     except Exception:
         logger.exception("Rule extraction failed")
         await db.rollback()
-        return RedirectResponse(
-            "/plan?msg=Could not extract rules — add them manually from the conversation&msg_type=error",
-            status_code=303,
-        )
+        return redirect("Could not extract rules — add them manually from the conversation", "error")
 
     if not rules:
-        return RedirectResponse(
-            "/plan?msg=No rules could be extracted — the conversation may need a summary first&msg_type=warning",
-            status_code=303,
-        )
+        return redirect("No rules could be extracted — the conversation may need a summary first", "warning")
 
     plan = await plan_service.get_plan(db)
     for rule in rules:
@@ -125,10 +121,7 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
 
     await db.commit()
     count = len(rules)
-    return RedirectResponse(
-        f"/plan?msg={count} rule{'s' if count != 1 else ''} added from Plan Builder&msg_type=success",
-        status_code=303,
-    )
+    return redirect(f"{count} rule{'s' if count != 1 else ''} added from Plan Builder")
 
 
 @router.post("/clear")

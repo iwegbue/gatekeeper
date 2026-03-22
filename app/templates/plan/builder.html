@@ -140,14 +140,15 @@
             <i data-lucide="send"></i>
         </button>
     </div>
-    <div class="builder-done-row">
-        <form id="done-form" method="post" action="/plan/builder/done" style="margin:0;">
-            <button type="submit" id="done-btn" class="builder-done-btn outline secondary small">
-                <i data-lucide="check-circle"></i> Done — add rules to my plan
-            </button>
-        </form>
-    </div>
 </form>
+
+<div id="builder-done-row" class="builder-done-row" style="display:none;">
+    <form id="done-form" method="post" action="/plan/builder/done" style="margin:0;">
+        <button type="submit" id="done-btn" class="builder-done-btn outline secondary small">
+            <i data-lucide="check-circle"></i> Done — add rules to my plan
+        </button>
+    </form>
+</div>
 
 <script>
 (function() {
@@ -174,6 +175,7 @@
     }
 
     var layerTracker = document.getElementById('layer-tracker');
+    var doneRow = document.getElementById('builder-done-row');
     var doneBtn = document.getElementById('done-btn');
     var doneForm = document.getElementById('done-form');
 
@@ -182,13 +184,13 @@
         layerTracker.style.display = 'flex';
         chatContainer.style.display = 'block';
         form.style.display = 'block';
-        if (doneBtn) doneBtn.style.display = 'none';
+        // done row stays hidden until first AI response
         messageInput.focus();
         lucide.createIcons();
     }
 
     function revealDoneBtn() {
-        if (doneBtn) doneBtn.style.display = 'inline-flex';
+        if (doneRow) doneRow.style.display = 'flex';
     }
 
     if (doneForm) {
@@ -359,9 +361,6 @@
 
     if (suggestSkip) {
         suggestSkip.addEventListener('click', showChat);
-    }
-
-    if (doneBtn) {
     }
 
     // ── Chat form ────────────────────────────────────────────────────────
