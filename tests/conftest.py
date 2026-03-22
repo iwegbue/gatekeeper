@@ -7,6 +7,7 @@ never pollute each other, no teardown needed.
 Usage:
     TEST_DATABASE_URL=postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5433/gatekeeper_test pytest
 """
+
 import os
 
 import pytest_asyncio

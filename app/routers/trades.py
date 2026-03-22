@@ -59,7 +59,8 @@ async def trade_open(
         return RedirectResponse(url="/ideas?msg=Idea+not+found&msg_type=error", status_code=303)
     try:
         trade = await trade_service.open_trade(
-            db, idea,
+            db,
+            idea,
             entry_price=entry_price,
             sl_price=sl_price,
             tp_price=tp_price,
@@ -126,7 +127,8 @@ async def trade_close(
         journal_entry = await journal_service.get_entry_for_trade(db, trade_id)
         if journal_entry is None:
             await journal_service.create_draft(
-                db, trade,
+                db,
+                trade,
                 plan_adherence_pct=adherence_pct,
                 rule_violations=violations,
             )

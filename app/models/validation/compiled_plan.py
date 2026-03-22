@@ -4,6 +4,7 @@ CompiledPlan — the interpreted plan artifact produced by the rule compiler.
 Stores a frozen snapshot of the plan at compile time plus the AI-proposed
 (and user-confirmable) machine-testable proxy for each rule.
 """
+
 import uuid
 from datetime import datetime
 
@@ -34,6 +35,7 @@ class CompiledPlan(Base):
         "user_confirmed": bool
     }
     """
+
     __tablename__ = "compiled_plans"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -1,4 +1,5 @@
 """Tests for authentication middleware and login/logout routes."""
+
 import pytest
 import pytest_asyncio
 
@@ -15,6 +16,7 @@ async def seeded_client(client, db):
     await db.commit()
     # Mark setup as complete so the middleware doesn't redirect to /setup or /setup/welcome
     from app.main import app
+
     app.state.needs_setup = False
     app.state.setup_completed = True
     return client

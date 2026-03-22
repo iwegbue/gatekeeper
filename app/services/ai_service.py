@@ -7,6 +7,7 @@ Four features:
   3. journal_coach — reviews a journal entry, identifies patterns
   4. rule_clarity  — pushes vague rules toward precision
 """
+
 import uuid
 from typing import TYPE_CHECKING
 
@@ -20,9 +21,11 @@ if TYPE_CHECKING:
 
 # ── Prompt building ────────────────────────────────────────────────────────────
 
+
 async def _build_plan_context(db: AsyncSession) -> str:
     """Summarize the trading plan and its rules for AI context."""
     from app.services.plan_service import get_plan, get_rules_by_layer
+
     plan = await get_plan(db)
     rules_by_layer = await get_rules_by_layer(db, plan.id)
 
@@ -73,6 +76,7 @@ async def _build_idea_context(db: AsyncSession, idea_id: uuid.UUID) -> str:
 
 
 # ── AI features ────────────────────────────────────────────────────────────────
+
 
 async def plan_builder_chat(
     db: AsyncSession,
@@ -137,6 +141,7 @@ async def journal_coach(
     Returns AI coaching as a string.
     """
     from app.services.journal_service import get_entry
+
     entry = await get_entry(db, entry_id)
     if entry is None:
         return "Journal entry not found."
@@ -200,6 +205,7 @@ async def rule_clarity_check(
 
 
 # ── Persistence ────────────────────────────────────────────────────────────────
+
 
 async def _save_analysis(
     db: AsyncSession,

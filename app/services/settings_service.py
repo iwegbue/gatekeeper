@@ -1,6 +1,7 @@
 """
 Runtime settings service — singleton pattern.
 """
+
 import hashlib
 import hmac
 import secrets

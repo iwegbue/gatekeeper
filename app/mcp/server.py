@@ -4,6 +4,7 @@ MCP server factory for Gatekeeper Core.
 Creates a FastMCP instance with all tools and resources registered.
 The server is mounted into the main FastAPI app at /mcp.
 """
+
 import logging
 
 from fastmcp import FastMCP

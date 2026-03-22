@@ -1,6 +1,7 @@
 """
 Tests for state_machine — transitions, guards, blockers, regression, invalidation.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +14,7 @@ from tests.factories import create_idea, create_plan, create_rule
 async def _make_idea_with_all_layers_checkable(db: AsyncSession):
     """Create a plan with one REQUIRED rule per layer, return (plan, idea, checks)."""
     from app.models.enums import PlanLayer
+
     plan = await create_plan(db)
     for layer in PlanLayer:
         await create_rule(db, plan.id, layer=layer.value, name=f"{layer.value} Gate", rule_type="REQUIRED")
@@ -26,6 +28,7 @@ async def _check_layer(db: AsyncSession, idea_id, checks, layer: str):
     from sqlalchemy import select
 
     from app.models.plan_rule import PlanRule
+
     for check in checks:
         result = await db.execute(select(PlanRule).where(PlanRule.id == check.rule_id))
         rule = result.scalar_one()
@@ -34,6 +37,7 @@ async def _check_layer(db: AsyncSession, idea_id, checks, layer: str):
 
 
 # ── Forward transitions ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_advance_blocked_when_layer_incomplete(db: AsyncSession):
@@ -173,6 +177,7 @@ async def test_cannot_advance_from_terminal_states(db: AsyncSession):
 
 # ── Backward regression ────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_regress_confirmed_to_setup_valid(db: AsyncSession):
     plan, idea, checks = await _make_idea_with_all_layers_checkable(db)
@@ -228,6 +233,7 @@ async def test_cannot_regress_from_watching(db: AsyncSession):
 
 # ── Invalidation ───────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_invalidation_from_watching(db: AsyncSession):
     idea = await create_idea(db, state=IdeaState.WATCHING.value)
@@ -279,6 +285,7 @@ async def test_cannot_invalidate_already_invalidated(db: AsyncSession):
 
 # ── State transition history ────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_transition_is_recorded(db: AsyncSession):
     """Each state change creates a StateTransition record."""
@@ -290,9 +297,7 @@ async def test_transition_is_recorded(db: AsyncSession):
     await _check_layer(db, idea.id, checks, "CONTEXT")
     await state_machine.advance(db, idea, reason="Context confirmed")
 
-    result = await db.execute(
-        select(StateTransition).where(StateTransition.idea_id == idea.id)
-    )
+    result = await db.execute(select(StateTransition).where(StateTransition.idea_id == idea.id))
     transitions = list(result.scalars().all())
     assert len(transitions) == 1
     t = transitions[0]
@@ -302,6 +307,7 @@ async def test_transition_is_recorded(db: AsyncSession):
 
 
 # ── get_available_actions ──────────────────────────────────────────────────────
+
 
 def test_available_actions_watching():
     actions = state_machine.get_available_actions(IdeaState.WATCHING.value)

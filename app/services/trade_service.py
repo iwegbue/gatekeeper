@@ -4,6 +4,7 @@ Trade CRUD service.
 Handles creating trades from ideas, updating SL/TP, marking partials/BE,
 and closing trades with R-multiple computation.
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -56,9 +57,7 @@ async def open_trade(
     Raises ValueError if idea is not in ENTRY_PERMITTED state.
     """
     if idea.state != IdeaState.ENTRY_PERMITTED.value:
-        raise ValueError(
-            f"Cannot open trade: idea must be in ENTRY_PERMITTED state (currently {idea.state})"
-        )
+        raise ValueError(f"Cannot open trade: idea must be in ENTRY_PERMITTED state (currently {idea.state})")
 
     trade = Trade(
         idea_id=idea.id,
@@ -92,8 +91,18 @@ async def update_trade(
     trade = await get_trade(db, trade_id)
     if trade is None:
         return None
-    protected = ("id", "idea_id", "instrument", "direction", "entry_time", "entry_price",
-                 "initial_sl_price", "r_multiple", "exit_time", "exit_price")
+    protected = (
+        "id",
+        "idea_id",
+        "instrument",
+        "direction",
+        "entry_time",
+        "entry_price",
+        "initial_sl_price",
+        "r_multiple",
+        "exit_time",
+        "exit_price",
+    )
     for key, value in kwargs.items():
         if hasattr(trade, key) and key not in protected:
             setattr(trade, key, value)
@@ -170,9 +179,7 @@ async def close_trade(
         float(trade.initial_sl_price or trade.sl_price),
     )
     await db.flush()
-    await notification_service.notify_trade_closed(
-        db, trade.instrument, trade.direction, trade.r_multiple
-    )
+    await notification_service.notify_trade_closed(db, trade.instrument, trade.direction, trade.r_multiple)
     return trade
 
 

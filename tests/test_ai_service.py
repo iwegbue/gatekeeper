@@ -27,6 +27,7 @@ class MockProvider:
 
 # ── _build_plan_context ────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_build_plan_context_includes_rule_names(db: AsyncSession):
     plan = await create_plan(db, name="My Strategy")
@@ -53,6 +54,7 @@ async def test_build_plan_context_includes_rule_types(db: AsyncSession):
 
 
 # ── _build_idea_context ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_build_idea_context_includes_idea_fields(db: AsyncSession):
@@ -81,6 +83,7 @@ async def test_build_idea_context_unchecked_rules(db: AsyncSession):
 
 # ── idea_review ────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_idea_review_calls_provider(db: AsyncSession):
     plan = await create_plan(db)
@@ -108,6 +111,7 @@ async def test_idea_review_saves_analysis(db: AsyncSession):
     from sqlalchemy import select
 
     from app.models.ai_analysis import AIAnalysis
+
     result = await db.execute(select(AIAnalysis).where(AIAnalysis.trigger == "idea_review"))
     analyses = list(result.scalars().all())
     assert len(analyses) == 1
@@ -117,9 +121,11 @@ async def test_idea_review_saves_analysis(db: AsyncSession):
 
 # ── journal_coach ──────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_journal_coach_handles_missing_entry(db: AsyncSession):
     import uuid
+
     provider = MockProvider("coaching")
     result = await ai_service.journal_coach(db, provider, uuid.uuid4())
     assert "not found" in result.lower()
@@ -145,6 +151,7 @@ async def test_journal_coach_calls_provider_with_trade_data(db: AsyncSession):
 
 # ── plan_builder_chat ──────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_plan_builder_chat_returns_response(db: AsyncSession):
     provider = MockProvider("Let's define your CONTEXT rules first.")
@@ -168,11 +175,13 @@ async def test_plan_builder_chat_passes_conversation(db: AsyncSession):
 
 # ── rule_clarity_check ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_rule_clarity_check_returns_feedback(db: AsyncSession):
     provider = MockProvider("This rule is vague. Suggest: price must close above the 50 SMA on H4.")
     result = await ai_service.rule_clarity_check(
-        db, provider,
+        db,
+        provider,
         rule_name="Good trend",
         rule_description=None,
         layer="CONTEXT",
@@ -184,7 +193,8 @@ async def test_rule_clarity_check_returns_feedback(db: AsyncSession):
 async def test_rule_clarity_includes_description_in_prompt(db: AsyncSession):
     provider = MockProvider("feedback")
     await ai_service.rule_clarity_check(
-        db, provider,
+        db,
+        provider,
         rule_name="Zone touch",
         rule_description="Price must be near a key level",
         layer="SETUP",

@@ -121,9 +121,14 @@ async def rule_update(
     _csrf: None = Depends(require_csrf),
 ):
     await plan_service.update_rule(
-        db, rule_id,
-        layer=layer, name=name, description=description or None,
-        rule_type=rule_type, weight=weight, is_active=is_active,
+        db,
+        rule_id,
+        layer=layer,
+        name=name,
+        description=description or None,
+        rule_type=rule_type,
+        weight=weight,
+        is_active=is_active,
     )
     return RedirectResponse(url=f"/plan?msg=Rule+updated#{layer}", status_code=303)
 

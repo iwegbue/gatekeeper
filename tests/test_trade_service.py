@@ -1,6 +1,7 @@
 """
 Tests for trade_service — open, update, close, R-multiple, plan adherence.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +10,7 @@ from app.services import checklist_service, trade_service
 from tests.factories import create_idea, create_plan, create_rule, create_trade
 
 # ── open_trade ─────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_open_trade_requires_entry_permitted_state(db: AsyncSession):
@@ -41,15 +43,19 @@ async def test_open_trade_advances_idea_to_in_trade(db: AsyncSession):
 async def test_open_trade_with_tp_and_lot_size(db: AsyncSession):
     idea = await create_idea(db, state=IdeaState.ENTRY_PERMITTED.value)
     trade = await trade_service.open_trade(
-        db, idea,
-        entry_price=1.1000, sl_price=1.0950,
-        tp_price=1.1100, lot_size=0.5,
+        db,
+        idea,
+        entry_price=1.1000,
+        sl_price=1.0950,
+        tp_price=1.1100,
+        lot_size=0.5,
     )
     assert float(trade.tp_price) == pytest.approx(1.1100)
     assert float(trade.lot_size) == pytest.approx(0.5)
 
 
 # ── update_trade ───────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_update_trade_sl(db: AsyncSession):
@@ -72,11 +78,13 @@ async def test_update_trade_cannot_change_protected_fields(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_update_trade_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await trade_service.update_trade(db, uuid.uuid4(), sl_price=1.0)
     assert result is None
 
 
 # ── take_partial / lock_be ─────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_take_partial_sets_flag_and_state(db: AsyncSession):
@@ -99,6 +107,7 @@ async def test_lock_be_sets_flag(db: AsyncSession):
 
 # ── close_trade ────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_close_trade_sets_exit_price_and_state(db: AsyncSession):
     idea = await create_idea(db)
@@ -118,6 +127,7 @@ async def test_close_trade_raises_if_already_closed(db: AsyncSession):
 
 
 # ── R-multiple computation ─────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_r_multiple_long_win(db: AsyncSession):
@@ -156,6 +166,7 @@ async def test_r_multiple_short_loss(db: AsyncSession):
 
 
 # ── compute_plan_adherence ─────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_plan_adherence_all_required_checked(db: AsyncSession):
@@ -200,6 +211,7 @@ async def test_plan_adherence_optional_rules_not_counted_as_violations(db: Async
         from sqlalchemy import select
 
         from app.models.plan_rule import PlanRule
+
         result = await db.execute(select(PlanRule).where(PlanRule.id == check.rule_id))
         rule = result.scalar_one()
         if rule.rule_type == "REQUIRED":
@@ -219,6 +231,7 @@ async def test_plan_adherence_no_rules_returns_100(db: AsyncSession):
 
 
 # ── get_trade / list_trades ────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_list_trades_open_only(db: AsyncSession):

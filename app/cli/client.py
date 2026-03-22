@@ -1,6 +1,7 @@
 """
 Thin HTTP client wrapper around the Gatekeeper JSON API.
 """
+
 import httpx
 
 

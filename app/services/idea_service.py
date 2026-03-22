@@ -1,6 +1,7 @@
 """
 Idea CRUD service.
 """
+
 import uuid
 from datetime import datetime, timedelta, timezone
 

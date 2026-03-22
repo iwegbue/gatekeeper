@@ -1,6 +1,7 @@
 """
 Instrument (watchlist) CRUD service.
 """
+
 import uuid
 
 from sqlalchemy import select

@@ -1,12 +1,14 @@
 """
 Pydantic schemas for the Plan Validation Engine API.
 """
+
 import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
 # ── Compiled rule ─────────────────────────────────────────────────────────────
+
 
 class CompiledRuleResponse(BaseModel):
     rule_id: str
@@ -25,6 +27,7 @@ class CompiledRuleResponse(BaseModel):
 
 # ── Compiled plan ─────────────────────────────────────────────────────────────
 
+
 class CompiledPlanResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -37,6 +40,7 @@ class CompiledPlanResponse(BaseModel):
 
 
 # ── Validation run ────────────────────────────────────────────────────────────
+
 
 class ValidationRunResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -58,8 +62,10 @@ class ValidationRunDetailResponse(ValidationRunResponse):
 
 # ── Requests ──────────────────────────────────────────────────────────────────
 
+
 class ConfirmCompiledRuleRequest(BaseModel):
     """User confirms or overrides an AI-proposed interpretation."""
+
     status: str | None = None
     proxy_type: str | None = None
     proxy_params: dict | None = None

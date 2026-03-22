@@ -3,6 +3,7 @@ Tests for notification_service — SMTP email, Telegram, and domain event helper
 
 SMTP and Telegram network calls are patched so tests run without real servers.
 """
+
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -32,6 +33,7 @@ def _settings(**kwargs) -> SimpleNamespace:
 
 
 # ── send_email ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.anyio
 async def test_send_email_success():
@@ -82,6 +84,7 @@ async def test_send_email_smtp_error_returns_false():
 
 
 # ── send_telegram ─────────────────────────────────────────────────────────────
+
 
 @pytest.mark.anyio
 async def test_send_telegram_success():
@@ -142,9 +145,11 @@ async def test_send_telegram_api_error_returns_false():
 
 # ── domain helpers ────────────────────────────────────────────────────────────
 
+
 @pytest.mark.anyio
 async def test_notify_idea_expired(db):
     from app.services.settings_service import update_settings
+
     await update_settings(
         db,
         notifications_enabled=True,
@@ -165,6 +170,7 @@ async def test_notify_idea_expired(db):
 @pytest.mark.anyio
 async def test_notify_trade_closed(db):
     from app.services.settings_service import update_settings
+
     await update_settings(
         db,
         notifications_enabled=True,
@@ -191,6 +197,7 @@ async def test_notify_trade_closed(db):
 @pytest.mark.anyio
 async def test_notify_trade_closed_no_r_multiple(db):
     from app.services.settings_service import update_settings
+
     await update_settings(
         db,
         notifications_enabled=True,

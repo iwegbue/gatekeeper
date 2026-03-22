@@ -1,6 +1,7 @@
 """
 Tests for idea_service — CRUD, active filtering, checklist initialization.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +10,7 @@ from app.services import checklist_service, idea_service
 from tests.factories import create_idea, create_plan, create_rule
 
 # ── create_idea ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_idea_defaults(db: AsyncSession):
@@ -69,6 +71,7 @@ async def test_create_idea_with_notes_and_risk(db: AsyncSession):
 
 # ── get_idea ───────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_idea_returns_correct(db: AsyncSession):
     idea = await create_idea(db, instrument="USDJPY")
@@ -81,11 +84,13 @@ async def test_get_idea_returns_correct(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_get_idea_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await idea_service.get_idea(db, uuid.uuid4())
     assert result is None
 
 
 # ── list_ideas ─────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_list_ideas_returns_all(db: AsyncSession):
@@ -132,6 +137,7 @@ async def test_list_ideas_instrument_filter_case_insensitive(db: AsyncSession):
 
 # ── update_idea ────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_update_idea_fields(db: AsyncSession):
     idea = await create_idea(db)
@@ -153,11 +159,13 @@ async def test_update_idea_cannot_change_state_via_kwargs(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_update_idea_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await idea_service.update_idea(db, uuid.uuid4(), notes="x")
     assert result is None
 
 
 # ── delete_idea ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_delete_idea_removes_it(db: AsyncSession):
@@ -171,5 +179,6 @@ async def test_delete_idea_removes_it(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_delete_idea_returns_false_for_missing(db: AsyncSession):
     import uuid
+
     result = await idea_service.delete_idea(db, uuid.uuid4())
     assert result is False

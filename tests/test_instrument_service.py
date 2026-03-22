@@ -1,4 +1,5 @@
 """Tests for instrument_service."""
+
 import pytest
 
 from app.services import instrument_service
@@ -68,5 +69,6 @@ async def test_delete_instrument(db):
 @pytest.mark.asyncio
 async def test_delete_nonexistent(db):
     import uuid
+
     result = await instrument_service.delete_instrument(db, uuid.uuid4())
     assert result is False

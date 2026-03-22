@@ -4,6 +4,7 @@ Integration tests for the Plan Validation Engine API.
 Uses a test HTTP client with the DB overridden and the AI provider mocked
 via dependency injection.
 """
+
 import json
 import uuid
 
@@ -21,13 +22,15 @@ class MockProvider:
     model = "mock"
 
     async def chat(self, system: str, messages: list[dict]) -> str:
-        return json.dumps({
-            "status": "TESTABLE",
-            "proxy_type": "sma_trend",
-            "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
-            "confidence": 0.9,
-            "interpretation_notes": "Mapped to SMA 200.",
-        })
+        return json.dumps(
+            {
+                "status": "TESTABLE",
+                "proxy_type": "sma_trend",
+                "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+                "confidence": 0.9,
+                "interpretation_notes": "Mapped to SMA 200.",
+            }
+        )
 
 
 @pytest_asyncio.fixture
@@ -50,6 +53,7 @@ async def api_client(client: AsyncClient, db: AsyncSession):
 
 
 # ── POST /api/v1/validation/compile ──────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_compile_returns_201(api_client: AsyncClient, db: AsyncSession):
@@ -119,6 +123,7 @@ async def test_compile_with_unconfigured_ai_returns_422(client: AsyncClient, db:
 
 # ── GET /api/v1/validation/runs ───────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_list_runs_empty_initially(api_client: AsyncClient, db: AsyncSession):
     await create_plan(db)
@@ -146,6 +151,7 @@ async def test_list_runs_returns_runs_after_compile(api_client: AsyncClient, db:
 
 
 # ── GET /api/v1/validation/runs/{id} ─────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_run_returns_detail(api_client: AsyncClient, db: AsyncSession):
@@ -175,6 +181,7 @@ async def test_get_run_returns_404_for_missing(api_client: AsyncClient, db: Asyn
 
 # ── PUT /api/v1/validation/compiled-plans/{id}/rules/{rule_id}/confirm ───────
 
+
 @pytest.mark.asyncio
 async def test_confirm_rule_updates_interpretation(api_client: AsyncClient, db: AsyncSession):
     plan = await create_plan(db)
@@ -197,9 +204,7 @@ async def test_confirm_rule_updates_interpretation(api_client: AsyncClient, db: 
     assert response.status_code == 200
     data = response.json()
 
-    updated_rule = next(
-        (r for r in data["compiled_rules"] if r["rule_id"] == rule_id), None
-    )
+    updated_rule = next((r for r in data["compiled_rules"] if r["rule_id"] == rule_id), None)
     assert updated_rule is not None
     assert updated_rule["status"] == "APPROXIMATED"
     assert updated_rule["proxy"]["type"] == "ema_trend"
@@ -237,6 +242,7 @@ async def test_confirm_rule_returns_404_for_missing_rule_id(api_client: AsyncCli
 
 
 # ── Feedback structure ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_compile_feedback_has_expected_keys(api_client: AsyncClient, db: AsyncSession):

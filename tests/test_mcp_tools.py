@@ -5,6 +5,7 @@ Uses the fastmcp in-process Client to call tools directly, with the DB
 session patched via AsyncSessionFactory override so each test gets an
 isolated schema.
 """
+
 import pytest
 from fastmcp import Client
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tests.factories import create_idea, create_idea_with_checks, create_plan, create_rule, create_trade
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
+
 
 def _patch_session_factory(db: AsyncSession):
     """
@@ -43,13 +45,16 @@ def _restore_session_factory(original, db_module):
 
 # ── MCP server fixture ───────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def mcp_server():
     from app.mcp import create_mcp_server
+
     return create_mcp_server()
 
 
 # ── Tool tests ───────────────────────────────────────────────────────────────
+
 
 @pytest.mark.anyio
 async def test_get_status(db, mcp_server):
@@ -94,11 +99,14 @@ async def test_create_idea(db, mcp_server):
     original, db_module = _patch_session_factory(db)
     try:
         async with Client(mcp_server) as client:
-            result = await client.call_tool("create_idea", {
-                "instrument": "EURUSD",
-                "direction": "LONG",
-                "notes": "Strong trend",
-            })
+            result = await client.call_tool(
+                "create_idea",
+                {
+                    "instrument": "EURUSD",
+                    "direction": "LONG",
+                    "notes": "Strong trend",
+                },
+            )
             data = result.data
             assert data["instrument"] == "EURUSD"
             assert data["direction"] == "LONG"
@@ -114,10 +122,13 @@ async def test_create_idea_invalid_direction(db, mcp_server):
     original, db_module = _patch_session_factory(db)
     try:
         async with Client(mcp_server) as client:
-            result = await client.call_tool("create_idea", {
-                "instrument": "EURUSD",
-                "direction": "SIDEWAYS",
-            })
+            result = await client.call_tool(
+                "create_idea",
+                {
+                    "instrument": "EURUSD",
+                    "direction": "SIDEWAYS",
+                },
+            )
             assert "error" in result.data
     finally:
         _restore_session_factory(original, db_module)
@@ -126,6 +137,7 @@ async def test_create_idea_invalid_direction(db, mcp_server):
 @pytest.mark.anyio
 async def test_get_idea_not_found(db, mcp_server):
     import uuid
+
     original, db_module = _patch_session_factory(db)
     try:
         async with Client(mcp_server) as client:
@@ -163,11 +175,14 @@ async def test_toggle_check(db, mcp_server):
     original, db_module = _patch_session_factory(db)
     try:
         async with Client(mcp_server) as client:
-            result = await client.call_tool("toggle_check", {
-                "check_id": str(check.id),
-                "checked": True,
-                "notes": "Confirmed on H4",
-            })
+            result = await client.call_tool(
+                "toggle_check",
+                {
+                    "check_id": str(check.id),
+                    "checked": True,
+                    "notes": "Confirmed on H4",
+                },
+            )
             data = result.data
             assert data["checked"] is True
             assert data["notes"] == "Confirmed on H4"
@@ -178,6 +193,7 @@ async def test_toggle_check(db, mcp_server):
 @pytest.mark.anyio
 async def test_list_ideas_active_filter(db, mcp_server):
     from app.models.enums import IdeaState
+
     await create_plan(db)
     active = await create_idea(db, state=IdeaState.WATCHING.value)
     closed = await create_idea(db, state=IdeaState.CLOSED.value)
@@ -209,6 +225,7 @@ async def test_list_trades_empty(db, mcp_server):
 @pytest.mark.anyio
 async def test_get_trade_not_found(db, mcp_server):
     import uuid
+
     original, db_module = _patch_session_factory(db)
     try:
         async with Client(mcp_server) as client:
@@ -259,10 +276,13 @@ async def test_invalidate_idea(db, mcp_server):
     original, db_module = _patch_session_factory(db)
     try:
         async with Client(mcp_server) as client:
-            result = await client.call_tool("invalidate_idea", {
-                "idea_id": str(idea.id),
-                "reason": "Setup invalidated by news",
-            })
+            result = await client.call_tool(
+                "invalidate_idea",
+                {
+                    "idea_id": str(idea.id),
+                    "reason": "Setup invalidated by news",
+                },
+            )
             data = result.data
             assert data["state"] == "INVALIDATED"
     finally:

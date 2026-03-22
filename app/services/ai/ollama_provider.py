@@ -1,6 +1,7 @@
 """
 Ollama provider — calls the local Ollama /api/chat endpoint via httpx.
 """
+
 import httpx
 
 

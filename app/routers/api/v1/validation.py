@@ -1,6 +1,7 @@
 """
 Plan Validation Engine — JSON API router (Phase 1: Interpretability).
 """
+
 import uuid
 from typing import TYPE_CHECKING
 
@@ -101,6 +102,7 @@ async def confirm_rule(
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────
+
 
 def _build_run_detail(run, compiled_plan) -> ValidationRunDetailResponse:
     plan_data = CompiledPlanResponse.model_validate(compiled_plan)

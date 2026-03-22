@@ -4,6 +4,7 @@ Tests for validation/plan_compiler.py.
 Covers: compile_plan, coherence checks, interpretability score,
 confirm_compiled_rule, list/get runs.
 """
+
 import json
 
 import pytest
@@ -26,16 +27,19 @@ class MockProvider:
         self.call_count += 1
         if self._override:
             return self._override
-        return json.dumps({
-            "status": "TESTABLE",
-            "proxy_type": "sma_trend",
-            "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
-            "confidence": 0.9,
-            "interpretation_notes": "Mapped to 200 SMA trend.",
-        })
+        return json.dumps(
+            {
+                "status": "TESTABLE",
+                "proxy_type": "sma_trend",
+                "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+                "confidence": 0.9,
+                "interpretation_notes": "Mapped to 200 SMA trend.",
+            }
+        )
 
 
 # ── compile_plan ──────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_compile_plan_creates_compiled_plan(db: AsyncSession):
@@ -104,19 +108,22 @@ async def test_compile_plan_empty_plan_returns_perfect_score(db: AsyncSession):
 
 # ── Interpretability score ────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_interpretability_score_partial(db: AsyncSession):
     plan = await create_plan(db)
     await create_rule(db, plan.id, layer="CONTEXT", name="Testable rule")
     await create_rule(db, plan.id, layer="SETUP", name="Non-testable rule")
 
-    not_testable_response = json.dumps({
-        "status": "NOT_TESTABLE",
-        "proxy_type": "not_testable",
-        "proxy_params": {},
-        "confidence": 0.1,
-        "interpretation_notes": "Cannot interpret.",
-    })
+    not_testable_response = json.dumps(
+        {
+            "status": "NOT_TESTABLE",
+            "proxy_type": "not_testable",
+            "proxy_params": {},
+            "confidence": 0.1,
+            "interpretation_notes": "Cannot interpret.",
+        }
+    )
 
     call_count = 0
 
@@ -127,13 +134,15 @@ async def test_interpretability_score_partial(db: AsyncSession):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return json.dumps({
-                    "status": "TESTABLE",
-                    "proxy_type": "sma_trend",
-                    "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
-                    "confidence": 0.9,
-                    "interpretation_notes": "ok",
-                })
+                return json.dumps(
+                    {
+                        "status": "TESTABLE",
+                        "proxy_type": "sma_trend",
+                        "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+                        "confidence": 0.9,
+                        "interpretation_notes": "ok",
+                    }
+                )
             return not_testable_response
 
     compiled, _ = await plan_compiler.compile_plan(db, AlternatingProvider())
@@ -141,6 +150,7 @@ async def test_interpretability_score_partial(db: AsyncSession):
 
 
 # ── Coherence checks ──────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_coherence_gap_warning_for_empty_layer(db: AsyncSession):
@@ -183,6 +193,7 @@ async def test_coherence_no_warnings_when_risk_present(db: AsyncSession):
 
 
 # ── confirm_compiled_rule ─────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_confirm_rule_marks_user_confirmed(db: AsyncSession):
@@ -231,9 +242,8 @@ async def test_confirm_rule_updates_proxy(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_confirm_rule_returns_none_for_missing_plan(db: AsyncSession):
     import uuid
-    result = await plan_compiler.confirm_compiled_rule(
-        db, uuid.uuid4(), "some-rule-id", status="TESTABLE"
-    )
+
+    result = await plan_compiler.confirm_compiled_rule(db, uuid.uuid4(), "some-rule-id", status="TESTABLE")
     assert result is None
 
 
@@ -246,13 +256,12 @@ async def test_confirm_rule_returns_none_for_missing_rule_id(db: AsyncSession):
 
     compiled, _ = await plan_compiler.compile_plan(db, provider)
 
-    result = await plan_compiler.confirm_compiled_rule(
-        db, compiled.id, "non-existent-rule-id", status="TESTABLE"
-    )
+    result = await plan_compiler.confirm_compiled_rule(db, compiled.id, "non-existent-rule-id", status="TESTABLE")
     assert result is None
 
 
 # ── list/get runs ─────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_list_validation_runs_empty(db: AsyncSession):
@@ -279,6 +288,7 @@ async def test_list_validation_runs_returns_all_runs(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_get_validation_run_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     run = await plan_compiler.get_validation_run(db, uuid.uuid4())
     assert run is None
 

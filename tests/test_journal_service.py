@@ -1,6 +1,7 @@
 """
 Tests for journal_service — draft creation, adherence, rule violations, tags.
 """
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,7 @@ async def _make_closed_trade(db: AsyncSession):
 
 # ── create_draft ───────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_create_draft_sets_trade_summary(db: AsyncSession):
     idea, trade = await _make_closed_trade(db)
@@ -35,7 +37,8 @@ async def test_create_draft_sets_trade_summary(db: AsyncSession):
 async def test_create_draft_captures_plan_adherence(db: AsyncSession):
     idea, trade = await _make_closed_trade(db)
     entry = await journal_service.create_draft(
-        db, trade,
+        db,
+        trade,
         plan_adherence_pct=60,
         rule_violations=["Rule A", "Rule B"],
     )
@@ -51,6 +54,7 @@ async def test_create_draft_empty_violations(db: AsyncSession):
 
 
 # ── get_entry / list_entries ───────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_entry_for_trade(db: AsyncSession):
@@ -74,11 +78,13 @@ async def test_list_entries_returns_all(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_get_entry_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await journal_service.get_entry(db, uuid.uuid4())
     assert result is None
 
 
 # ── update_entry ───────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_update_entry_fields(db: AsyncSession):
@@ -86,7 +92,8 @@ async def test_update_entry_fields(db: AsyncSession):
     entry = await journal_service.create_draft(db, trade)
 
     updated = await journal_service.update_entry(
-        db, entry.id,
+        db,
+        entry.id,
         what_went_well="Patient entry",
         what_went_wrong="Moved SL too early",
         lessons_learned="Trust the plan",
@@ -110,7 +117,8 @@ async def test_update_entry_cannot_change_trade_summary(db: AsyncSession):
     original_instrument = entry.trade_summary["instrument"]
 
     await journal_service.update_entry(
-        db, entry.id,
+        db,
+        entry.id,
         trade_summary={"instrument": "HACKED"},
     )
     fresh = await journal_service.get_entry(db, entry.id)
@@ -120,11 +128,13 @@ async def test_update_entry_cannot_change_trade_summary(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_update_entry_returns_none_for_missing(db: AsyncSession):
     import uuid
+
     result = await journal_service.update_entry(db, uuid.uuid4(), what_went_well="x")
     assert result is None
 
 
 # ── complete_entry ─────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_complete_entry_changes_status(db: AsyncSession):
@@ -138,6 +148,7 @@ async def test_complete_entry_changes_status(db: AsyncSession):
 
 # ── delete_entry ───────────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_delete_entry(db: AsyncSession):
     idea, trade = await _make_closed_trade(db)
@@ -150,11 +161,13 @@ async def test_delete_entry(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_delete_entry_returns_false_for_missing(db: AsyncSession):
     import uuid
+
     result = await journal_service.delete_entry(db, uuid.uuid4())
     assert result is False
 
 
 # ── tags ───────────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_get_or_create_tag_idempotent(db: AsyncSession):
@@ -195,6 +208,7 @@ async def test_set_entry_tags_replaces_existing(db: AsyncSession):
 
 # ── Full pipeline integration ──────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_full_pipeline_idea_to_journal(db: AsyncSession):
     """
@@ -217,7 +231,8 @@ async def test_full_pipeline_idea_to_journal(db: AsyncSession):
 
     adherence_pct, violations = await trade_service.compute_plan_adherence(db, idea.id)
     entry = await journal_service.create_draft(
-        db, trade,
+        db,
+        trade,
         plan_adherence_pct=adherence_pct,
         rule_violations=violations,
     )

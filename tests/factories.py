@@ -3,6 +3,7 @@ Test factory helpers — create test objects with sensible defaults.
 
 Each factory accepts a db session and keyword overrides.
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -103,7 +104,7 @@ async def create_idea_with_checks(
     checks = []
     for layer in PlanLayer:
         for i in range(num_rules_per_layer):
-            rule = await create_rule(db, plan_id, layer=layer.value, name=f"{layer.value} Rule {i+1}", order=i)
+            rule = await create_rule(db, plan_id, layer=layer.value, name=f"{layer.value} Rule {i + 1}", order=i)
             check = IdeaRuleCheck(idea_id=idea.id, rule_id=rule.id)
             db.add(check)
             await db.flush()

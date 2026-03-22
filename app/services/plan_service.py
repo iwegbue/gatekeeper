@@ -1,6 +1,7 @@
 """
 Trading plan + plan rules CRUD service.
 """
+
 import uuid
 
 from sqlalchemy import func, select
@@ -36,7 +37,9 @@ async def update_plan(db: AsyncSession, *, name: str | None = None, description:
 # ── Rules ────────────────────────────────────────────────────────────────
 
 
-async def get_rules(db: AsyncSession, plan_id: uuid.UUID, *, layer: str | None = None, active_only: bool = True) -> list[PlanRule]:
+async def get_rules(
+    db: AsyncSession, plan_id: uuid.UUID, *, layer: str | None = None, active_only: bool = True
+) -> list[PlanRule]:
     stmt = select(PlanRule).where(PlanRule.plan_id == plan_id)
     if layer:
         stmt = stmt.where(PlanRule.layer == layer)
@@ -47,7 +50,9 @@ async def get_rules(db: AsyncSession, plan_id: uuid.UUID, *, layer: str | None =
     return list(result.scalars().all())
 
 
-async def get_rules_by_layer(db: AsyncSession, plan_id: uuid.UUID, active_only: bool = True) -> dict[str, list[PlanRule]]:
+async def get_rules_by_layer(
+    db: AsyncSession, plan_id: uuid.UUID, active_only: bool = True
+) -> dict[str, list[PlanRule]]:
     rules = await get_rules(db, plan_id, active_only=active_only)
     by_layer: dict[str, list[PlanRule]] = {layer.value: [] for layer in PlanLayer}
     for rule in rules:
@@ -73,8 +78,7 @@ async def create_rule(
 ) -> PlanRule:
     # Auto-assign order as max+1 in that layer
     result = await db.execute(
-        select(func.coalesce(func.max(PlanRule.order), 0))
-        .where(PlanRule.plan_id == plan_id, PlanRule.layer == layer)
+        select(func.coalesce(func.max(PlanRule.order), 0)).where(PlanRule.plan_id == plan_id, PlanRule.layer == layer)
     )
     max_order = result.scalar() or 0
 

@@ -1,4 +1,5 @@
 """Tests for plan_service: plan CRUD + rule CRUD/reorder/completeness."""
+
 import pytest
 
 from app.models.enums import PlanLayer
@@ -87,6 +88,7 @@ async def test_delete_rule(db):
 @pytest.mark.asyncio
 async def test_delete_nonexistent_rule(db):
     import uuid
+
     result = await plan_service.delete_rule(db, uuid.uuid4())
     assert result is False
 
@@ -104,6 +106,7 @@ async def test_reorder_rules(db):
     from sqlalchemy import select
 
     from app.models.plan_rule import PlanRule
+
     result = await db.execute(select(PlanRule).where(PlanRule.id == r3.id))
     assert result.scalar_one().order == 0
 

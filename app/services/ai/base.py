@@ -1,6 +1,7 @@
 """
 AI Provider protocol — the interface all providers must implement.
 """
+
 from typing import Protocol, runtime_checkable
 
 

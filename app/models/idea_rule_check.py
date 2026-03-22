@@ -13,6 +13,7 @@ class IdeaRuleCheck(Base):
     Links an idea to a plan rule — tracks whether the rule was checked off.
     One row per (idea, rule) pair.
     """
+
     __tablename__ = "idea_rule_checks"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

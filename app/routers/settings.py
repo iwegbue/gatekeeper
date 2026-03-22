@@ -149,7 +149,9 @@ async def test_email_notification(
     )
     if ok:
         return RedirectResponse(url="/settings?msg=Test+email+sent+successfully", status_code=303)
-    return RedirectResponse(url="/settings?msg=Failed+to+send+test+email+%E2%80%94+check+your+SMTP+settings&msg_type=error", status_code=303)
+    return RedirectResponse(
+        url="/settings?msg=Failed+to+send+test+email+%E2%80%94+check+your+SMTP+settings&msg_type=error", status_code=303
+    )
 
 
 @router.post("/notifications/test-telegram")
@@ -165,7 +167,10 @@ async def test_telegram_notification(
     )
     if ok:
         return RedirectResponse(url="/settings?msg=Test+Telegram+message+sent", status_code=303)
-    return RedirectResponse(url="/settings?msg=Failed+to+send+Telegram+message+%E2%80%94+check+your+token+and+chat+ID&msg_type=error", status_code=303)
+    return RedirectResponse(
+        url="/settings?msg=Failed+to+send+Telegram+message+%E2%80%94+check+your+token+and+chat+ID&msg_type=error",
+        status_code=303,
+    )
 
 
 @router.post("/restart-setup")

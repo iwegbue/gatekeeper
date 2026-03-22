@@ -50,7 +50,8 @@ async def journal_edit(
     _csrf: None = Depends(require_csrf),
 ):
     entry = await journal_service.update_entry(
-        db, entry_id,
+        db,
+        entry_id,
         what_went_well=what_went_well or None,
         what_went_wrong=what_went_wrong or None,
         lessons_learned=lessons_learned or None,
@@ -68,7 +69,9 @@ async def journal_edit(
 
 
 @router.post("/{entry_id}/complete")
-async def journal_complete(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
+async def journal_complete(
+    entry_id: uuid.UUID, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)
+):
     result = await journal_service.complete_entry(db, entry_id)
     if result is None:
         return RedirectResponse(url="/journal?msg=Entry+not+found&msg_type=error", status_code=303)

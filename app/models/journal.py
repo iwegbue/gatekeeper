@@ -20,7 +20,9 @@ from app.models.base import Base
 journal_entry_tags = Table(
     "journal_entry_tags",
     Base.metadata,
-    Column("journal_entry_id", UUID(as_uuid=True), ForeignKey("journal_entries.id", ondelete="CASCADE"), primary_key=True),
+    Column(
+        "journal_entry_id", UUID(as_uuid=True), ForeignKey("journal_entries.id", ondelete="CASCADE"), primary_key=True
+    ),
     Column("tag_id", UUID(as_uuid=True), ForeignKey("journal_tags.id", ondelete="CASCADE"), primary_key=True),
 )
 
@@ -33,7 +35,8 @@ class JournalTag(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
 
     entries: Mapped[list["JournalEntry"]] = relationship(
-        secondary=journal_entry_tags, back_populates="tags",
+        secondary=journal_entry_tags,
+        back_populates="tags",
     )
 
 
@@ -62,9 +65,13 @@ class JournalEntry(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), onupdate=lambda: datetime.now(timezone.utc),
+        DateTime(timezone=True),
+        server_default=text("now()"),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     tags: Mapped[list[JournalTag]] = relationship(
-        secondary=journal_entry_tags, back_populates="entries", lazy="selectin",
+        secondary=journal_entry_tags,
+        back_populates="entries",
+        lazy="selectin",
     )

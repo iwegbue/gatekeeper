@@ -4,6 +4,7 @@ Tests for validation/feedback_service.py.
 Pure unit tests — no DB needed.
 Builds CompiledPlan-like objects directly.
 """
+
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
@@ -29,7 +30,11 @@ def _make_compiled_rule(
         "weight": 1,
         "status": status,
         "proxy": {"type": proxy_type, "params": {}} if status != InterpretationStatus.NOT_TESTABLE.value else None,
-        "confidence": 0.9 if status == InterpretationStatus.TESTABLE.value else 0.5 if status == InterpretationStatus.APPROXIMATED.value else None,
+        "confidence": 0.9
+        if status == InterpretationStatus.TESTABLE.value
+        else 0.5
+        if status == InterpretationStatus.APPROXIMATED.value
+        else None,
         "interpretation_notes": "Test note.",
         "feature_dependencies": [],
         "user_confirmed": user_confirmed,
@@ -48,6 +53,7 @@ def _make_compiled_plan(rules: list[dict], warnings: list[str] | None = None, sc
 
 
 # ── build_report structure ────────────────────────────────────────────────────
+
 
 def test_build_report_returns_required_keys():
     plan = _make_compiled_plan([_make_compiled_rule()])
@@ -108,6 +114,7 @@ def test_build_report_coherence_warnings_passed_through():
 
 # ── replay_readiness ──────────────────────────────────────────────────────────
 
+
 def test_replay_ready_when_all_non_behavioral_testable():
     rules = [
         _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
@@ -152,6 +159,7 @@ def test_replay_not_ready_when_no_testable_rules_at_all():
 
 
 # ── Suggestions ───────────────────────────────────────────────────────────────
+
 
 def test_suggestions_mention_behavioral_rules():
     rules = [

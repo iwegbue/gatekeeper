@@ -24,6 +24,7 @@ def create_session_token() -> str:
 
 def verify_session_token(token: str) -> bool:
     from itsdangerous.exc import BadSignature, SignatureExpired
+
     try:
         data = serializer.loads(token, max_age=MAX_SESSION_AGE)
         return data.get("authenticated", False)

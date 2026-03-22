@@ -9,6 +9,7 @@ Usage:
 
 Token lifetime: 1 hour. Tokens are per-session (signed with SECRET_KEY).
 """
+
 import logging
 from typing import Annotated
 

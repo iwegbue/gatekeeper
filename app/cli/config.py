@@ -1,6 +1,7 @@
 """
 CLI configuration — resolves base URL and API token from env vars or config file.
 """
+
 import os
 import tomllib
 from pathlib import Path

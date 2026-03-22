@@ -7,6 +7,7 @@ Strategy: AI proposes, user confirms.
 - BEHAVIORAL rules are auto-classified as NOT_TESTABLE (no AI call).
 - Results are returned as CompiledRule dicts; persisted by plan_compiler.
 """
+
 import json
 import logging
 from typing import TYPE_CHECKING
@@ -70,7 +71,12 @@ PROXY_VOCABULARY: dict[str, dict] = {
     "momentum_confirm": {
         "layer": "CONFIRMATION",
         "description": "A momentum indicator confirms trade direction (RSI above/below threshold).",
-        "params": {"indicator": "str ('rsi')", "period": "int (e.g. 14)", "threshold": "float (e.g. 50)", "direction": "str ('above' or 'below')"},
+        "params": {
+            "indicator": "str ('rsi')",
+            "period": "int (e.g. 14)",
+            "threshold": "float (e.g. 50)",
+            "direction": "str ('above' or 'below')",
+        },
         "feature_dependencies": ["rsi_{period}"],
     },
     "limit_entry": {
@@ -106,7 +112,11 @@ PROXY_VOCABULARY: dict[str, dict] = {
     "trailing_stop": {
         "layer": "MANAGEMENT",
         "description": "Stop loss trails price by a fixed ATR distance once trade is in profit.",
-        "params": {"atr_period": "int (e.g. 14)", "atr_multiple": "float (e.g. 1.0)", "activate_at_r": "float (e.g. 1.0)"},
+        "params": {
+            "atr_period": "int (e.g. 14)",
+            "atr_multiple": "float (e.g. 1.0)",
+            "activate_at_r": "float (e.g. 1.0)",
+        },
         "feature_dependencies": ["atr_{atr_period}"],
     },
     "partial_at_r": {

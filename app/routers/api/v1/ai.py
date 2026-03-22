@@ -36,6 +36,10 @@ async def journal_coach(entry_id: uuid.UUID, db: AsyncSession = Depends(get_db))
 async def rule_clarity(body: RuleClarityRequest, db: AsyncSession = Depends(get_db)):
     provider = await _get_provider(db)
     content = await ai_service.rule_clarity_check(
-        db, provider, body.rule_name, body.rule_description, body.layer,
+        db,
+        provider,
+        body.rule_name,
+        body.rule_description,
+        body.layer,
     )
     return AIReviewResponse(content=content)
