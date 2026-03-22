@@ -8,10 +8,20 @@
 {% block content %}
 <div class="page-header">
     <h2>AI Plan Builder</h2>
-    <a href="/plan" class="secondary outline">← Trading Plan</a>
+    <div class="flex-row">
+        {% if has_history %}
+        <form method="post" action="/plan/builder/clear" style="margin:0;">
+            <button type="submit" class="outline secondary small">
+                <i data-lucide="rotate-ccw"></i> Start over
+            </button>
+        </form>
+        {% endif %}
+        <a href="/plan" class="secondary outline">← Trading Plan</a>
+    </div>
 </div>
 
-<div id="builder-suggest" class="builder-suggest">
+{# ── Suggestion panel — shown only when there is no saved conversation ── #}
+<div id="builder-suggest" class="builder-suggest" {% if has_history %}style="display:none;"{% endif %}>
     <div class="builder-suggest-header">
         <div class="builder-suggest-icon">
             <i data-lucide="sparkles"></i>
@@ -97,19 +107,22 @@
     </div>
 </div>
 
-<div id="chat-container" class="builder-chat" style="display:none;">
+{# ── Chat area — shown when there is a saved conversation or after skip ── #}
+<div id="chat-container" class="builder-chat" {% if not has_history %}style="display:none;"{% endif %}>
     <div id="chat-messages" class="builder-messages">
+        {% if not has_history %}
         <div class="builder-msg builder-msg--ai">
             <div class="builder-msg-avatar"><i data-lucide="bot"></i></div>
             <div class="builder-msg-body">
                 <p>Hello! I'm here to help you build your trading plan. Tell me about your trading strategy — what markets do you trade, what setups do you look for, and how do you manage risk?</p>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
-<form id="chat-form" class="builder-input-form" style="display:none;">
-    <input type="hidden" name="history" id="history-field" value="[]">
+<form id="chat-form" class="builder-input-form" {% if not has_history %}style="display:none;"{% endif %}>
+    <input type="hidden" name="history" id="history-field" value="{{ saved_history | e }}">
     <div class="builder-input-row">
         <textarea name="message" id="message-input" rows="2"
                   placeholder="Describe your strategy…" required></textarea>
@@ -134,10 +147,7 @@
     var selectedStrategy = null;
     var selectedTags = {};
 
-    marked.setOptions({
-        breaks: true,
-        gfm: true
-    });
+    marked.setOptions({ breaks: true, gfm: true });
 
     function renderMarkdown(text) {
         var container = document.createElement('div');
@@ -160,11 +170,9 @@
 
         var avatar = document.createElement('div');
         avatar.className = 'builder-msg-avatar';
-        if (role === 'user') {
-            avatar.innerHTML = '<i data-lucide="user"></i>';
-        } else {
-            avatar.innerHTML = '<i data-lucide="bot"></i>';
-        }
+        avatar.innerHTML = role === 'user'
+            ? '<i data-lucide="user"></i>'
+            : '<i data-lucide="bot"></i>';
 
         var body = document.createElement('div');
         body.className = 'builder-msg-body';
@@ -220,7 +228,7 @@
         formData.append('history', historyField.value);
 
         try {
-            var resp = await fetch('/plan/builder/chat', {method: 'POST', body: formData});
+            var resp = await fetch('/plan/builder/chat', { method: 'POST', body: formData });
             var data = await resp.json();
             hideThinking();
             if (data.error) {
@@ -238,7 +246,25 @@
         }
     }
 
-    // ── Suggestion chips ──
+    // ── Restore saved conversation on page load ──────────────────────────
+
+    (function restoreHistory() {
+        var raw = historyField.value;
+        if (!raw || raw === '[]') return;
+        try {
+            var turns = JSON.parse(raw);
+            if (!turns.length) return;
+            turns.forEach(function(turn) {
+                appendMessage(turn.role, turn.content);
+            });
+            // Scroll to bottom after restore
+            messages.scrollTop = messages.scrollHeight;
+        } catch(e) {
+            // Malformed history — start fresh
+        }
+    })();
+
+    // ── Suggestion chips ─────────────────────────────────────────────────
 
     document.querySelectorAll('.builder-chip[data-prompt]').forEach(function(chip) {
         chip.addEventListener('click', function() {
@@ -254,9 +280,9 @@
     document.querySelectorAll('.builder-chip[data-tag]').forEach(function(chip) {
         chip.addEventListener('click', function() {
             var tag = chip.getAttribute('data-tag');
-            var siblings = document.querySelectorAll('.builder-chip[data-tag="' + tag + '"]');
-            siblings.forEach(function(s) { s.classList.remove('builder-chip--active'); });
-
+            document.querySelectorAll('.builder-chip[data-tag="' + tag + '"]').forEach(function(s) {
+                s.classList.remove('builder-chip--active');
+            });
             if (selectedTags[tag] === chip.getAttribute('data-value')) {
                 delete selectedTags[tag];
             } else {
@@ -271,21 +297,20 @@
         suggestGo.disabled = !selectedStrategy;
     }
 
-    suggestGo.addEventListener('click', function() {
-        var parts = [selectedStrategy];
-        Object.keys(selectedTags).forEach(function(k) {
-            parts.push(selectedTags[k]);
+    if (suggestGo) {
+        suggestGo.addEventListener('click', function() {
+            var parts = [selectedStrategy];
+            Object.keys(selectedTags).forEach(function(k) { parts.push(selectedTags[k]); });
+            showChat();
+            sendMessage(parts.join(' '));
         });
-        var prompt = parts.join(' ');
-        showChat();
-        sendMessage(prompt);
-    });
+    }
 
-    suggestSkip.addEventListener('click', function() {
-        showChat();
-    });
+    if (suggestSkip) {
+        suggestSkip.addEventListener('click', showChat);
+    }
 
-    // ── Chat form ──
+    // ── Chat form ────────────────────────────────────────────────────────
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
