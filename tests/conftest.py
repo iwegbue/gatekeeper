@@ -17,9 +17,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.models.base import Base
 import app.models  # noqa: F401 — register all models
 
-TEST_DATABASE_URL = os.environ.get(
-    "TEST_DATABASE_URL",
-    "postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5433/gatekeeper_test",
+TEST_DATABASE_URL = (
+    os.environ.get("TEST_DATABASE_URL")
+    or os.environ.get("DATABASE_URL")
+    or "postgresql+asyncpg://gatekeeper:gatekeeper@localhost:5433/gatekeeper_test"
 )
 
 # Use a single event loop for the whole session so engine/connections share it.

@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% block title %}Help — Gatekeeper{% endblock %}
+{% block content %}
+
+<div class="help-layout">
+
+    {# ── Sidebar TOC ──────────────────────────────────────────────────────── #}
+    <nav class="help-toc" id="help-toc">
+        <ul>
+            <li><a href="#overview" class="help-toc-link active">Overview</a></li>
+            <li><a href="#workflow" class="help-toc-link">Workflow</a></li>
+            <li><a href="#layers" class="help-toc-link">The 7 Layers</a></li>
+            <li><a href="#state-machine" class="help-toc-link">Idea States</a></li>
+            <li><a href="#rules" class="help-toc-link">Rules &amp; Checklist</a></li>
+            <li><a href="#trades" class="help-toc-link">Trades</a></li>
+            <li><a href="#grading" class="help-toc-link">Grading</a></li>
+            <li><a href="#journal" class="help-toc-link">Journal</a></li>
+            <li><a href="#reports" class="help-toc-link">Reports</a></li>
+            <li><a href="#ai" class="help-toc-link">AI Features</a></li>
+            <li><a href="#api" class="help-toc-link">API &amp; CLI</a></li>
+            <li><a href="#keyboard" class="help-toc-link">Shortcuts</a></li>
+        </ul>
+    </nav>
+
+    {# ── Main Content ─────────────────────────────────────────────────────── #}
+    <div class="help-content">
+
+        <div class="help-hero">
+            <div class="help-hero-icon">
+                <i data-lucide="book-open"></i>
+            </div>
+            <h2>Help &amp; Guide</h2>
+            <p class="muted">Everything you need to know about using Gatekeeper to enforce trading discipline.</p>
+        </div>
+
+        {# ── Overview ─────────────────────────────────────────────────────── #}
+        <section id="overview" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="info"></i>
+                <h3>Overview</h3>
+            </div>
+            <p>Gatekeeper is a <strong>trading discipline platform</strong> that enforces your trading plan through a structured, rule-based workflow. Every trade idea must pass through a 7-layer checklist before you're permitted to enter — preventing impulsive, off-plan trades.</p>
+            <div class="help-card-grid">
+                <article class="help-card">
+                    <div class="help-card-icon help-card-icon--purple"><i data-lucide="target"></i></div>
+                    <strong>Plan-first</strong>
+                    <p>Define your rules across 7 layers. Gatekeeper holds you to them.</p>
+                </article>
+                <article class="help-card">
+                    <div class="help-card-icon help-card-icon--green"><i data-lucide="shield-check"></i></div>
+                    <strong>Gated entry</strong>
+                    <p>You can only enter a trade after completing all required checks.</p>
+                </article>
+                <article class="help-card">
+                    <div class="help-card-icon help-card-icon--blue"><i data-lucide="bar-chart-2"></i></div>
+                    <strong>Track &amp; improve</strong>
+                    <p>Journal every trade, review with AI, and monitor your discipline score.</p>
+                </article>
+            </div>
+        </section>
+
+        {# ── Workflow ─────────────────────────────────────────────────────── #}
+        <section id="workflow" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="git-branch"></i>
+                <h3>Workflow</h3>
+            </div>
+            <p>The core loop follows five steps, repeated for every trade opportunity:</p>
+            <ol class="help-steps">
+                <li>
+                    <span class="help-step-num">1</span>
+                    <div>
+                        <strong>Spot an opportunity</strong>
+                        <p>Create an <em>idea</em> with the instrument and direction (Long/Short). It starts in the <span class="badge state-watching">WATCHING</span> state.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="help-step-num">2</span>
+                    <div>
+                        <strong>Work through the checklist</strong>
+                        <p>Check off rules across the 7 layers. Your idea advances state only when the required rules for each gate are met.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="help-step-num">3</span>
+                    <div>
+                        <strong>Entry permitted</strong>
+                        <p>Once your idea reaches <span class="badge state-entry-permitted">ENTRY_PERMITTED</span>, open a trade with entry price, stop loss, and targets.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="help-step-num">4</span>
+                    <div>
+                        <strong>Manage &amp; close</strong>
+                        <p>Track partials, move stops, and close the trade. Complete the Management layer to advance to <span class="badge state-managed">MANAGED</span>.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="help-step-num">5</span>
+                    <div>
+                        <strong>Journal &amp; review</strong>
+                        <p>Write a journal entry reflecting on the trade. Use the AI coach for structured feedback, then check your reports.</p>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        {# ── The 7 Layers ─────────────────────────────────────────────────── #}
+        <section id="layers" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="layers"></i>
+                <h3>The 7 Layers</h3>
+            </div>
+            <p>Your trading plan is organized into seven layers. Each layer represents a distinct phase of trade evaluation.</p>
+            <div class="help-layers">
+                <div class="help-layer">
+                    <span class="badge layer-context">1</span>
+                    <div>
+                        <strong>Context</strong>
+                        <p>Market regime, higher-timeframe bias, news events. Is the environment right for this trade?</p>
+                    </div>
+                </div>
+                <div class="help-layer">
+                    <span class="badge layer-setup">2</span>
+                    <div>
+                        <strong>Setup</strong>
+                        <p>Pattern recognition, key levels, structure. Does the chart show a valid setup?</p>
+                    </div>
+                </div>
+                <div class="help-layer">
+                    <span class="badge layer-confirmation">3</span>
+                    <div>
+                        <strong>Confirmation</strong>
+                        <p>Trigger signals, momentum alignment, volume. Is there evidence the move is starting?</p>
+                    </div>
+                </div>
+                <div class="help-layer">
+                    <span class="badge layer-entry">4</span>
+                    <div>
+                        <strong>Entry</strong>
+                        <p>Precise entry criteria, order type, timing. Where exactly do you get in?</p>
+                    </div>
+                </div>
+                <div class="help-layer">
+                    <span class="badge layer-risk">5</span>
+                    <div>
+                        <strong>Risk</strong>
+                        <p>Stop loss placement, position sizing, risk-per-trade. How much are you risking?</p>
+                    </div>
+                </div>
+                <div class="help-layer">
+                    <span class="badge layer-management">6</span>
+                    <div>
+                        <strong>Management</strong>
+                        <p>Trailing stops, partial exits, breakeven rules. How do you manage the open position?</p>
+                    </div>
+                </div>
+                <div class="help-layer">
+                    <span class="badge layer-behavioral">7</span>
+                    <div>
+                        <strong>Behavioral</strong>
+                        <p>Emotional state, revenge-trading checks, session limits. Are you in the right headspace?</p>
+                    </div>
+                </div>
+            </div>
+            <p class="muted" style="margin-top:0.75rem;font-size:0.85rem;">Configure your layers at <a href="/plan">Trading Plan</a> or use the <a href="/plan/builder">AI Plan Builder</a> to generate a custom rule set.</p>
+        </section>
+
+        {# ── Idea States ──────────────────────────────────────────────────── #}
+        <section id="state-machine" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="workflow"></i>
+                <h3>Idea States</h3>
+            </div>
+            <p>Every idea progresses through a state machine. Forward advancement is gated by layer completion; backward regression is allowed before entering a trade.</p>
+
+            <div class="help-state-flow">
+                <div class="help-state-node"><span class="badge state-watching">WATCHING</span><small>Context layer</small></div>
+                <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
+                <div class="help-state-node"><span class="badge state-setup-valid">SETUP_VALID</span><small>Setup layer</small></div>
+                <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
+                <div class="help-state-node"><span class="badge state-confirmed">CONFIRMED</span><small>Confirm + Entry + Risk</small></div>
+                <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
+                <div class="help-state-node"><span class="badge state-entry-permitted">ENTRY_PERMITTED</span><small>Open trade</small></div>
+                <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
+                <div class="help-state-node"><span class="badge state-in-trade">IN_TRADE</span><small>Management layer</small></div>
+                <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
+                <div class="help-state-node"><span class="badge state-managed">MANAGED</span><small>Close trade</small></div>
+                <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
+                <div class="help-state-node"><span class="badge state-closed">CLOSED</span></div>
+            </div>
+
+            <div class="help-info-box">
+                <i data-lucide="alert-circle"></i>
+                <div>
+                    <strong>Invalidation</strong> — Any idea in a non-terminal state can be moved to <span class="badge state-invalidated">INVALIDATED</span> at any time. Use this when the setup is no longer valid.
+                </div>
+            </div>
+
+            <details class="help-details">
+                <summary>Gate requirements per transition</summary>
+                <table>
+                    <thead><tr><th>From</th><th>To</th><th>Required layers</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="badge state-watching">WATCHING</span></td><td><span class="badge state-setup-valid">SETUP_VALID</span></td><td>Context</td></tr>
+                        <tr><td><span class="badge state-setup-valid">SETUP_VALID</span></td><td><span class="badge state-confirmed">CONFIRMED</span></td><td>Setup</td></tr>
+                        <tr><td><span class="badge state-confirmed">CONFIRMED</span></td><td><span class="badge state-entry-permitted">ENTRY_PERMITTED</span></td><td>Confirmation, Entry, Risk</td></tr>
+                        <tr><td><span class="badge state-entry-permitted">ENTRY_PERMITTED</span></td><td><span class="badge state-in-trade">IN_TRADE</span></td><td>—  (open a trade)</td></tr>
+                        <tr><td><span class="badge state-in-trade">IN_TRADE</span></td><td><span class="badge state-managed">MANAGED</span></td><td>Management</td></tr>
+                        <tr><td><span class="badge state-managed">MANAGED</span></td><td><span class="badge state-closed">CLOSED</span></td><td>—  (close the trade)</td></tr>
+                    </tbody>
+                </table>
+            </details>
+        </section>
+
+        {# ── Rules & Checklist ────────────────────────────────────────────── #}
+        <section id="rules" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="check-square"></i>
+                <h3>Rules &amp; Checklist</h3>
+            </div>
+            <p>Each layer contains rules you define. Rules have three types that control how they affect state advancement:</p>
+            <div class="help-rule-types">
+                <div class="help-rule-type">
+                    <span class="template-rule-type-dot template-rule-type-dot--required"></span>
+                    <div>
+                        <strong>Required</strong>
+                        <p>Must be checked before the idea can advance past the layer's gate. These are your non-negotiable criteria.</p>
+                    </div>
+                </div>
+                <div class="help-rule-type">
+                    <span class="template-rule-type-dot template-rule-type-dot--optional"></span>
+                    <div>
+                        <strong>Optional</strong>
+                        <p>Tracked for grading but won't block advancement. Checking more optional rules improves your setup grade.</p>
+                    </div>
+                </div>
+                <div class="help-rule-type">
+                    <span class="template-rule-type-dot template-rule-type-dot--advisory"></span>
+                    <div>
+                        <strong>Advisory</strong>
+                        <p>Informational reminders. They appear on the checklist but don't affect grading or gating.</p>
+                    </div>
+                </div>
+            </div>
+            <p>When viewing an idea, the checklist shows all rules for each layer. Toggle a rule on or off to record whether the condition is met. Required rules that are unchecked will block advancement — the system tells you exactly which rules are blocking.</p>
+        </section>
+
+        {# ── Trades ───────────────────────────────────────────────────────── #}
+        <section id="trades" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="trending-up"></i>
+                <h3>Trades</h3>
+            </div>
+            <p>A trade is created from an idea that has reached <span class="badge state-entry-permitted">ENTRY_PERMITTED</span>. Each trade records:</p>
+            <ul>
+                <li><strong>Entry price</strong> — where you entered</li>
+                <li><strong>Stop loss (SL)</strong> — your risk boundary</li>
+                <li><strong>Take-profit targets (TP)</strong> — one or more exit levels</li>
+                <li><strong>Position size</strong> — how many units/lots</li>
+            </ul>
+            <p>While a trade is open, you can:</p>
+            <div class="help-actions-grid">
+                <div class="help-action">
+                    <i data-lucide="scissors"></i>
+                    <div><strong>Take partial</strong><p>Close a portion at a target level</p></div>
+                </div>
+                <div class="help-action">
+                    <i data-lucide="shield"></i>
+                    <div><strong>Lock breakeven</strong><p>Move stop loss to entry price</p></div>
+                </div>
+                <div class="help-action">
+                    <i data-lucide="move-vertical"></i>
+                    <div><strong>Update stop loss</strong><p>Trail your stop as price moves</p></div>
+                </div>
+                <div class="help-action">
+                    <i data-lucide="x-circle"></i>
+                    <div><strong>Close trade</strong><p>Record exit price and final R-multiple</p></div>
+                </div>
+            </div>
+
+            <details class="help-details">
+                <summary>Trade states</summary>
+                <table>
+                    <thead><tr><th>State</th><th>Meaning</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="badge trade-open">OPEN</span></td><td>Full position is active</td></tr>
+                        <tr><td><span class="badge trade-partial">PARTIAL</span></td><td>Some lots closed at a target; remainder running</td></tr>
+                        <tr><td><span class="badge trade-runner">RUNNER</span></td><td>Trailing a runner position after partials</td></tr>
+                        <tr><td><span class="badge trade-closed">CLOSED</span></td><td>Fully exited — final R recorded</td></tr>
+                    </tbody>
+                </table>
+            </details>
+        </section>
+
+        {# ── Grading ──────────────────────────────────────────────────────── #}
+        <section id="grading" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="award"></i>
+                <h3>Grading</h3>
+            </div>
+            <p>Every idea receives a <strong>setup grade</strong> based on how many rules (Required + Optional) were checked. The grade reflects the quality of your setup — not whether the trade won or lost.</p>
+            <div class="help-grades">
+                <div class="help-grade">
+                    <span class="badge grade-a">A</span>
+                    <div>
+                        <strong>A-grade</strong>
+                        <p>High compliance — most or all rules checked. This is your ideal trade.</p>
+                    </div>
+                </div>
+                <div class="help-grade">
+                    <span class="badge grade-b">B</span>
+                    <div>
+                        <strong>B-grade</strong>
+                        <p>Moderate compliance — some optional rules missed. Acceptable but not textbook.</p>
+                    </div>
+                </div>
+                <div class="help-grade">
+                    <span class="badge grade-c">C</span>
+                    <div>
+                        <strong>C-grade</strong>
+                        <p>Low compliance — many rules unchecked. A warning sign that discipline slipped.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="muted" style="font-size:0.85rem;">Over time, your Reports page shows grade distribution and R-multiples by grade — helping you see whether A-grade setups actually outperform.</p>
+        </section>
+
+        {# ── Journal ──────────────────────────────────────────────────────── #}
+        <section id="journal" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="book-open"></i>
+                <h3>Journal</h3>
+            </div>
+            <p>After closing a trade, a journal entry is automatically created. Use it to reflect on:</p>
+            <ul>
+                <li>What went well and what didn't</li>
+                <li>Whether you followed your plan</li>
+                <li>Emotional state during the trade</li>
+                <li>Lessons learned for next time</li>
+            </ul>
+            <p>Journal entries start as <span class="badge journal-draft">DRAFT</span> and can be marked <span class="badge journal-completed">COMPLETED</span> once you've finished your reflection. You can tag entries for filtering (e.g. "revenge-trade", "perfect-execution", "news-event").</p>
+        </section>
+
+        {# ── Reports ──────────────────────────────────────────────────────── #}
+        <section id="reports" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="bar-chart-2"></i>
+                <h3>Reports</h3>
+            </div>
+            <p>The Reports page gives you a data-driven view of your trading discipline:</p>
+            <div class="help-metrics-grid">
+                <div class="help-metric">
+                    <strong>Discipline Score</strong>
+                    <p>A 0–100 score measuring how consistently you follow your plan — based on rule compliance, grade distribution, and win rate.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Win Rate</strong>
+                    <p>Percentage of closed trades that were profitable (positive R-multiple).</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Average R</strong>
+                    <p>Your average risk-reward multiple across all closed trades. 1R = you made back what you risked.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Plan Adherence</strong>
+                    <p>Percentage of Required rules checked across all trades. High adherence = trading your plan consistently.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Consistency Trend</strong>
+                    <p>30-day chart showing how your discipline score changes over time.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Rule Violations</strong>
+                    <p>Which Required rules are most frequently left unchecked — your weak spots.</p>
+                </div>
+            </div>
+        </section>
+
+        {# ── AI Features ──────────────────────────────────────────────────── #}
+        <section id="ai" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="sparkles"></i>
+                <h3>AI Features</h3>
+            </div>
+            <p>Gatekeeper includes optional AI-powered features. Bring your own API key (OpenAI, Anthropic, or a local Ollama instance) in <a href="/settings">Settings</a>.</p>
+            <div class="help-ai-features">
+                <div class="help-ai-feature">
+                    <div class="help-ai-feature-icon"><i data-lucide="scan-search"></i></div>
+                    <div>
+                        <strong>Idea Review</strong>
+                        <p>Get an AI assessment of your idea's checklist — it highlights strengths, weaknesses, and potential blind spots based on your rules.</p>
+                    </div>
+                </div>
+                <div class="help-ai-feature">
+                    <div class="help-ai-feature-icon"><i data-lucide="message-circle"></i></div>
+                    <div>
+                        <strong>Journal Coach</strong>
+                        <p>After writing your journal entry, ask the AI coach for structured feedback on your trade execution, emotional management, and areas to improve.</p>
+                    </div>
+                </div>
+                <div class="help-ai-feature">
+                    <div class="help-ai-feature-icon"><i data-lucide="wand-2"></i></div>
+                    <div>
+                        <strong>Plan Builder</strong>
+                        <p>Use the <a href="/plan/builder">AI Plan Builder</a> to generate a complete trading plan through a guided conversation. It creates rules across all 7 layers based on your trading style.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {# ── API & CLI ────────────────────────────────────────────────────── #}
+        <section id="api" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="terminal"></i>
+                <h3>API &amp; CLI</h3>
+            </div>
+            <p>Gatekeeper exposes a full JSON API and a command-line interface for automation and agent integration.</p>
+            <div class="help-api-grid">
+                <article class="help-api-card">
+                    <strong>JSON API</strong>
+                    <p>All endpoints live under <code>/api/v1/</code> and require a bearer token. Generate a token in <a href="/settings">Settings</a>.</p>
+                    <code class="help-code-block">curl -H "Authorization: Bearer &lt;token&gt;" \<br>  http://localhost/api/v1/ideas</code>
+                </article>
+                <article class="help-api-card">
+                    <strong>CLI (<code>gk</code>)</strong>
+                    <p>The <code>gk</code> command provides the full workflow from your terminal.</p>
+                    <code class="help-code-block">gk ideas list<br>gk ideas create --instrument EURUSD --direction LONG<br>gk trades open --idea &lt;id&gt; --entry 1.0850 --sl 1.0800</code>
+                </article>
+                <article class="help-api-card">
+                    <strong>MCP Server</strong>
+                    <p>Gatekeeper runs as an MCP server at <code>/mcp</code>, compatible with Claude Desktop, Cursor, and other MCP clients. AI agents can manage your full trading workflow.</p>
+                </article>
+            </div>
+        </section>
+
+        {# ── Keyboard Shortcuts ───────────────────────────────────────────── #}
+        <section id="keyboard" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="keyboard"></i>
+                <h3>Shortcuts</h3>
+            </div>
+            <p>Quick navigation tips for power users:</p>
+            <table class="help-shortcuts-table">
+                <tbody>
+                    <tr><td><kbd>/</kbd> then type</td><td>Use the sidebar links to navigate between sections</td></tr>
+                    <tr><td><a href="/">Dashboard</a></td><td>Overview of active ideas, open trades, and KPIs</td></tr>
+                    <tr><td><a href="/ideas/new">New Idea</a></td><td>Start evaluating a new trade opportunity</td></tr>
+                    <tr><td><a href="/plan">Trading Plan</a></td><td>View and edit your rules across all 7 layers</td></tr>
+                    <tr><td><a href="/plan/builder">Plan Builder</a></td><td>AI-guided plan creation through conversation</td></tr>
+                    <tr><td><a href="/reports">Reports</a></td><td>Discipline score, win rate, and performance analytics</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block head_extra_bottom %}
+<script>
+(function() {
+    var toc = document.getElementById('help-toc');
+    if (!toc) return;
+
+    var links = toc.querySelectorAll('.help-toc-link');
+    var sections = [];
+    links.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+    });
+
+    function updateActive() {
+        var scrollY = window.scrollY + 120;
+        var current = sections[0];
+        for (var i = 0; i < sections.length; i++) {
+            if (sections[i].el.offsetTop <= scrollY) {
+                current = sections[i];
+            }
+        }
+        links.forEach(function(l) { l.classList.remove('active'); });
+        if (current) current.link.classList.add('active');
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    updateActive();
+})();
+</script>
+{% endblock %}

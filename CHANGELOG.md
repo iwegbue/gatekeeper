@@ -39,6 +39,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - All commands support `--json` for machine-readable output and `--url`/`--token` overrides
   - Registered as `gk` entry point in `pyproject.toml`
 
+- **Help section** — comprehensive in-app help and guide at `/help` covering the full workflow, 7-layer system, idea states, rules & checklist, trades, grading, journal, reports, AI features, and API/CLI; accessible from sidebar and top bar; includes sticky table-of-contents with scroll-tracking, responsive layout, and state flow diagram
+
 - **SMTP email notifications** — replaced SendGrid with standard SMTP (Python `smtplib`); works with Gmail, Proton Mail Bridge, Mailhog, self-hosted Postfix, and any SMTP relay; configurable from Settings UI
 - **Telegram notifications** — bot token and chat ID now stored in DB and configurable from the UI instead of environment variables only
 - **Notifications settings card** — new collapsible "Notifications" card in Settings with SMTP config, Telegram config, per-channel enable toggles, and one-click test-send buttons for both channels

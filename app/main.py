@@ -16,6 +16,7 @@ from app.mcp import create_mcp_server
 from app.routers import (
     auth,
     dashboard,
+    help,
     ideas,
     instruments,
     journal,
@@ -132,6 +133,7 @@ def create_app() -> FastAPI:
     app.include_router(settings.router)
     app.include_router(reports.router)
     app.include_router(validation.router)
+    app.include_router(help.router)
 
     # JSON API v1
     app.include_router(api_v1_auth_router)

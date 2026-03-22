@@ -14,6 +14,8 @@
     z-index: 100;
     display: flex;
     align-items: center;
+    flex-wrap: nowrap;
+    overflow: hidden;
     gap: 0.5rem;
     padding: 0 1rem;
     background: var(--pico-background-color, #11191f);
@@ -38,6 +40,7 @@
     align-items: center;
     gap: 0.1rem;
     margin-left: auto;
+    flex-shrink: 0;
 }
 
 .top-bar-icon {
@@ -1284,6 +1287,598 @@ footer.container {
     font-weight: 600;
 }
 
+/* ── Help Section ────────────────────────────────────────────────────── */
+
+.help-layout {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.help-toc {
+    position: sticky;
+    top: calc(var(--topbar-height) + 1.5rem);
+    padding: 0;
+}
+
+
+.help-toc ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.help-toc-link {
+    display: block;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--pico-muted-color, #9ca3af);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.help-toc-link:hover {
+    color: var(--pico-color, #e5e7eb);
+}
+
+.help-toc-link.active {
+    color: #c4b5fd;
+    border-left-color: var(--pico-primary, #6366f1);
+}
+
+.help-content {
+    min-width: 0;
+    max-width: 52rem;
+}
+
+.help-hero {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem 0 0.5rem;
+}
+
+.help-hero-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--pico-primary, #6366f1);
+    margin-bottom: 0.75rem;
+}
+
+.help-hero-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.help-hero h2 {
+    margin-bottom: 0.25rem;
+}
+
+.help-section {
+    margin-bottom: 2.5rem;
+    padding-top: 0.5rem;
+    scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.help-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.help-section-header svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--pico-primary, #6366f1);
+    flex-shrink: 0;
+}
+
+.help-section-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.help-section > p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--pico-muted-color, #d1d5db);
+}
+
+.help-section ul,
+.help-section ol {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--pico-muted-color, #d1d5db);
+}
+
+.help-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.help-card {
+    padding: 1rem;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 10px;
+    background: var(--pico-card-background-color, #141e26);
+    text-align: center;
+}
+
+.help-card strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.help-card p {
+    font-size: 0.8rem;
+    color: var(--pico-muted-color, #9ca3af);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.help-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+}
+
+.help-card-icon svg {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.help-card-icon--purple { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+.help-card-icon--green  { background: rgba(34, 197, 94, 0.12);  color: #4ade80; }
+.help-card-icon--blue   { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+
+/* Help steps */
+
+.help-steps {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.help-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.help-steps li:last-child {
+    border-bottom: none;
+}
+
+.help-step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--pico-primary, #6366f1);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.help-steps li strong {
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.help-steps li p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.5;
+}
+
+/* Help layers */
+
+.help-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 1rem;
+}
+
+.help-layer {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.help-layer:last-child {
+    border-bottom: none;
+}
+
+.help-layer .badge {
+    width: 1.6rem;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.help-layer strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.1rem;
+}
+
+.help-layer p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.5;
+}
+
+/* State flow diagram */
+
+.help-state-flow {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin: 1.25rem 0;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+}
+
+.help-state-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.help-state-node small {
+    font-size: 0.65rem;
+    color: var(--pico-muted-color, #6b7280);
+    white-space: nowrap;
+}
+
+.help-state-arrow {
+    color: var(--pico-muted-color, #6b7280);
+    display: flex;
+    align-items: center;
+}
+
+.help-state-arrow svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+/* Info box */
+
+.help-info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.help-info-box > svg {
+    width: 1rem;
+    height: 1rem;
+    color: #f87171;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.help-info-box strong {
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+/* Details/expandable */
+
+.help-details {
+    margin: 1rem 0;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.help-details summary {
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--pico-muted-color, #9ca3af);
+    transition: background 0.15s;
+}
+
+.help-details summary:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.help-details table {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+/* Rule types */
+
+.help-rule-types {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.help-rule-type {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.help-rule-type .template-rule-type-dot {
+    margin-top: 0.45rem;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+}
+
+.help-rule-type strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.1rem;
+}
+
+.help-rule-type p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.5;
+}
+
+/* Trade actions grid */
+
+.help-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.help-action {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 8px;
+    background: var(--pico-card-background-color, #141e26);
+}
+
+.help-action > svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--pico-primary, #6366f1);
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+}
+
+.help-action strong {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 0.1rem;
+}
+
+.help-action p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.4;
+}
+
+/* Grades */
+
+.help-grades {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.help-grade {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.help-grade .badge {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.help-grade strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.1rem;
+}
+
+.help-grade p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.5;
+}
+
+/* Metrics grid */
+
+.help-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.help-metric {
+    padding: 0.85rem;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 8px;
+    background: var(--pico-card-background-color, #141e26);
+}
+
+.help-metric strong {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+.help-metric p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.5;
+}
+
+/* AI features */
+
+.help-ai-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.help-ai-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 8px;
+    background: var(--pico-card-background-color, #141e26);
+}
+
+.help-ai-feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 8px;
+    background: rgba(139, 92, 246, 0.15);
+    color: #c4b5fd;
+    flex-shrink: 0;
+}
+
+.help-ai-feature-icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.help-ai-feature strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+}
+
+.help-ai-feature p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--pico-muted-color, #9ca3af);
+    line-height: 1.5;
+}
+
+/* API grid */
+
+.help-api-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.help-api-card {
+    padding: 1rem;
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 10px;
+    background: var(--pico-card-background-color, #141e26);
+}
+
+.help-api-card strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.9rem;
+}
+
+.help-api-card p {
+    font-size: 0.82rem;
+    color: var(--pico-muted-color, #9ca3af);
+    margin: 0 0 0.6rem;
+    line-height: 1.5;
+}
+
+.help-code-block {
+    display: block;
+    padding: 0.6rem 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: #d1d5db;
+    overflow-x: auto;
+}
+
+/* Shortcuts table */
+
+.help-shortcuts-table {
+    font-size: 0.85rem;
+}
+
+.help-shortcuts-table td:first-child {
+    white-space: nowrap;
+    width: 10rem;
+}
+
+.help-shortcuts-table kbd {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--pico-muted-border-color, #374151);
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-family: inherit;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────── */
 
 @media (max-width: 1023px) {
@@ -1314,6 +1909,14 @@ footer.container {
         position: fixed;
         width: 100%;
     }
+
+    .help-toc {
+        display: none;
+    }
+
+    .help-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1341,6 +1944,27 @@ footer.container {
     table th,
     table td {
         padding: 0.35rem 0.4rem;
+    }
+
+    .help-card-grid,
+    .help-actions-grid,
+    .help-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .help-api-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .help-state-flow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .help-state-arrow {
+        transform: rotate(90deg);
+        margin-left: 1.5rem;
     }
 
     .wizard-stepper {
