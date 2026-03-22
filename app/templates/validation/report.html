@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Validation Report — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Validation Report</h2>
+    <small class="muted">{{ run.created_at.strftime('%Y-%m-%d %H:%M UTC') }} &mdash; {{ run.mode }}</small>
+</div>
+
+<a href="/validation">&larr; All runs</a>
+
+{% if feedback %}
+
+{# ── Score row ─────────────────────────────────────────────────────────────── #}
+<div class="kpi-row" style="margin-top: 1.5rem;">
+    <article class="kpi-card">
+        <small class="muted">Interpretability Score</small>
+        <strong class="kpi-big">{{ feedback.interpretability_score }}%</strong>
+        <small class="muted">rules testable or approximated</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Testable Rules</small>
+        <strong class="kpi-big">{{ feedback.rule_counts.testable }}</strong>
+        <small class="muted">directly machine-testable</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Approximated</small>
+        <strong class="kpi-big">{{ feedback.rule_counts.approximated }}</strong>
+        <small class="muted">mapped with proxies</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Replay Readiness</small>
+        <strong class="kpi-big {{ 'positive' if feedback.replay_readiness == 'READY' else '' }}">
+            {{ feedback.replay_readiness }}
+        </strong>
+        <small class="muted">for historical replay</small>
+    </article>
+</div>
+
+{# ── Summary ─────────────────────────────────────────────────────────────── #}
+<article style="margin-top: 1.5rem;">
+    <header><strong>Summary</strong></header>
+    <p>{{ feedback.summary }}</p>
+</article>
+
+{# ── Coherence warnings ───────────────────────────────────────────────────── #}
+{% if feedback.coherence_warnings %}
+<article style="margin-top: 1rem; border-left: 3px solid var(--pico-color-amber-450);">
+    <header><strong>Coherence Warnings</strong></header>
+    <ul>
+        {% for warning in feedback.coherence_warnings %}
+        <li>{{ warning }}</li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+{# ── Refinement suggestions ───────────────────────────────────────────────── #}
+{% if feedback.refinement_suggestions %}
+<article style="margin-top: 1rem;">
+    <header><strong>Refinement Suggestions</strong></header>
+    <ul>
+        {% for suggestion in feedback.refinement_suggestions %}
+        <li>{{ suggestion }}</li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+{# ── Layer breakdown ──────────────────────────────────────────────────────── #}
+<h3 style="margin-top: 2rem;">Rule Interpretations by Layer</h3>
+
+{% for layer_name, layer_data in feedback.layer_breakdown.items() %}
+{% set total = layer_data.testable + layer_data.approximated + layer_data.not_testable %}
+{% if total > 0 %}
+<details style="margin-bottom: 1rem;">
+    <summary>
+        <strong>{{ layer_name }}</strong>
+        &nbsp;
+        <small class="muted">
+            {{ layer_data.testable }}T &middot; {{ layer_data.approximated }}A &middot; {{ layer_data.not_testable }}N
+            {% if layer_data.behavioral %}(live enforcement only){% endif %}
+        </small>
+    </summary>
+
+    <table style="margin-top: 0.5rem; font-size: 0.9em;">
+        <thead>
+            <tr>
+                <th>Rule</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Proxy</th>
+                <th>Confidence</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rule in layer_data.rules %}
+            <tr>
+                <td>{{ rule.name }}</td>
+                <td><small>{{ rule.rule_type }}</small></td>
+                <td>
+                    <span class="badge badge--{{ 'success' if rule.status == 'TESTABLE' else 'warning' if rule.status == 'APPROXIMATED' else 'error' }}">
+                        {{ rule.status }}
+                    </span>
+                    {% if rule.user_confirmed %}
+                    <span class="badge badge--info" title="Confirmed by you">&#10003;</span>
+                    {% endif %}
+                </td>
+                <td><small>{{ rule.proxy_type or '—' }}</small></td>
+                <td>
+                    {% if rule.confidence is not none %}
+                        {{ (rule.confidence * 100) | int }}%
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td><small class="muted">{{ rule.interpretation_notes }}</small></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</details>
+{% endif %}
+{% endfor %}
+
+{% else %}
+<article class="empty-state">
+    <p>No feedback available for this run.</p>
+</article>
+{% endif %}
+
+<div style="margin-top: 2rem;">
+    <form method="post" action="/validation/compile">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit">
+            <i data-lucide="refresh-cw"></i> Re-compile Plan
+        </button>
+    </form>
+</div>
+
+{% endblock %}

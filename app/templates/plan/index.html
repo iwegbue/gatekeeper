@@ -10,8 +10,11 @@
 <p class="muted">{{ plan.description }}</p>
 {% endif %}
 
-<div style="margin-bottom: 1rem;">
+<div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; align-items: center;">
     <a href="/plan/rules/new" role="button" class="small">+ Add Rule</a>
+    <a href="/validation" role="button" class="small secondary">
+        <i data-lucide="flask-conical"></i> Validate Plan
+    </a>
 </div>
 
 {% for layer in layers %}

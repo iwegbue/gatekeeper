@@ -9,6 +9,8 @@ from app.models.state_transition import StateTransition
 from app.models.trade import Trade
 from app.models.journal import JournalEntry, JournalTag, journal_entry_tags
 from app.models.ai_analysis import AIAnalysis
+from app.models.validation.compiled_plan import CompiledPlan
+from app.models.validation.validation_run import ValidationRun
 
 __all__ = [
     "Base",
@@ -24,4 +26,6 @@ __all__ = [
     "JournalTag",
     "journal_entry_tags",
     "AIAnalysis",
+    "CompiledPlan",
+    "ValidationRun",
 ]
