@@ -266,19 +266,12 @@
 
     // ── Suggestion chips ─────────────────────────────────────────────────
 
-    var CHECK_SVG = '<svg class="builder-chip-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,8 6.5,12 13.5,4"/></svg>';
-
     function activateChip(chip) {
         chip.classList.add('builder-chip--active');
-        if (!chip.querySelector('.builder-chip-check')) {
-            chip.insertAdjacentHTML('afterbegin', CHECK_SVG);
-        }
     }
 
     function deactivateChip(chip) {
         chip.classList.remove('builder-chip--active');
-        var check = chip.querySelector('.builder-chip-check');
-        if (check) check.remove();
     }
 
     document.querySelectorAll('.builder-chip[data-prompt]').forEach(function(chip) {

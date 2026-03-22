@@ -2235,12 +2235,6 @@ details.plan-layer-details {
     flex-shrink: 0;
 }
 
-.builder-chip-check {
-    width: 0.8rem;
-    height: 0.8rem;
-    flex-shrink: 0;
-}
-
 .builder-chip:hover {
     border-color: rgba(139, 92, 246, 0.5);
     background: rgba(139, 92, 246, 0.06);
@@ -2249,15 +2243,24 @@ details.plan-layer-details {
 
 .builder-chip--active {
     border-color: #8b5cf6;
-    background: #8b5cf6;
-    color: #fff;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35);
+    background: rgba(139, 92, 246, 0.18);
+    color: #e0d4fc;
+    box-shadow: 0 0 0 1.5px #8b5cf6;
+    padding-left: 0.65rem;
+}
+
+.builder-chip--active::before {
+    content: '✓';
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #a78bfa;
+    flex-shrink: 0;
 }
 
 .builder-chip--active:hover {
-    background: #7c3aed;
-    border-color: #7c3aed;
-    color: #fff;
+    background: rgba(139, 92, 246, 0.25);
+    border-color: #8b5cf6;
+    color: #e0d4fc;
 }
 
 .builder-chip--sm {
