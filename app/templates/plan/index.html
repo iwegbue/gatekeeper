@@ -12,7 +12,7 @@
     </div>
 </div>
 
-{% if plan.description %}
+{% if plan.description and total_rules > 0 %}
 <p class="muted">{{ plan.description }}</p>
 {% endif %}
 
