@@ -143,10 +143,24 @@ async def extract_rules_from_conversation(
         "No markdown fences, no explanation — raw JSON array only."
     )
 
+    # Find the last assistant message — this will be the structured summary.
+    # Passing the full conversation risks hitting token limits on long sessions;
+    # the extraction model only needs the summary text to produce the JSON.
+    last_assistant = next(
+        (t["content"] for t in reversed(conversation) if t.get("role") == "assistant"),
+        None,
+    )
+    if not last_assistant:
+        return []
+
+    extraction_messages = [{"role": "user", "content": last_assistant}]
+
     try:
-        raw = await provider.chat(system=system, messages=conversation)
+        raw = await provider.chat(system=system, messages=extraction_messages)
         await _save_analysis(db, trigger="plan_builder_extract", reasoning=raw)
     except Exception:
+        import logging as _logging
+        _logging.getLogger(__name__).exception("extract_rules_from_conversation: provider call failed")
         return []
 
     # Strip accidental markdown fences the model may add despite instructions
