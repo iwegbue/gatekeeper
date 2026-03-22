@@ -383,7 +383,7 @@
                 <i data-lucide="sparkles"></i>
                 <h3>AI Features</h3>
             </div>
-            <p>Gatekeeper includes optional AI-powered features. Bring your own API key (OpenAI, Anthropic, or a local Ollama instance) in <a href="/settings">Settings</a>.</p>
+            <p>Gatekeeper includes optional AI-powered features. Bring your own API key (OpenAI, Anthropic, or a local Ollama instance) in <a href="/settings">Settings</a> (saved in the database). Alternatively, you can set <code>ANTHROPIC_API_KEY</code> or <code>OPENAI_API_KEY</code> in the environment (e.g. Docker Compose <code>.env</code>) — the app will use them when the database key is empty; <a href="/settings">Settings</a> explains when a key comes from the environment.</p>
             <div class="help-ai-features">
                 <div class="help-ai-feature">
                     <div class="help-ai-feature-icon"><i data-lucide="scan-search"></i></div>

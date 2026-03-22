@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Settings / AI** — `/settings` shows when Anthropic or OpenAI keys are supplied only via `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` (e.g. Docker `.env`); `OPENAI_API_KEY` is wired the same way as Anthropic in `docker-compose` and the AI factory
 - **Reset Plan** — new `/plan/reset` page lets you wipe all existing rules and optionally load a starter template (Trend Following, Mean Reversion) or start from scratch; plan name and description can be updated at the same time
 
 - **Plan Validation Engine (Phase 1 — Interpretability)** — AI-assisted compilation of trading plan rules into machine-testable proxies

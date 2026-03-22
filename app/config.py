@@ -55,6 +55,7 @@ class Settings(BaseSettings):
 
     # AI (env-var fallback; primary config is in DB settings)
     ANTHROPIC_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
 
     # Email notifications (SendGrid)
     SENDGRID_API_KEY: str = ""

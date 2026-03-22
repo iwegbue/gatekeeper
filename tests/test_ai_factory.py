@@ -43,9 +43,19 @@ def test_configure_openai_with_key():
     assert isinstance(provider, OpenAIProvider)
 
 
+def test_configure_openai_uses_env_fallback():
+    with patch.dict(os.environ, {"OPENAI_API_KEY": "env-openai-key"}):
+        provider = configure(provider="openai", openai_api_key="")
+    from app.services.ai.openai_provider import OpenAIProvider
+
+    assert isinstance(provider, OpenAIProvider)
+
+
 def test_configure_openai_no_key_raises():
-    with pytest.raises(AIConfigError, match="OpenAI API key"):
-        configure(provider="openai", openai_api_key="")
+    with patch.dict(os.environ, {}, clear=True):
+        os.environ.pop("OPENAI_API_KEY", None)
+        with pytest.raises(AIConfigError, match="OpenAI API key"):
+            configure(provider="openai", openai_api_key="")
 
 
 def test_configure_ollama_with_url():

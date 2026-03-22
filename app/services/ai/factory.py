@@ -26,7 +26,7 @@ def configure(
 ) -> "AIProvider":
     """
     Instantiate the correct provider from explicit config values.
-    Falls back to ANTHROPIC_API_KEY env var if no Anthropic key given.
+    Falls back to ANTHROPIC_API_KEY / OPENAI_API_KEY env vars when the DB key is empty.
 
     Raises AIConfigError if the requested provider cannot be configured.
     """
@@ -41,11 +41,14 @@ def configure(
         return AnthropicProvider(api_key=key, model=model)
 
     if provider == "openai":
-        if not openai_api_key:
-            raise AIConfigError("OpenAI API key not configured. Set it in Settings.")
+        key = openai_api_key or os.environ.get("OPENAI_API_KEY", "")
+        if not key:
+            raise AIConfigError(
+                "OpenAI API key not configured. Set it in Settings or OPENAI_API_KEY env var."
+            )
         from app.services.ai.openai_provider import OpenAIProvider
 
-        return OpenAIProvider(api_key=openai_api_key, model=model)
+        return OpenAIProvider(api_key=key, model=model)
 
     if provider == "ollama":
         url = ollama_base_url or "http://localhost:11434"
