@@ -7,6 +7,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Plan Builder UX overhaul** — strategy archetype suggestion chips (breakouts, pullbacks, mean reversion, momentum, range, supply & demand) with timeframe and market selectors so new users can start without a blank page; AI responses now render as formatted HTML (markdown via marked.js); animated thinking indicator while the AI responds; user and AI messages are visually distinct with avatars and differentiated bubble styles
+
 - **Settings / AI** — `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` env vars (e.g. Docker `.env`) are now seeded into the database on first boot, identical to entering them via the UI; `OPENAI_API_KEY` is also wired into `app/config.py` and `docker-compose.yml` for parity with Anthropic
 - **Reset Plan** — new `/plan/reset` page lets you wipe all existing rules and optionally load a starter template (Trend Following, Mean Reversion) or start from scratch; plan name and description can be updated at the same time
 
@@ -99,7 +101,7 @@ Initial release.
 - **Weighted checklist grading** — A (≥85%), B (65–84%), C (<65%); advisory rules visible but non-blocking
 - **Trade management** — open from ENTRY_PERMITTED, partial/BE management, R-multiple on close
 - **Auto-journal** — draft created on trade close with plan adherence % and rule violations
-- **AI plan builder** — multi-turn wizard (BYOK: Anthropic, OpenAI, Ollama)
+- **Plan Builder** — multi-turn wizard (BYOK: Anthropic, OpenAI, Ollama)
 - **AI idea review** — checklist analysis against plan
 - **AI journal coach** — behavioral pattern identification
 - **AI rule clarity check** — push vague rules toward precision

@@ -1,5 +1,6 @@
 from app.models.ai_analysis import AIAnalysis
 from app.models.base import Base
+from app.models.plan_builder_session import PlanBuilderSession
 from app.models.idea import Idea
 from app.models.idea_rule_check import IdeaRuleCheck
 from app.models.instrument import Instrument
@@ -26,6 +27,7 @@ __all__ = [
     "JournalTag",
     "journal_entry_tags",
     "AIAnalysis",
+    "PlanBuilderSession",
     "CompiledPlan",
     "ValidationRun",
 ]

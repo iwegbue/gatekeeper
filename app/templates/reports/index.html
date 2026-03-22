@@ -11,12 +11,12 @@
 {# ── Score row ─────────────────────────────────────────────────────────────── #}
 <div class="kpi-row">
     <article class="kpi-card">
-        <small class="muted">Discipline Score</small>
+        <small class="muted"><span class="tip-trigger-text">Discipline Score<span class="tip-content">Composite score (0–100) based on plan adherence, grade distribution, and rule compliance across all closed trades.</span></span></small>
         <strong class="kpi-big">{{ discipline_score }}</strong>
         <small class="muted">/ 100</small>
     </article>
     <article class="kpi-card">
-        <small class="muted">Avg Plan Adherence</small>
+        <small class="muted"><span class="tip-trigger-text">Avg Plan Adherence<span class="tip-content">Average percentage of REQUIRED rules checked across all closed trades with journal entries.</span></span></small>
         <strong class="kpi-big">{{ adherence_stats.avg }}%</strong>
         <small class="muted">across all closed trades</small>
     </article>
@@ -26,7 +26,7 @@
         <small class="muted">{{ trade_stats.wins }}W / {{ trade_stats.losses }}L / {{ trade_stats.breakeven }}BE</small>
     </article>
     <article class="kpi-card">
-        <small class="muted">Expectancy</small>
+        <small class="muted"><span class="tip-trigger-text">Expectancy<span class="tip-content">Average R-multiple per trade: (Win rate × Avg win R) − (Loss rate × Avg loss R). Positive = edge in your favour.</span></span></small>
         <strong class="kpi-big {% if trade_stats.expectancy > 0 %}positive{% elif trade_stats.expectancy < 0 %}negative{% endif %}">
             {{ trade_stats.expectancy }}R
         </strong>
@@ -85,9 +85,9 @@
 
     {# ── R stats ─────────────────────────────────────────────────────────── #}
     <article>
-        <header><strong>R-Multiple Stats</strong></header>
+        <header><strong><span class="tip-trigger-text">R-Multiple Stats<span class="tip-content">R-multiple measures profit/loss relative to initial risk. 1R = you made exactly what you risked. Tracking R removes the distortion of varying position sizes.</span></span></strong></header>
         <dl class="dl-grid">
-            <dt>Average R</dt>
+            <dt><span class="tip-trigger-text">Average R<span class="tip-content">Mean R-multiple across all closed trades. Above 0 = profitable system on average.</span></span></dt>
             <dd class="{% if trade_stats.avg_r > 0 %}positive{% elif trade_stats.avg_r < 0 %}negative{% endif %}">
                 {{ trade_stats.avg_r }}R
             </dd>

@@ -5,7 +5,7 @@
     <h2>{{ plan.name }}</h2>
     <div class="flex-row">
         {% if total_rules > 0 %}
-        <a href="/plan/builder" class="small secondary" role="button">AI Plan Builder</a>
+        <a href="/plan/builder" class="small secondary" role="button">Plan Builder</a>
         {% endif %}
         <a href="/plan/edit" class="small secondary" role="button">Edit Plan</a>
         <a href="/plan/reset" class="small contrast" role="button">Reset Plan</a>
@@ -26,9 +26,9 @@
     <h3>Build your trading plan</h3>
     <p class="muted">
         Describe your strategy in plain language — what markets you trade, what setups you look for,
-        how you manage risk. The AI will structure it into rules across the 7 layers.
+        how you manage risk. We'll structure it into rules across the 7 layers.
     </p>
-    <a href="/plan/builder" role="button" class="plan-hero-cta">Start AI Plan Builder →</a>
+    <a href="/plan/builder" role="button" class="plan-hero-cta">Start Plan Builder →</a>
 </div>
 
 <div class="plan-divider"><span>or build manually</span></div>
@@ -73,8 +73,8 @@
             <thead>
                 <tr>
                     <th>Rule</th>
-                    <th>Type</th>
-                    <th>Weight</th>
+                    <th><span class="tip-trigger-text">Type<span class="tip-content"><strong>REQUIRED</strong> — must be met before acting.<br><strong>OPTIONAL</strong> — improves your score if met.<br><strong>ADVISORY</strong> — a reminder; does not affect score.</span></span></th>
+                    <th><span class="tip-trigger-text">Weight<span class="tip-content">How much this rule contributes to your checklist score.<br><strong>1</strong> = minor &nbsp; <strong>2</strong> = moderate &nbsp; <strong>3</strong> = critical</span></span></th>
                     <th></th>
                 </tr>
             </thead>
