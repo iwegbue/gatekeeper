@@ -5,59 +5,20 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
-from app.config import settings as app_settings
 from app.csrf import require_csrf
 from app.database import get_db
 from app.services import notification_service, settings_service
 
 logger = logging.getLogger(__name__)
-
-
-def _env_ai_key_present(value: str) -> bool:
-    return bool(value.strip())
-
-
-def _ai_effectively_configured(
-    *,
-    ai_provider: str,
-    anthropic_api_key: str,
-    openai_api_key: str,
-    env_anthropic_key_set: bool,
-    env_openai_key_set: bool,
-) -> bool:
-    """Whether the selected provider can run given DB fields and optional env keys."""
-    p = (ai_provider or "anthropic").lower()
-    if p == "anthropic":
-        return _env_ai_key_present(anthropic_api_key) or env_anthropic_key_set
-    if p == "openai":
-        return _env_ai_key_present(openai_api_key) or env_openai_key_set
-    if p == "ollama":
-        return True
-    return False
 router = APIRouter(prefix="/settings")
 
 
 @router.get("")
 async def settings_page(request: Request, db: AsyncSession = Depends(get_db)):
     s = await settings_service.get_settings(db)
-    env_anthropic_key_set = _env_ai_key_present(app_settings.ANTHROPIC_API_KEY)
-    env_openai_key_set = _env_ai_key_present(app_settings.OPENAI_API_KEY)
-    ai_effectively_configured = _ai_effectively_configured(
-        ai_provider=s.ai_provider,
-        anthropic_api_key=s.anthropic_api_key,
-        openai_api_key=s.openai_api_key,
-        env_anthropic_key_set=env_anthropic_key_set,
-        env_openai_key_set=env_openai_key_set,
-    )
     return request.app.state.templates.TemplateResponse(
         "settings/edit.html",
-        {
-            "request": request,
-            "settings": s,
-            "env_anthropic_key_set": env_anthropic_key_set,
-            "env_openai_key_set": env_openai_key_set,
-            "ai_effectively_configured": ai_effectively_configured,
-        },
+        {"request": request, "settings": s},
     )
 
 

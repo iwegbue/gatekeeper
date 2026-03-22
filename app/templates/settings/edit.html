@@ -6,23 +6,17 @@
 </div>
 
 {# ── AI Provider card ─────────────────────────────────────────────────────── #}
-<details class="settings-card" {% if not ai_effectively_configured %}open{% endif %}>
+<details class="settings-card" {% if not settings.anthropic_api_key and not settings.openai_api_key and not settings.ollama_base_url %}open{% endif %}>
     <summary class="settings-card-summary">
         <div class="settings-card-title">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
             AI Provider
         </div>
         <div class="settings-card-meta">
-            {% if ai_effectively_configured %}
+            {% if settings.anthropic_api_key or settings.openai_api_key or settings.ollama_base_url %}
             <span class="settings-badge settings-badge--ok">
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                {% if settings.ai_provider == 'anthropic' and not settings.anthropic_api_key and env_anthropic_key_set %}
-                Anthropic key from environment
-                {% elif settings.ai_provider == 'openai' and not settings.openai_api_key and env_openai_key_set %}
-                OpenAI key from environment
-                {% else %}
                 {{ settings.ai_provider | title }} configured
-                {% endif %}
             </span>
             {% else %}
             <span class="settings-badge settings-badge--warn">Not configured</span>
@@ -34,7 +28,7 @@
     </summary>
 
     <div class="settings-card-body">
-        <p class="muted" style="font-size:0.85rem; margin-bottom:1rem;">Bring your own API key. Keys you paste here are saved in the database and are never shown in full on this page after save. You can also set <code>ANTHROPIC_API_KEY</code> or <code>OPENAI_API_KEY</code> in the environment (e.g. <code>.env</code> for Docker) — those work for the app but are not copied into the database automatically.</p>
+        <p class="muted" style="font-size:0.85rem; margin-bottom:1rem;">Bring your own API key. Your key is stored in the database and never logged. You can also set <code>ANTHROPIC_API_KEY</code> or <code>OPENAI_API_KEY</code> in the environment (e.g. <code>.env</code> for Docker) — they are seeded into the database automatically on first boot.</p>
         <form method="post" action="/settings/ai" id="settings-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
@@ -47,21 +41,17 @@
 
             <label for="anthropic_api_key">Anthropic API Key</label>
             {% if settings.anthropic_api_key %}
-            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Key saved in database — leave blank to keep it, or enter a new key to replace it.</p>
-            {% elif env_anthropic_key_set %}
-            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Using <code>ANTHROPIC_API_KEY</code> from the environment. Paste a key here and save to store it in the database (optional).</p>
+            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Key configured — leave blank to keep existing, or enter a new key to replace it.</p>
             {% endif %}
             <input type="password" id="anthropic_api_key" name="anthropic_api_key" value=""
-                   placeholder="{% if settings.anthropic_api_key %}••••••••{{ settings.anthropic_api_key[-4:] }}{% elif env_anthropic_key_set %}Set via ANTHROPIC_API_KEY{% else %}sk-ant-...{% endif %}">
+                   placeholder="{{ '••••••••' + settings.anthropic_api_key[-4:] if settings.anthropic_api_key else 'sk-ant-...' }}">
 
             <label for="openai_api_key">OpenAI API Key</label>
             {% if settings.openai_api_key %}
-            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Key saved in database — leave blank to keep it, or enter a new key to replace it.</p>
-            {% elif env_openai_key_set %}
-            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Using <code>OPENAI_API_KEY</code> from the environment. Paste a key here and save to store it in the database (optional).</p>
+            <p class="muted" style="font-size:0.82rem; margin-bottom:0.25rem;">Key configured — leave blank to keep existing, or enter a new key to replace it.</p>
             {% endif %}
             <input type="password" id="openai_api_key" name="openai_api_key" value=""
-                   placeholder="{% if settings.openai_api_key %}••••••••{{ settings.openai_api_key[-4:] }}{% elif env_openai_key_set %}Set via OPENAI_API_KEY{% else %}sk-...{% endif %}">
+                   placeholder="{{ '••••••••' + settings.openai_api_key[-4:] if settings.openai_api_key else 'sk-...' }}">
 
             <label for="ollama_base_url">Ollama Base URL</label>
             <input type="text" id="ollama_base_url" name="ollama_base_url"

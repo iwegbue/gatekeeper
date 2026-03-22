@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
 
     # Seed admin password from env var if provided and no hash exists in the DB yet
     from app.database import AsyncSessionFactory
-    from app.services.settings_service import admin_password_is_set, get_settings, set_admin_password
+    from app.services.settings_service import admin_password_is_set, get_settings, set_admin_password, update_settings
 
     async with AsyncSessionFactory() as db:
         password_set = await admin_password_is_set(db)
@@ -72,6 +72,19 @@ async def lifespan(app: FastAPI):
         app.state.needs_setup = not password_set
         s = await get_settings(db)
         app.state.setup_completed = s.setup_completed
+
+        # Seed AI keys from env vars when the DB row is still empty.
+        # This mirrors the ADMIN_PASSWORD pattern — the env var is the source of truth
+        # on first boot; after that the DB value takes over (and can be changed via UI).
+        ai_updates: dict = {}
+        if not s.anthropic_api_key and _settings.ANTHROPIC_API_KEY:
+            ai_updates["anthropic_api_key"] = _settings.ANTHROPIC_API_KEY
+        if not s.openai_api_key and _settings.OPENAI_API_KEY:
+            ai_updates["openai_api_key"] = _settings.OPENAI_API_KEY
+        if ai_updates:
+            await update_settings(db, **ai_updates)
+            await db.commit()
+            logger.info("AI key(s) seeded from environment: %s", ", ".join(ai_updates))
 
     logger.info("Gatekeeper Core starting up")
     from app.tasks.background import start_background_tasks
