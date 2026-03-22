@@ -223,6 +223,7 @@ API routers: raise `HTTPException` with appropriate status codes:
 - [ ] `CHANGELOG.md` updated
 - [ ] All 175+ tests still pass
 - [ ] **Help section reviewed** — if the feature adds or changes UI, update `app/templates/help/index.html` to reflect it
+- [ ] **VISION.md reviewed** — if the feature affects product direction, roadmap status, or Core/Pro boundaries, update `VISION.md` to reflect it
 
 ### Help section (`/help`)
 
@@ -241,6 +242,22 @@ The help page at `app/templates/help/index.html` is the single source of in-app 
 - Styling or layout tweaks that don't affect how a feature works
 
 The help page is a static Jinja2 template — no service or router logic required. Edit it directly and rebuild the Docker image to see changes.
+
+### Vision and roadmap (`VISION.md`)
+
+`VISION.md` is the product direction document. It defines what Gatekeeper is, the Core/Pro split, design principles, and the roadmap horizon. Keep it accurate as the product evolves.
+
+**Update VISION.md when you:**
+- Ship a roadmap item — move it from its horizon into the "Now" section or mark it as delivered
+- Add a feature that changes the Core/Pro boundary (e.g. something previously "Planned for Pro" lands in Core)
+- Add a capability that belongs in the "Category" section (what Gatekeeper is or is not)
+- Cut or defer a roadmap item — remove or move it honestly
+- Release a new version — update the "Now" section to reflect the current state
+
+**Do not update VISION.md for:**
+- Internal refactors with no user-visible change
+- Bug fixes that restore existing documented behaviour
+- Features already captured in the roadmap that are simply being implemented
 
 ---
 
