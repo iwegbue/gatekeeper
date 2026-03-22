@@ -6,7 +6,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-
 # ── Compiled rule ─────────────────────────────────────────────────────────────
 
 class CompiledRuleResponse(BaseModel):

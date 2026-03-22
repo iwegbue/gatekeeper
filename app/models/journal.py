@@ -17,7 +17,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
-
 journal_entry_tags = Table(
     "journal_entry_tags",
     Base.metadata,

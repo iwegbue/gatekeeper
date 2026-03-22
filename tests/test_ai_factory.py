@@ -2,11 +2,11 @@
 Tests for AI provider factory — selection, env fallback, config error.
 """
 import os
-import pytest
 from unittest.mock import patch
 
-from app.services.ai.factory import AIConfigError, configure
+import pytest
 
+from app.services.ai.factory import AIConfigError, configure
 
 # ── configure() ────────────────────────────────────────────────────────────────
 
@@ -100,8 +100,8 @@ def test_configure_case_insensitive_provider():
 
 @pytest.mark.asyncio
 async def test_get_provider_from_db_anthropic(db):
-    from app.services.settings_service import update_settings
     from app.services.ai.factory import get_provider_from_db
+    from app.services.settings_service import update_settings
     await update_settings(db, ai_provider="anthropic", anthropic_api_key="db-test-key")
     provider = await get_provider_from_db(db)
     from app.services.ai.anthropic_provider import AnthropicProvider
@@ -110,8 +110,8 @@ async def test_get_provider_from_db_anthropic(db):
 
 @pytest.mark.asyncio
 async def test_get_provider_from_db_ollama(db):
-    from app.services.settings_service import update_settings
     from app.services.ai.factory import get_provider_from_db
+    from app.services.settings_service import update_settings
     await update_settings(db, ai_provider="ollama", ollama_base_url="http://localhost:11434")
     provider = await get_provider_from_db(db)
     from app.services.ai.ollama_provider import OllamaProvider
@@ -120,8 +120,8 @@ async def test_get_provider_from_db_ollama(db):
 
 @pytest.mark.asyncio
 async def test_get_provider_from_db_raises_without_key(db):
+    from app.services.ai.factory import AIConfigError, get_provider_from_db
     from app.services.settings_service import update_settings
-    from app.services.ai.factory import get_provider_from_db, AIConfigError
     with patch.dict(os.environ, {}, clear=True):
         os.environ.pop("ANTHROPIC_API_KEY", None)
         await update_settings(db, ai_provider="anthropic", anthropic_api_key="")

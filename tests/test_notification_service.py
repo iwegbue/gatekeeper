@@ -3,10 +3,10 @@ Tests for notification_service — SMTP email, Telegram, and domain event helper
 
 SMTP and Telegram network calls are patched so tests run without real servers.
 """
-import pytest
-import pytest_asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.services import notification_service
 

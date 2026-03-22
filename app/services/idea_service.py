@@ -7,8 +7,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.idea import Idea
 from app.models.enums import IdeaState
+from app.models.idea import Idea
 from app.services import checklist_service, plan_service, settings_service
 
 

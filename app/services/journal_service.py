@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.journal import JournalEntry, JournalTag
 from app.models.trade import Trade
 
-
 # ── Journal entries ────────────────────────────────────────────────────────────
 
 async def get_entry(db: AsyncSession, entry_id: uuid.UUID) -> JournalEntry | None:

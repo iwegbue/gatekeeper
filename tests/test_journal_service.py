@@ -4,9 +4,9 @@ Tests for journal_service — draft creation, adherence, rule violations, tags.
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import IdeaState, TradeState
+from app.models.enums import IdeaState
 from app.services import checklist_service, journal_service, trade_service
-from tests.factories import create_idea, create_plan, create_rule, create_trade
+from tests.factories import create_idea, create_plan, create_rule
 
 
 async def _make_closed_trade(db: AsyncSession):

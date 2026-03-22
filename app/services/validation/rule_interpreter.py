@@ -177,7 +177,7 @@ def _resolve_feature_dependencies(proxy_type: str, proxy_params: dict) -> list[s
 def _build_rule_message(rule: PlanRule, plan_context: str) -> str:
     lines = [
         f"Plan context:\n{plan_context}\n",
-        f"Rule to compile:",
+        "Rule to compile:",
         f"  Layer: {rule.layer}",
         f"  Name: {rule.name}",
         f"  Type: {rule.rule_type}",

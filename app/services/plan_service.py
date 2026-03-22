@@ -3,13 +3,12 @@ Trading plan + plan rules CRUD service.
 """
 import uuid
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.trading_plan import TradingPlan
-from app.models.plan_rule import PlanRule
 from app.models.enums import PlanLayer
-
+from app.models.plan_rule import PlanRule
+from app.models.trading_plan import TradingPlan
 
 # ── Plan (singleton) ────────────────────────────────────────────────────
 

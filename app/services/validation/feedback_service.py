@@ -12,7 +12,6 @@ This is the output layer for Phase 1 (interpretability). It produces:
 from app.models.enums import InterpretationStatus, PlanLayer
 from app.models.validation.compiled_plan import CompiledPlan
 
-
 _REPLAY_READY = "READY"
 _REPLAY_PARTIAL = "PARTIAL"
 _REPLAY_NOT_READY = "NOT_READY"

@@ -44,8 +44,8 @@ async def _build_plan_context(db: AsyncSession) -> str:
 
 async def _build_idea_context(db: AsyncSession, idea_id: uuid.UUID) -> str:
     """Summarize an idea and its current checklist state."""
+    from app.services.checklist_service import compute_score, get_checks_with_rules
     from app.services.idea_service import get_idea
-    from app.services.checklist_service import get_checks_with_rules, compute_score
 
     idea = await get_idea(db, idea_id)
     if idea is None:

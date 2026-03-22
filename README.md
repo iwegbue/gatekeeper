@@ -44,8 +44,8 @@ Bring your own AI key (Anthropic, OpenAI, or Ollama) for plan-building assistanc
 ### 1. Clone and start
 
 ```bash
-git clone https://github.com/your-org/gatekeeper-core
-cd gatekeeper-core
+git clone https://github.com/iwegbue/gatekeeper
+cd gatekeeper
 docker compose up -d
 ```
 

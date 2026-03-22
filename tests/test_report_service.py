@@ -4,9 +4,9 @@ Tests for report_service — trade stats, grade distribution, adherence, violati
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import IdeaState, TradeState
-from app.services import checklist_service, journal_service, report_service, trade_service
-from tests.factories import create_idea, create_plan, create_rule, create_trade
+from app.models.enums import TradeState
+from app.services import journal_service, report_service
+from tests.factories import create_idea, create_trade
 
 
 async def _closed_trade(db, instrument="EURUSD", direction="LONG",
@@ -17,8 +17,9 @@ async def _closed_trade(db, instrument="EURUSD", direction="LONG",
                                entry_price=entry, sl_price=sl, grade=grade,
                                state=TradeState.CLOSED.value)
     # Set exit fields
-    from app.services.trade_service import _compute_r_multiple
     from datetime import datetime, timezone
+
+    from app.services.trade_service import _compute_r_multiple
     trade.exit_price = exit_
     trade.exit_time = datetime.now(timezone.utc)
     trade.r_multiple = _compute_r_multiple(direction, entry, exit_, sl)

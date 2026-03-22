@@ -250,7 +250,7 @@ async def confirm_compiled_rule(
             if status is not None:
                 rule["status"] = status
             if proxy_type is not None:
-                from app.services.validation.rule_interpreter import PROXY_VOCABULARY, _resolve_feature_dependencies
+                from app.services.validation.rule_interpreter import _resolve_feature_dependencies
                 params = proxy_params or {}
                 rule["proxy"] = None if proxy_type == "not_testable" else {"type": proxy_type, "params": params}
                 rule["feature_dependencies"] = _resolve_feature_dependencies(proxy_type, params)

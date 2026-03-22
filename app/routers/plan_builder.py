@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from app.database import get_db
-from app.services.ai import factory as ai_factory
 from app.services import ai_service
+from app.services.ai import factory as ai_factory
 
 logger = logging.getLogger(__name__)
 

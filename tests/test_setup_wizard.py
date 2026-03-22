@@ -21,8 +21,8 @@ from app.csrf import generate_csrf_token
 from app.main import app
 from app.models.plan_rule import PlanRule
 from app.models.settings import Settings
-from app.services.settings_service import set_admin_password
 from app.services.plan_templates import get_template
+from app.services.settings_service import set_admin_password
 
 _TEST_PASSWORD = "wizardtest123"
 

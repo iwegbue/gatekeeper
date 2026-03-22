@@ -8,7 +8,7 @@ from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import PlanLayer, RuleType
 from app.services import plan_service
-from app.services.plan_templates import list_templates, get_template
+from app.services.plan_templates import get_template, list_templates
 
 router = APIRouter(prefix="/plan")
 

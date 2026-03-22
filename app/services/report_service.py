@@ -6,12 +6,12 @@ analytics for the reports page.
 """
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import TradeState
 from app.models.journal import JournalEntry
 from app.models.trade import Trade
-from app.models.enums import TradeState
 
 
 async def get_trade_stats(db: AsyncSession) -> dict:

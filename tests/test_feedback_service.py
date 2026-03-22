@@ -8,10 +8,8 @@ import uuid
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
-import pytest
-
-from app.models.enums import InterpretationStatus, PlanLayer
-from app.services.validation.feedback_service import build_report, _assess_replay_readiness
+from app.models.enums import InterpretationStatus
+from app.services.validation.feedback_service import _assess_replay_readiness, build_report
 
 
 def _make_compiled_rule(

@@ -8,14 +8,13 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.trading_plan import TradingPlan
-from app.models.plan_rule import PlanRule
-from app.models.instrument import Instrument
+from app.models.enums import PlanLayer
 from app.models.idea import Idea
 from app.models.idea_rule_check import IdeaRuleCheck
+from app.models.instrument import Instrument
+from app.models.plan_rule import PlanRule
 from app.models.trade import Trade
-from app.models.journal import JournalEntry
-from app.models.enums import PlanLayer
+from app.models.trading_plan import TradingPlan
 
 
 async def create_plan(db: AsyncSession, *, name: str = "Test Plan", description: str | None = None) -> TradingPlan:

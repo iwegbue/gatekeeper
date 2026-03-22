@@ -24,6 +24,7 @@ async def _make_idea_with_all_layers_checkable(db: AsyncSession):
 async def _check_layer(db: AsyncSession, idea_id, checks, layer: str):
     """Check all rules for a given layer."""
     from sqlalchemy import select
+
     from app.models.plan_rule import PlanRule
     for check in checks:
         result = await db.execute(select(PlanRule).where(PlanRule.id == check.rule_id))
@@ -282,6 +283,7 @@ async def test_cannot_invalidate_already_invalidated(db: AsyncSession):
 async def test_transition_is_recorded(db: AsyncSession):
     """Each state change creates a StateTransition record."""
     from sqlalchemy import select
+
     from app.models.state_transition import StateTransition
 
     plan, idea, checks = await _make_idea_with_all_layers_checkable(db)

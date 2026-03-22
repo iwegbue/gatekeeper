@@ -12,9 +12,8 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.ai.factory import AIConfigError, get_provider_from_db
-from app.services.settings_service import generate_api_token
 from app.routers.api.v1.validation import get_validation_ai_provider
+from app.services.settings_service import generate_api_token
 from tests.factories import create_plan, create_rule
 
 
@@ -98,8 +97,9 @@ async def test_compile_requires_auth(client: AsyncClient, db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_compile_with_unconfigured_ai_returns_422(client: AsyncClient, db: AsyncSession):
-    from app.main import app
     from fastapi import HTTPException
+
+    from app.main import app
 
     token = await generate_api_token(db)
     await db.commit()

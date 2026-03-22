@@ -8,11 +8,10 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import PlanLayer, RuleType, SetupGrade
+from app.models.idea import Idea
 from app.models.idea_rule_check import IdeaRuleCheck
 from app.models.plan_rule import PlanRule
-from app.models.idea import Idea
-from app.models.enums import PlanLayer, RuleType, SetupGrade
-
 
 # ── Grade thresholds ─────────────────────────────────────────────────────
 GRADE_A_THRESHOLD = 85  # >= 85% → A

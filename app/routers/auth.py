@@ -4,7 +4,7 @@ from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
-from app.auth import SESSION_COOKIE, MAX_SESSION_AGE, create_session_token
+from app.auth import MAX_SESSION_AGE, SESSION_COOKIE, create_session_token
 from app.config import settings as app_settings
 from app.csrf import require_csrf
 from app.database import get_db

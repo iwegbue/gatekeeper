@@ -5,7 +5,7 @@ Stores a frozen snapshot of the plan at compile time plus the AI-proposed
 (and user-confirmable) machine-testable proxy for each rule.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, Numeric, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID

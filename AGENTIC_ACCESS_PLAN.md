@@ -152,7 +152,7 @@ Resources:
 
 ## Phase 3: `gatekeeper-cli` — Self-Hosted Agentic Toolkit
 
-**Goal:** A CLI tool that ships with gatekeeper-core, allowing users who run
+**Goal:** A CLI tool that ships with gatekeeper, allowing users who run
 Gatekeeper on their own VPS to install agent capabilities locally.
 
 ### Why a CLI?
@@ -236,7 +236,7 @@ gk status                            # Health, version, counts
 - **Language:** Python (same ecosystem, shares Pydantic schemas with core)
 - **HTTP client:** `httpx` (already a dependency)
 - **CLI framework:** `click` or `typer` (Typer preferred — builds on Pydantic)
-- **Distribution:** Ships inside the gatekeeper-core repo as `gk` entry point
+- **Distribution:** Ships inside the gatekeeper repo as `gk` entry point
   in `pyproject.toml`, or installable standalone via `pip install gatekeeper-cli`
 - **Config file:** `~/.config/gatekeeper/config.toml` for URL + token persistence
 

@@ -2,8 +2,8 @@
 Tests for ai_service — prompt building and feature dispatching.
 Uses a mock provider; no real API calls in CI.
 """
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services import ai_service, checklist_service
@@ -106,6 +106,7 @@ async def test_idea_review_saves_analysis(db: AsyncSession):
     await ai_service.idea_review(db, provider, idea.id)
 
     from sqlalchemy import select
+
     from app.models.ai_analysis import AIAnalysis
     result = await db.execute(select(AIAnalysis).where(AIAnalysis.trigger == "idea_review"))
     analyses = list(result.scalars().all())
@@ -126,8 +127,8 @@ async def test_journal_coach_handles_missing_entry(db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_journal_coach_calls_provider_with_trade_data(db: AsyncSession):
-    from app.services import journal_service, trade_service
     from app.models.enums import IdeaState
+    from app.services import journal_service, trade_service
 
     idea = await create_idea(db, state=IdeaState.ENTRY_PERMITTED.value)
     trade = await trade_service.open_trade(db, idea, entry_price=1.1000, sl_price=1.0950)

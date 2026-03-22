@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.enums import IdeaState, TradeState
 from app.services import idea_service, trade_service
 
 router = APIRouter(tags=["status"])

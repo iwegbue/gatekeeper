@@ -8,12 +8,12 @@ import json
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import InterpretationStatus, PlanLayer
+from app.models.enums import InterpretationStatus
 from app.services.validation.rule_interpreter import (
     PROXY_VOCABULARY,
+    _resolve_feature_dependencies,
     interpret_rule,
     interpret_rules,
-    _resolve_feature_dependencies,
 )
 from tests.factories import create_plan, create_rule
 
