@@ -1,62 +1,219 @@
 {% extends "base.html" %}
 {% block title %}Plan Builder — Gatekeeper{% endblock %}
 
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <h2>AI Plan Builder</h2>
     <a href="/plan" class="secondary outline">← Trading Plan</a>
 </div>
 
-<p class="muted">
-    Describe your trading strategy in plain language. The AI will help you convert it into
-    structured rules organized by layer.
-    <a href="/settings">Configure your AI provider →</a>
-</p>
+<div id="builder-suggest" class="builder-suggest">
+    <div class="builder-suggest-header">
+        <div class="builder-suggest-icon">
+            <i data-lucide="sparkles"></i>
+        </div>
+        <div>
+            <h3>What kind of trader are you?</h3>
+            <p class="muted">Pick a starting point — the AI will tailor rules to your style. Or skip and describe your strategy from scratch.</p>
+        </div>
+    </div>
 
-<div id="chat-container" class="chat-container">
-    <div id="chat-messages" class="chat-messages">
-        <div class="chat-message chat-assistant">
-            <p>Hello! I'm here to help you build your trading plan. Tell me about your trading strategy — what markets do you trade, what setups do you look for, and how do you manage risk?</p>
+    <div class="builder-chips">
+        <div class="builder-chip-group">
+            <span class="builder-chip-label">Strategy</span>
+            <div class="builder-chip-row">
+                <button type="button" class="builder-chip" data-prompt="I trade breakouts — I look for price breaking through key support/resistance levels with volume confirmation.">
+                    <i data-lucide="trending-up"></i> Breakouts
+                </button>
+                <button type="button" class="builder-chip" data-prompt="I trade pullbacks — I wait for a trending market to retrace to a key level before entering in the trend direction.">
+                    <i data-lucide="git-pull-request"></i> Pullbacks
+                </button>
+                <button type="button" class="builder-chip" data-prompt="I trade mean reversion — I look for overextended moves away from the mean and trade the snap-back.">
+                    <i data-lucide="refresh-cw"></i> Mean Reversion
+                </button>
+                <button type="button" class="builder-chip" data-prompt="I trade momentum — I follow strong directional moves and ride the trend with trailing stops.">
+                    <i data-lucide="zap"></i> Momentum
+                </button>
+                <button type="button" class="builder-chip" data-prompt="I trade ranges — I buy near support and sell near resistance in sideways markets.">
+                    <i data-lucide="minus"></i> Range Trading
+                </button>
+                <button type="button" class="builder-chip" data-prompt="I trade supply and demand zones — I identify institutional order blocks and trade reactions at those levels.">
+                    <i data-lucide="layers"></i> Supply &amp; Demand
+                </button>
+            </div>
+        </div>
+
+        <div class="builder-chip-group">
+            <span class="builder-chip-label">Timeframe</span>
+            <div class="builder-chip-row">
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="timeframe" data-value="I scalp on 1-5 minute charts.">
+                    Scalping
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="timeframe" data-value="I day trade — all positions closed by end of session.">
+                    Day Trading
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="timeframe" data-value="I swing trade — holding positions for days to weeks.">
+                    Swing
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="timeframe" data-value="I position trade — holding for weeks to months.">
+                    Position
+                </button>
+            </div>
+        </div>
+
+        <div class="builder-chip-group">
+            <span class="builder-chip-label">Market</span>
+            <div class="builder-chip-row">
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="market" data-value="I trade Forex.">
+                    Forex
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="market" data-value="I trade Equities/Stocks.">
+                    Equities
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="market" data-value="I trade Crypto.">
+                    Crypto
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="market" data-value="I trade Futures.">
+                    Futures
+                </button>
+                <button type="button" class="builder-chip builder-chip--sm" data-tag="market" data-value="I trade Options.">
+                    Options
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="builder-suggest-actions">
+        <button type="button" id="suggest-go" class="builder-suggest-go" disabled>
+            <i data-lucide="wand-2"></i> Build my plan
+        </button>
+        <button type="button" id="suggest-skip" class="builder-suggest-skip outline secondary">
+            Skip — I'll describe my strategy
+        </button>
+    </div>
+</div>
+
+<div id="chat-container" class="builder-chat" style="display:none;">
+    <div id="chat-messages" class="builder-messages">
+        <div class="builder-msg builder-msg--ai">
+            <div class="builder-msg-avatar"><i data-lucide="bot"></i></div>
+            <div class="builder-msg-body">
+                <p>Hello! I'm here to help you build your trading plan. Tell me about your trading strategy — what markets do you trade, what setups do you look for, and how do you manage risk?</p>
+            </div>
         </div>
     </div>
 </div>
 
-<form id="chat-form" class="chat-input-form">
+<form id="chat-form" class="builder-input-form" style="display:none;">
     <input type="hidden" name="history" id="history-field" value="[]">
-    <div class="chat-input-row">
+    <div class="builder-input-row">
         <textarea name="message" id="message-input" rows="2"
                   placeholder="Describe your strategy…" required></textarea>
-        <button type="submit" id="send-btn">Send</button>
+        <button type="submit" id="send-btn">
+            <i data-lucide="send"></i>
+        </button>
     </div>
 </form>
 
 <script>
 (function() {
+    var suggestPanel = document.getElementById('builder-suggest');
+    var chatContainer = document.getElementById('chat-container');
     var form = document.getElementById('chat-form');
     var messages = document.getElementById('chat-messages');
     var historyField = document.getElementById('history-field');
     var messageInput = document.getElementById('message-input');
     var sendBtn = document.getElementById('send-btn');
+    var suggestGo = document.getElementById('suggest-go');
+    var suggestSkip = document.getElementById('suggest-skip');
+
+    var selectedStrategy = null;
+    var selectedTags = {};
+
+    marked.setOptions({
+        breaks: true,
+        gfm: true
+    });
+
+    function renderMarkdown(text) {
+        var container = document.createElement('div');
+        container.className = 'builder-md';
+        container.innerHTML = marked.parse(text);
+        return container;
+    }
+
+    function showChat() {
+        suggestPanel.style.display = 'none';
+        chatContainer.style.display = 'block';
+        form.style.display = 'block';
+        messageInput.focus();
+        lucide.createIcons();
+    }
 
     function appendMessage(role, content) {
         var div = document.createElement('div');
-        div.className = 'chat-message chat-' + role;
-        var p = document.createElement('p');
-        p.textContent = content;
-        div.appendChild(p);
+        div.className = 'builder-msg builder-msg--' + (role === 'user' ? 'user' : 'ai');
+
+        var avatar = document.createElement('div');
+        avatar.className = 'builder-msg-avatar';
+        if (role === 'user') {
+            avatar.innerHTML = '<i data-lucide="user"></i>';
+        } else {
+            avatar.innerHTML = '<i data-lucide="bot"></i>';
+        }
+
+        var body = document.createElement('div');
+        body.className = 'builder-msg-body';
+
+        if (role === 'user') {
+            var p = document.createElement('p');
+            p.textContent = content;
+            body.appendChild(p);
+        } else {
+            body.appendChild(renderMarkdown(content));
+        }
+
+        div.appendChild(avatar);
+        div.appendChild(body);
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
+        lucide.createIcons();
     }
 
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        var msg = messageInput.value.trim();
-        if (!msg) return;
+    function showThinking() {
+        var div = document.createElement('div');
+        div.className = 'builder-msg builder-msg--ai';
+        div.id = 'thinking-indicator';
 
+        var avatar = document.createElement('div');
+        avatar.className = 'builder-msg-avatar';
+        avatar.innerHTML = '<i data-lucide="bot"></i>';
+
+        var body = document.createElement('div');
+        body.className = 'builder-msg-body';
+        body.innerHTML = '<div class="builder-thinking"><span></span><span></span><span></span></div>';
+
+        div.appendChild(avatar);
+        div.appendChild(body);
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+        lucide.createIcons();
+    }
+
+    function hideThinking() {
+        var el = document.getElementById('thinking-indicator');
+        if (el) el.remove();
+    }
+
+    async function sendMessage(msg) {
         appendMessage('user', msg);
         messageInput.value = '';
         sendBtn.disabled = true;
-        sendBtn.textContent = '…';
+        showThinking();
 
         var formData = new FormData();
         formData.append('message', msg);
@@ -65,18 +222,76 @@
         try {
             var resp = await fetch('/plan/builder/chat', {method: 'POST', body: formData});
             var data = await resp.json();
+            hideThinking();
             if (data.error) {
-                appendMessage('assistant', 'Error: ' + data.error);
+                appendMessage('assistant', '**Error:** ' + data.error);
             } else {
                 appendMessage('assistant', data.response);
                 historyField.value = data.history;
             }
         } catch(err) {
-            appendMessage('assistant', 'Connection error. Please try again.');
+            hideThinking();
+            appendMessage('assistant', '**Connection error.** Please try again.');
         } finally {
             sendBtn.disabled = false;
-            sendBtn.textContent = 'Send';
+            messageInput.focus();
         }
+    }
+
+    // ── Suggestion chips ──
+
+    document.querySelectorAll('.builder-chip[data-prompt]').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            document.querySelectorAll('.builder-chip[data-prompt]').forEach(function(c) {
+                c.classList.remove('builder-chip--active');
+            });
+            chip.classList.add('builder-chip--active');
+            selectedStrategy = chip.getAttribute('data-prompt');
+            updateGoButton();
+        });
+    });
+
+    document.querySelectorAll('.builder-chip[data-tag]').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            var tag = chip.getAttribute('data-tag');
+            var siblings = document.querySelectorAll('.builder-chip[data-tag="' + tag + '"]');
+            siblings.forEach(function(s) { s.classList.remove('builder-chip--active'); });
+
+            if (selectedTags[tag] === chip.getAttribute('data-value')) {
+                delete selectedTags[tag];
+            } else {
+                chip.classList.add('builder-chip--active');
+                selectedTags[tag] = chip.getAttribute('data-value');
+            }
+            updateGoButton();
+        });
+    });
+
+    function updateGoButton() {
+        suggestGo.disabled = !selectedStrategy;
+    }
+
+    suggestGo.addEventListener('click', function() {
+        var parts = [selectedStrategy];
+        Object.keys(selectedTags).forEach(function(k) {
+            parts.push(selectedTags[k]);
+        });
+        var prompt = parts.join(' ');
+        showChat();
+        sendMessage(prompt);
+    });
+
+    suggestSkip.addEventListener('click', function() {
+        showChat();
+    });
+
+    // ── Chat form ──
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var msg = messageInput.value.trim();
+        if (!msg || sendBtn.disabled) return;
+        sendMessage(msg);
     });
 
     messageInput.addEventListener('keydown', function(e) {
@@ -85,6 +300,8 @@
             form.dispatchEvent(new Event('submit'));
         }
     });
+
+    lucide.createIcons();
 })();
 </script>
 {% endblock %}
