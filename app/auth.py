@@ -2,12 +2,11 @@ import logging
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
-
-from itsdangerous import URLSafeTimedSerializer
 
 from app.config import settings
 from app.database import get_db
@@ -36,7 +35,7 @@ def verify_session_token(token: str) -> bool:
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    EXEMPT_PATHS = {"/login", "/setup", "/static", "/api/", "/version"}
+    EXEMPT_PATHS = {"/login", "/setup", "/static", "/api/", "/version", "/mcp"}
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path

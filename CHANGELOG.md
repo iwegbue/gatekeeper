@@ -16,8 +16,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Interpretability score (% of non-behavioral rules that are testable or approximated)
   - Deterministic coherence checks: gap detection, underfiltering/overfiltering warnings, redundancy detection
   - Structured feedback report with per-layer rule breakdowns, replay readiness assessment (`READY / PARTIAL / NOT_READY`), and actionable refinement suggestions
-  - `CompiledPlan` and `ValidationRun` models; migration `003_add_validation_tables`
+  - `CompiledPlan` and `ValidationRun` models; migration `006_add_validation_tables`
   - 58 new tests across `test_rule_interpreter`, `test_plan_compiler`, `test_feedback_service`, `test_validation_api`
+
+- **MCP server** — Gatekeeper is now an MCP server, mountable at `/mcp` (StreamableHTTP transport)
+  - 16 tools covering the full workflow: `create_idea`, `get_idea`, `list_ideas`, `toggle_check`, `advance_idea`, `regress_idea`, `invalidate_idea`, `open_trade`, `close_trade`, `update_stop_loss`, `take_partial`, `lock_breakeven`, `list_trades`, `get_trade`, `list_journal`, `get_journal_entry`, `update_journal_entry`, `complete_journal_entry`, `review_idea`, `coach_journal`, `get_status`
+  - 4 resources for agent context: `gatekeeper://plan`, `gatekeeper://ideas/active`, `gatekeeper://trades/open`, `gatekeeper://discipline`
+  - State machine guards enforced — agents cannot skip layers; errors are surfaced as tool error responses
+  - MCP lifespan combined with app lifespan; mounted via `fastmcp` at `/mcp`
+  - 14 new tests in `test_mcp_tools.py`
+
+- **`gk` CLI** — command-line interface for scripting, automation, and MCP stdio transport
+  - `gk status` — health, version, active counts
+  - `gk ideas list/show/create/advance/regress/invalidate/check`
+  - `gk trades list/show/open/close/update-sl/partial/be`
+  - `gk journal list/show/edit/complete`
+  - `gk plan show`
+  - `gk report discipline`
+  - `gk ai review/coach`
+  - `gk mcp [--transport stdio|sse] [--port N]` — launch MCP server for Claude Desktop / Cursor
+  - `gk config set/show` — persist URL and token to `~/.config/gatekeeper/config.toml`
+  - All commands support `--json` for machine-readable output and `--url`/`--token` overrides
+  - Registered as `gk` entry point in `pyproject.toml`
 
 - **SMTP email notifications** — replaced SendGrid with standard SMTP (Python `smtplib`); works with Gmail, Proton Mail Bridge, Mailhog, self-hosted Postfix, and any SMTP relay; configurable from Settings UI
 - **Telegram notifications** — bot token and chat ID now stored in DB and configurable from the UI instead of environment variables only
