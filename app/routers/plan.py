@@ -135,7 +135,7 @@ async def rule_delete(rule_id: uuid.UUID, db: AsyncSession = Depends(get_db), _c
 @router.get("/reset")
 async def plan_reset_confirm(request: Request, db: AsyncSession = Depends(get_db)):
     plan = await plan_service.get_plan(db)
-    rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id)
+    rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id, active_only=False)
     total_rules = sum(len(v) for v in rules_by_layer.values())
     return request.app.state.templates.TemplateResponse(
         "plan/reset.html",

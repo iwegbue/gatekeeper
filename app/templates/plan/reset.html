@@ -83,7 +83,7 @@
     <div style="margin-top: 1.5rem;">
         <label for="plan_name">Plan name</label>
         <input type="text" id="plan_name" name="plan_name"
-               value="{{ plan.name }}" placeholder="My Trading Plan">
+               value="{{ plan.name }}" placeholder="My Trading Plan" required>
         <label for="plan_description">Description <span class="muted">(optional)</span></label>
         <textarea id="plan_description" name="plan_description" rows="2"
                   placeholder="A short description of your strategy or edge.">{{ plan.description or '' }}</textarea>
