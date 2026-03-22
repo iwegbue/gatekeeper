@@ -27,8 +27,7 @@ def register(mcp: FastMCP) -> None:
         from app.services import plan_service
 
         async with AsyncSessionFactory() as db:
-            plan = await plan_service.get_plan(db)
-            # get_plan auto-creates a plan row if none exists; commit so it persists
+            plan = await plan_service.get_active_plan(db)
             await db.commit()
             rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id)
 

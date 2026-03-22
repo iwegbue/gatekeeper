@@ -7,10 +7,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Plan Builder UX overhaul** — strategy archetype suggestion chips (breakouts, pullbacks, mean reversion, momentum, range, supply & demand) with timeframe and market selectors so new users can start without a blank page; AI responses now render as formatted HTML (markdown via marked.js); animated thinking indicator while the AI responds; user and AI messages are visually distinct with avatars and differentiated bubble styles
+- **Multiple Trading Plans** — create, duplicate, and switch between multiple trading plans; only one plan is active at a time and new ideas use the active plan; existing ideas keep the plan they were created with
+  - Plan list page at `/plan` with activate, duplicate, and delete actions
+  - Plan detail page at `/plan/{id}` with full rule management
+  - Rule edit and delete URLs scoped to plan: `/plan/{id}/rules/{rule_id}/edit` and `/plan/{id}/rules/{rule_id}/delete`
+  - New plan creation at `/plan/new` with optional template pre-fill
+  - Plan duplication copies all rules (including inactive) to a new inactive plan
+  - Plan deletion blocked if the plan is currently active or has ideas attached
+  - API endpoints: `GET/POST /api/v1/plans`, `GET/PATCH/DELETE /api/v1/plans/{id}`, `POST /api/v1/plans/{id}/activate`, `POST /api/v1/plans/{id}/duplicate`
+  - Backward-compatible `/api/v1/plan` endpoints still work (operate on the active plan)
+  - Ideas now store `plan_id` to track which plan they were created under
+  - Migration `008_multiple_trading_plans` with backfill for existing data
+  - 17 new tests in `test_multi_plan.py`
+
+- **Plan Builder UX overhaul** — strategy archetype suggestion chips (breakouts, pullbacks, mean reversion, momentum, range, supply & demand) with timeframe and market selectors so new users can start without a blank page; AI responses now render as formatted HTML (markdown via marked.js); animated thinking indicator while the AI responds; user and AI messages are visually distinct with avatars and differentiated bubble styles; after completing the builder, redirects to the active plan's detail page (`/plan/{id}`) rather than the plan list
 
 - **Settings / AI** — `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` env vars (e.g. Docker `.env`) are now seeded into the database on first boot, identical to entering them via the UI; `OPENAI_API_KEY` is also wired into `app/config.py` and `docker-compose.yml` for parity with Anthropic
-- **Reset Plan** — new `/plan/reset` page lets you wipe all existing rules and optionally load a starter template (Trend Following, Mean Reversion) or start from scratch; plan name and description can be updated at the same time
+- **Reset Plan** — new `/plan/{id}/reset` page lets you wipe all existing rules and optionally load a starter template (Trend Following, Mean Reversion) or start from scratch; plan name and description can be updated at the same time
 
 - **Plan Validation Engine (Phase 1 — Interpretability)** — AI-assisted compilation of trading plan rules into machine-testable proxies
   - `POST /api/v1/validation/compile` — compile the active plan; each rule is mapped to a proxy from a fixed vocabulary (16 proxy types across all 7 layers) using the configured AI provider; BEHAVIORAL rules auto-classified as NOT_TESTABLE without an AI call

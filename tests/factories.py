@@ -18,8 +18,10 @@ from app.models.trade import Trade
 from app.models.trading_plan import TradingPlan
 
 
-async def create_plan(db: AsyncSession, *, name: str = "Test Plan", description: str | None = None) -> TradingPlan:
-    plan = TradingPlan(name=name, description=description)
+async def create_plan(
+    db: AsyncSession, *, name: str = "Test Plan", description: str | None = None, is_active: bool = True
+) -> TradingPlan:
+    plan = TradingPlan(name=name, description=description, is_active=is_active)
     db.add(plan)
     await db.flush()
     return plan
@@ -79,6 +81,7 @@ async def create_idea(
     state: str = "WATCHING",
     risk_pct: float | None = None,
     notes: str | None = None,
+    plan_id: uuid.UUID | None = None,
 ) -> Idea:
     idea = Idea(
         instrument=instrument,
@@ -86,6 +89,7 @@ async def create_idea(
         state=state,
         risk_pct=risk_pct,
         notes=notes,
+        plan_id=plan_id,
     )
     db.add(idea)
     await db.flush()

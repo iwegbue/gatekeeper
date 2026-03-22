@@ -163,7 +163,7 @@
                     </div>
                 </div>
             </div>
-            <p class="muted" style="margin-top:0.75rem;font-size:0.85rem;">Configure your layers at <a href="/plan">Trading Plan</a> or use the <a href="/plan/builder">Plan Builder</a> to generate a custom rule set.</p>
+            <p class="muted" style="margin-top:0.75rem;font-size:0.85rem;">Configure your layers at <a href="/plan">Trading Plans</a> or use the <a href="/plan/builder">Plan Builder</a> to generate a custom rule set.</p>
         </section>
 
         {# ── Idea States ──────────────────────────────────────────────────── #}
@@ -244,6 +244,10 @@
                 </div>
             </div>
             <p>When viewing an idea, the checklist shows all rules for each layer. Toggle a rule on or off to record whether the condition is met. Required rules that are unchecked will block advancement — the system tells you exactly which rules are blocking.</p>
+
+            <h4>Multiple Plans</h4>
+            <p>You can create multiple trading plans — for example, one for trend following and another for mean reversion. Only one plan is <strong>active</strong> at a time. New ideas automatically use the active plan's rules. Existing ideas keep the plan they were created with, even if you switch the active plan later.</p>
+            <p>Manage your plans at <a href="/plan">Trading Plans</a>. From there you can create new plans, duplicate existing ones, activate a different plan, or delete a plan. A plan cannot be deleted if it is currently active or if any ideas were created under it.</p>
         </section>
 
         {# ── Trades ───────────────────────────────────────────────────────── #}
@@ -403,7 +407,7 @@
                     <div class="help-ai-feature-icon"><i data-lucide="wand-2"></i></div>
                     <div>
                         <strong>Plan Builder</strong>
-                        <p>Use the <a href="/plan/builder">Plan Builder</a> to generate a complete trading plan through a guided conversation. Pick a strategy archetype (breakouts, pullbacks, mean reversion, etc.), timeframe, and market — or skip straight to a free-form chat. We'll create rules across all 7 layers based on your trading style.</p>
+                        <p>Use the <a href="/plan/builder">Plan Builder</a> to generate a complete trading plan through a guided conversation. Pick a strategy archetype (breakouts, pullbacks, mean reversion, etc.), timeframe, and market — or skip straight to a free-form chat. We'll create rules across all 7 layers based on your trading style. When you're done, you'll be taken directly to the active plan's detail page.</p>
                     </div>
                 </div>
             </div>
@@ -446,7 +450,7 @@
                     <tr><td><kbd>/</kbd> then type</td><td>Use the sidebar links to navigate between sections</td></tr>
                     <tr><td><a href="/">Dashboard</a></td><td>Overview of active ideas, open trades, and KPIs</td></tr>
                     <tr><td><a href="/ideas/new">New Idea</a></td><td>Start evaluating a new trade opportunity</td></tr>
-                    <tr><td><a href="/plan">Trading Plan</a></td><td>View and edit your rules across all 7 layers</td></tr>
+                    <tr><td><a href="/plan">Trading Plans</a></td><td>Manage your trading plans and rules across all 7 layers</td></tr>
                     <tr><td><a href="/plan/builder">Plan Builder</a></td><td>Guided plan creation — pick a strategy archetype or describe your own</td></tr>
                     <tr><td><a href="/reports">Reports</a></td><td>Discipline score, win rate, and performance analytics</td></tr>
                 </tbody>

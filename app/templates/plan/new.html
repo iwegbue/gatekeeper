@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}New Trading Plan - Gatekeeper{% endblock %}
+{% block content %}
+<a href="/plan" class="back-link">&larr; All Plans</a>
+<h2>New Trading Plan</h2>
+
+<form method="post" action="/plan/new">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <label for="name">Plan Name</label>
+    <input type="text" id="name" name="name" required placeholder="e.g., Trend Following Strategy">
+
+    <label for="description">Description <span class="muted">(optional)</span></label>
+    <textarea id="description" name="description" rows="3" placeholder="A short description of this strategy or edge."></textarea>
+
+    <label for="template_id">Start from template <span class="muted">(optional)</span></label>
+    <select id="template_id" name="template_id">
+        <option value="scratch">Start from scratch</option>
+        {% for tmpl in templates %}
+        <option value="{{ tmpl.id }}">{{ tmpl.name }} ({{ tmpl.rules | length }} rules)</option>
+        {% endfor %}
+    </select>
+
+    <label>
+        <input type="checkbox" name="activate" value="true">
+        Activate this plan immediately
+    </label>
+
+    <button type="submit">Create Plan</button>
+</form>
+{% endblock %}

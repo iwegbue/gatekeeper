@@ -10,7 +10,7 @@ Bring your own AI key (Anthropic, OpenAI, or Ollama) for plan-building assistanc
 
 ## Features
 
-- **7-layer trading plan** — CONTEXT → SETUP → CONFIRMATION → ENTRY → RISK → MANAGEMENT → BEHAVIORAL
+- **Multiple trading plans** — define rules across 7 layers (CONTEXT → SETUP → CONFIRMATION → ENTRY → RISK → MANAGEMENT → BEHAVIORAL); multiple plans supported, one active at a time
 - **Layer-gated state machine** — ideas cannot advance without completing their layer's required rules
 - **Weighted checklist grading** — A/B/C grades based on rule weights; advisory rules visible but non-blocking
 - **Trade management** — partials, BE lock, SL updates, R-multiple computed on close
@@ -61,7 +61,7 @@ volume so sessions survive container restarts.
 
 ### 4. Set up your plan
 
-1. Go to **Trading Plan** → add rules across the 7 layers
+1. Go to **Trading Plans** → create or select a plan, then add rules across the 7 layers
 2. Go to **Instruments** → add the markets you trade
 3. Go to **Settings** → optionally configure your AI provider (BYOK)
 

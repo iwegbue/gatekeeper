@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Trading Plans - Gatekeeper{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Trading Plans</h2>
+    <a href="/plan/new" class="small" role="button">+ New Plan</a>
+</div>
+
+<p class="muted">Create multiple plans for different strategies. Only one plan can be active at a time — new ideas use the active plan.</p>
+
+<div class="plan-cards">
+    {% for p in plans %}
+    <article class="plan-card{% if p.is_active %} plan-card--active{% endif %}">
+        <header class="plan-card-header">
+            <div>
+                <h3 class="plan-card-title">
+                    <a href="/plan/{{ p.id }}">{{ p.name }}</a>
+                </h3>
+                {% if p.description %}
+                <p class="muted plan-card-desc">{{ p.description }}</p>
+                {% endif %}
+            </div>
+            {% if p.is_active %}
+            <span class="badge grade-a">Active</span>
+            {% endif %}
+        </header>
+
+        <footer class="plan-card-actions">
+            {% if p.is_active %}
+            <a href="/plan/{{ p.id }}" role="button" class="small">View Plan</a>
+            {% else %}
+            <form method="post" action="/plan/{{ p.id }}/activate" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="small">Activate</button>
+            </form>
+            <form method="post" action="/plan/{{ p.id }}/duplicate" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="small secondary outline">Duplicate</button>
+            </form>
+            <form method="post" action="/plan/{{ p.id }}/delete" style="display:inline;"
+                  onsubmit="return confirm('Delete this plan and all its rules?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="small contrast outline">Delete</button>
+            </form>
+            {% endif %}
+        </footer>
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}

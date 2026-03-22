@@ -8,7 +8,8 @@ Read it in full before making any changes.
 ## Project Overview
 
 Gatekeeper Core is a **single-user trading discipline platform**.
-It enforces a 7-layer rule-based trading plan via a layer-gated state machine.
+It enforces 7-layer rule-based trading plans via a layer-gated state machine.
+Multiple plans can exist but only one is active at a time — new ideas use the active plan.
 The stack is: FastAPI + SQLAlchemy async + PostgreSQL + Jinja2/HTMX.
 There is also a JSON API layer under `/api/v1` for CLI/MCP/agent access.
 
@@ -221,7 +222,7 @@ API routers: raise `HTTPException` with appropriate status codes:
 - [ ] API router updated (with schema)
 - [ ] Pydantic schema added/updated
 - [ ] `CHANGELOG.md` updated
-- [ ] All 175+ tests still pass
+- [ ] All 303+ tests still pass
 - [ ] **Help section reviewed** — if the feature adds or changes UI, update `app/templates/help/index.html` to reflect it
 - [ ] **VISION.md reviewed** — if the feature affects product direction, roadmap status, or Core/Pro boundaries, update `VISION.md` to reflect it
 

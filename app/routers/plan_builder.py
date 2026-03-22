@@ -109,7 +109,7 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
     if not rules and not instruments:
         return redirect("No rules could be extracted — the conversation may need a summary first", "warning")
 
-    plan = await plan_service.get_plan(db)
+    plan = await plan_service.get_active_plan(db)
     for rule in rules:
         await plan_service.create_rule(
             db,
@@ -140,7 +140,11 @@ async def builder_done(request: Request, db: AsyncSession = Depends(get_db)):
         parts.append(f"{len(rules)} rule{'s' if len(rules) != 1 else ''}")
     if new_instrument_count:
         parts.append(f"{new_instrument_count} instrument{'s' if new_instrument_count != 1 else ''}")
-    return redirect(f"{' and '.join(parts)} added from Plan Builder")
+
+    return RedirectResponse(
+        f"/plan/{plan.id}?msg={quote(' and '.join(parts) + ' added from Plan Builder')}",
+        status_code=303,
+    )
 
 
 @router.post("/clear")

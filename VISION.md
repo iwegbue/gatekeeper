@@ -37,7 +37,7 @@ Everything in Gatekeeper serves this loop:
 
 | Phase | What Gatekeeper does |
 |-------|---------------------|
-| **Define** | 7-layer plan structure. AI-assisted plan builder. Starter templates. |
+| **Define** | 7-layer plan structure. Multiple plans (one active at a time). AI-assisted plan builder. Starter templates. |
 | **Enforce** | Layer-gated state machine. You cannot open a trade until every required rule is satisfied. |
 | **Measure** | Auto-journal on close. Plan adherence %. Discipline score. Grade distribution. Violation tracking. |
 | **Refine** | AI journal coaching. Rule clarity checks. Plan validation (rule → testable proxy compilation). |
@@ -98,6 +98,7 @@ The foundation is solid. The immediate priority is releasing the substantial bod
 - SMTP + Telegram notifications
 - Help section
 - Plan reset with template loading
+- Multiple trading plans (plan list, plan detail, plan-scoped rules, delete guard)
 
 Once v0.3.0 is shipped, the next focus areas are:
 
