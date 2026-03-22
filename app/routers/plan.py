@@ -17,12 +17,14 @@ router = APIRouter(prefix="/plan")
 async def plan_index(request: Request, db: AsyncSession = Depends(get_db)):
     plan = await plan_service.get_plan(db)
     rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id)
+    total_rules = sum(len(v) for v in rules_by_layer.values())
     return request.app.state.templates.TemplateResponse(
         "plan/index.html",
         {
             "request": request,
             "plan": plan,
             "rules_by_layer": rules_by_layer,
+            "total_rules": total_rules,
             "layers": PlanLayer,
             "rule_types": RuleType,
         },
