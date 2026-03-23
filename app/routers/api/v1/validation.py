@@ -1,8 +1,9 @@
 """
-Plan Validation Engine — JSON API router (Phase 1: Interpretability).
+Plan Validation Engine — JSON API router (Phase 1: Interpretability + Phase 2: Replay).
 """
 
 import uuid
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,11 +13,13 @@ from app.database import get_db
 from app.schemas.validation import (
     CompiledPlanResponse,
     ConfirmCompiledRuleRequest,
+    ReplayRequest,
     ValidationRunDetailResponse,
     ValidationRunResponse,
 )
 from app.services.ai.factory import AIConfigError, get_provider_from_db
 from app.services.validation import feedback_service, plan_compiler
+from app.services.validation.replay_service import create_replay_run, run_replay_for_run
 
 if TYPE_CHECKING:
     from app.services.ai.base import AIProvider
@@ -99,6 +102,53 @@ async def confirm_rule(
         raise HTTPException(status_code=404, detail="Compiled plan not found")
 
     return CompiledPlanResponse.model_validate(updated)
+
+
+@router.post("/runs/{run_id}/replay", response_model=ValidationRunDetailResponse, status_code=201)
+async def trigger_replay(
+    run_id: uuid.UUID,
+    body: ReplayRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Trigger a historical replay for an interpretability run.
+    run_id must be an INTERPRETABILITY run UUID.
+    Returns the completed ValidationRun with summary_metrics populated.
+    """
+    interp_run = await plan_compiler.get_validation_run(db, run_id)
+    if interp_run is None:
+        raise HTTPException(status_code=404, detail="Validation run not found")
+
+    if interp_run.mode != "INTERPRETABILITY":
+        raise HTTPException(status_code=422, detail="run_id must reference an INTERPRETABILITY run")
+
+    today = date.today()
+    start_date = body.start_date or (today - timedelta(days=365))
+    end_date = body.end_date or today
+
+    if end_date <= start_date:
+        raise HTTPException(status_code=422, detail="end_date must be after start_date")
+
+    compiled_plan = await plan_compiler.get_compiled_plan(db, interp_run.compiled_plan_id)
+    if compiled_plan is None:
+        raise HTTPException(status_code=404, detail="Compiled plan not found")
+
+    replay_run = await create_replay_run(
+        db,
+        compiled_plan_id=interp_run.compiled_plan_id,
+        symbol=body.symbol,
+        timeframe=body.timeframe,
+        start_date=start_date,
+        end_date=end_date,
+        direction=body.direction,
+    )
+
+    try:
+        completed_run = await run_replay_for_run(db, replay_run.id)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return _build_run_detail(completed_run, compiled_plan)
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────

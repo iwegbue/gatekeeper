@@ -1,5 +1,6 @@
 from app.models.ai_analysis import AIAnalysis
 from app.models.base import Base
+from app.models.ohlc_bar import OhlcBar
 from app.models.plan_builder_session import PlanBuilderSession
 from app.models.idea import Idea
 from app.models.idea_rule_check import IdeaRuleCheck
@@ -30,4 +31,5 @@ __all__ = [
     "PlanBuilderSession",
     "CompiledPlan",
     "ValidationRun",
+    "OhlcBar",
 ]

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Replay Report — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Replay Report</h2>
+    <small class="muted">
+        {{ replay_run.created_at.strftime('%Y-%m-%d %H:%M UTC') }}
+        &mdash; {{ metrics.get('symbol', settings.get('symbol', '')) }}/{{ metrics.get('timeframe', settings.get('timeframe', '')) }}
+    </small>
+</div>
+
+<a href="/validation/runs/{{ interp_run.id }}">&larr; Back to interpretability report</a>
+
+{% if metrics %}
+
+{# ── KPI row ──────────────────────────────────────────────────────────────── #}
+<div class="kpi-row" style="margin-top: 1.5rem;">
+    <article class="kpi-card">
+        <small class="muted"><span class="tip-trigger-text">Win Rate<span class="tip-content">Percentage of simulated trades that closed with a positive R-multiple.</span></span></small>
+        <strong class="kpi-big {% if metrics.win_rate >= 0.5 %}positive{% endif %}">
+            {{ (metrics.win_rate * 100) | round(1) }}%
+        </strong>
+        <small class="muted">{{ metrics.winning_trades }}W / {{ metrics.losing_trades }}L of {{ metrics.total_trades }} trades</small>
+    </article>
+
+    <article class="kpi-card">
+        <small class="muted"><span class="tip-trigger-text">Profit Factor<span class="tip-content">Total winning R divided by total losing R. Above 1.0 is profitable. None if no losing trades.</span></span></small>
+        <strong class="kpi-big {% if metrics.profit_factor and metrics.profit_factor >= 1.5 %}positive{% endif %}">
+            {% if metrics.profit_factor is not none %}
+                {{ metrics.profit_factor | round(2) }}
+            {% else %}
+                &mdash;
+            {% endif %}
+        </strong>
+        <small class="muted">gross win / gross loss R</small>
+    </article>
+
+    <article class="kpi-card">
+        <small class="muted"><span class="tip-trigger-text">Max Drawdown<span class="tip-content">Worst peak-to-trough decline in cumulative R. More negative = deeper drawdown.</span></span></small>
+        <strong class="kpi-big {% if metrics.max_drawdown_r > -3 %}positive{% else %}negative{% endif %}">
+            {{ metrics.max_drawdown_r | round(2) }}R
+        </strong>
+        <small class="muted">peak-to-trough cumulative R</small>
+    </article>
+
+    <article class="kpi-card">
+        <small class="muted"><span class="tip-trigger-text">Total Trades<span class="tip-content">Number of completed simulated trades over the replay period.</span></span></small>
+        <strong class="kpi-big">{{ metrics.total_trades }}</strong>
+        <small class="muted">{{ metrics.bars_with_signal }} signals / {{ metrics.bars_evaluated }} bars</small>
+    </article>
+</div>
+
+{# ── Secondary KPIs ───────────────────────────────────────────────────────── #}
+<div class="kpi-row" style="margin-top: 1rem;">
+    <article class="kpi-card">
+        <small class="muted">Total R</small>
+        <strong class="kpi-big {% if metrics.total_r > 0 %}positive{% elif metrics.total_r < 0 %}negative{% endif %}">
+            {{ metrics.total_r | round(2) }}R
+        </strong>
+        <small class="muted">avg {{ metrics.avg_r | round(2) if metrics.avg_r is not none else '—' }}R per trade</small>
+    </article>
+
+    <article class="kpi-card">
+        <small class="muted">Best / Worst Trade</small>
+        <strong class="kpi-big">{{ metrics.max_r | round(2) }}R / {{ metrics.min_r | round(2) }}R</strong>
+        <small class="muted">max consecutive losses: {{ metrics.max_consecutive_losses }}</small>
+    </article>
+
+    <article class="kpi-card">
+        <small class="muted"><span class="tip-trigger-text">Signal Rate<span class="tip-content">Fraction of evaluated bars on which all required gates passed and an entry signal was generated.</span></span></small>
+        <strong class="kpi-big">{{ (metrics.signal_rate * 100) | round(2) }}%</strong>
+        <small class="muted">of bars generated a signal</small>
+    </article>
+
+    <article class="kpi-card">
+        <small class="muted"><span class="tip-trigger-text">Avg Optional Score<span class="tip-content">Mean fraction of optional rules that fired. Higher scores on winners indicate optional rules add predictive value.</span></span></small>
+        <strong class="kpi-big">{{ (metrics.avg_optional_score * 100) | round(1) }}%</strong>
+        <small class="muted">
+            W: {{ (metrics.avg_optional_score_winners * 100) | round(1) }}% &nbsp;
+            L: {{ (metrics.avg_optional_score_losers * 100) | round(1) }}%
+        </small>
+    </article>
+</div>
+
+{# ── Data coverage ────────────────────────────────────────────────────────── #}
+<article style="margin-top: 1rem;">
+    <header><strong>Data Coverage</strong></header>
+    <p style="margin: 0;">
+        <strong>{{ metrics.symbol }}</strong> / <strong>{{ metrics.timeframe }}</strong>
+        &nbsp;&mdash;&nbsp;
+        {{ metrics.start_date }} to {{ metrics.end_date }}
+        &nbsp;&mdash;&nbsp;
+        {{ metrics.bars_loaded }} bars loaded
+        {% if metrics.fallback_stop_used %}
+        &nbsp;<span class="badge badge--warning" title="No testable risk rule found; using 2% fallback stop">fallback stop</span>
+        {% endif %}
+    </p>
+    {% if metrics.data_coverage_warning %}
+    <p style="color: var(--pico-color-amber-450); margin-top: 0.5rem;">
+        &#9888; {{ metrics.data_coverage_warning }}
+    </p>
+    {% endif %}
+</article>
+
+{# ── Exit breakdown ───────────────────────────────────────────────────────── #}
+{% if metrics.exit_reasons %}
+<article style="margin-top: 1rem;">
+    <header><strong>Exit Breakdown</strong></header>
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+        {% for reason, count in metrics.exit_reasons.items() %}
+        {% if count > 0 %}
+        <div>
+            <small class="muted">{{ reason.replace('_', ' ') }}</small><br>
+            <strong>{{ count }}</strong>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% for event, count in metrics.management_events.items() %}
+        {% if count > 0 %}
+        <div>
+            <small class="muted">{{ event.replace('_', ' ') }}</small><br>
+            <strong>{{ count }}</strong>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</article>
+{% endif %}
+
+{# ── R-distribution chart (HTML/CSS only) ─────────────────────────────────── #}
+{# Buckets are computed server-side and passed as metrics.r_buckets if present #}
+{# For now we render a simple descriptive summary #}
+<article style="margin-top: 1rem;">
+    <header><strong>R-Multiple Distribution</strong></header>
+    {% if metrics.total_trades > 0 %}
+    <p style="font-size: 0.9em; color: var(--pico-muted-color);">
+        Range: {{ metrics.min_r | round(2) }}R to {{ metrics.max_r | round(2) }}R
+        &nbsp;&middot;&nbsp; Avg: {{ metrics.avg_r | round(2) if metrics.avg_r is not none else '—' }}R
+        &nbsp;&middot;&nbsp; Total: {{ metrics.total_r | round(2) }}R
+    </p>
+    <div style="display: flex; gap: 0.5rem; align-items: flex-end; margin-top: 0.75rem; height: 60px;">
+        {# Render a simplified bar for each R bucket using CSS widths #}
+        {% set buckets = [
+            ('≤-2R', 'negative', metrics.losing_trades),
+            ('-2→0R', 'neutral', metrics.losing_trades),
+            ('0→+1R', 'neutral', metrics.winning_trades),
+            ('+1→+2R', 'positive', metrics.winning_trades),
+            ('>+2R', 'positive', metrics.winning_trades)
+        ] %}
+        {# Simple two-bar representation: winners vs losers #}
+        {% set loss_pct = (metrics.losing_trades / metrics.total_trades * 100) | round(0) | int if metrics.total_trades > 0 else 0 %}
+        {% set win_pct = (metrics.winning_trades / metrics.total_trades * 100) | round(0) | int if metrics.total_trades > 0 else 0 %}
+        <div style="display: flex; width: 100%; gap: 4px; align-items: flex-end; height: 100%;">
+            {% if metrics.losing_trades > 0 %}
+            <div style="
+                width: {{ loss_pct }}%;
+                background: var(--pico-color-red-500, #ef4444);
+                height: {{ [loss_pct, 10] | max }}%;
+                min-height: 8px;
+                border-radius: 3px 3px 0 0;
+                display: flex; align-items: flex-start; justify-content: center;
+                padding-top: 2px; font-size: 0.7em; color: white;">
+                {{ metrics.losing_trades }}L
+            </div>
+            {% endif %}
+            {% if metrics.winning_trades > 0 %}
+            <div style="
+                width: {{ win_pct }}%;
+                background: var(--pico-color-green-500, #22c55e);
+                height: {{ [win_pct, 10] | max }}%;
+                min-height: 8px;
+                border-radius: 3px 3px 0 0;
+                display: flex; align-items: flex-start; justify-content: center;
+                padding-top: 2px; font-size: 0.7em; color: white;">
+                {{ metrics.winning_trades }}W
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <p class="muted">No trades simulated.</p>
+    {% endif %}
+</article>
+
+{% else %}
+
+<article class="empty-state">
+    <p>No metrics available for this replay run.</p>
+</article>
+
+{% endif %}
+
+{# ── Run Again form ────────────────────────────────────────────────────────── #}
+<article style="margin-top: 2rem;">
+    <header><strong>Run Again</strong></header>
+    <form method="post" action="/validation/runs/{{ interp_run.id }}/replay">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem;">
+            <label>
+                Symbol
+                <input type="text" name="symbol" value="{{ settings.get('symbol', 'EURUSD') }}" placeholder="EURUSD" required>
+            </label>
+            <label>
+                Timeframe
+                <select name="timeframe">
+                    {% for tf in ['1d', '4h', '1h', '15m'] %}
+                    <option value="{{ tf }}" {{ 'selected' if settings.get('timeframe', '1d') == tf else '' }}>{{ tf }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Direction
+                <select name="direction">
+                    {% for d in ['BOTH', 'LONG', 'SHORT'] %}
+                    <option value="{{ d }}" {{ 'selected' if settings.get('direction', 'BOTH') == d else '' }}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Start Date
+                <input type="date" name="start_date" value="{{ default_start }}" required>
+            </label>
+            <label>
+                End Date
+                <input type="date" name="end_date" value="{{ default_end }}" required>
+            </label>
+        </div>
+        <button type="submit" style="margin-top: 1rem;">
+            <i data-lucide="play"></i> Run Replay
+        </button>
+    </form>
+</article>
+
+{% endblock %}
