@@ -43,6 +43,44 @@
     <p>{{ feedback.summary }}</p>
 </article>
 
+{# ── Replay coverage ──────────────────────────────────────────────────────── #}
+{% if feedback.replayable_rules is defined %}
+{% set replayable = feedback.replayable_rules %}
+{% set live_only = feedback.live_only_rules %}
+{% set coverage_total = (replayable | length) + (live_only | length) %}
+{% if coverage_total > 0 %}
+<article style="margin-top: 1rem;">
+    <header><strong>Replay Coverage</strong> &mdash; <small class="muted">{{ replayable | length }} of {{ coverage_total }} rules will be replayed</small></header>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div>
+            <h6 style="color: #4ade80; margin-bottom: 0.5rem;">Included in replay</h6>
+            {% if replayable %}
+            <ul style="margin: 0; padding-left: 1.2rem;">
+                {% for r in replayable %}
+                <li><small>{{ r.name }} <span class="muted">({{ r.layer }}{% if r.proxy_type %} &middot; {{ r.proxy_type }}{% endif %})</span></small></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <small class="muted">No replayable rules yet.</small>
+            {% endif %}
+        </div>
+        <div>
+            <h6 style="color: #9ca3af; margin-bottom: 0.5rem;">Live enforcement only</h6>
+            {% if live_only %}
+            <ul style="margin: 0; padding-left: 1.2rem;">
+                {% for r in live_only %}
+                <li><small>{{ r.name }} <span class="muted">({{ r.layer }} &middot; {{ r.reason }})</span></small></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <small class="muted">All rules are replayable.</small>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endif %}
+{% endif %}
+
 {# ── Coherence warnings ───────────────────────────────────────────────────── #}
 {% if feedback.coherence_warnings %}
 <article style="margin-top: 1rem; border-left: 3px solid var(--pico-color-amber-450);">
@@ -78,7 +116,7 @@
         <strong>{{ layer_name }}</strong>
         &nbsp;
         <small class="muted">
-            {{ layer_data.testable }}<span class="tip-trigger-text">T<span class="tip-content">Testable — checked directly against market data.</span></span> &middot; {{ layer_data.approximated }}<span class="tip-trigger-text">A<span class="tip-content">Approximated — tested via a proxy when no exact signal exists.</span></span> &middot; {{ layer_data.not_testable }}<span class="tip-trigger-text">N<span class="tip-content">Not testable — requires manual judgment; cannot be machine-checked.</span></span>
+            {{ layer_data.testable }}<span class="tip-trigger-text">T<span class="tip-content">Testable — checked directly against market data.</span></span> &middot; {{ layer_data.approximated }}<span class="tip-trigger-text">A<span class="tip-content">Approximated — tested via a proxy when no exact signal exists.</span></span> &middot; {{ layer_data.not_testable }}<span class="tip-trigger-text">L<span class="tip-content">Live only — evaluated via the checklist during live trading, not included in replay.</span></span>
             {% if layer_data.behavioral %}(live enforcement only){% endif %}
         </small>
     </summary>
@@ -88,7 +126,7 @@
             <tr>
                 <th>Rule</th>
                 <th><span class="tip-trigger-text">Type<span class="tip-content"><strong>REQUIRED</strong> — must be met before acting.<br><strong>OPTIONAL</strong> — improves score if met.<br><strong>ADVISORY</strong> — reminder only.</span></span></th>
-                <th><span class="tip-trigger-text">Status<span class="tip-content"><strong>TESTABLE</strong> — verified directly against data.<br><strong>APPROXIMATED</strong> — tested via a proxy.<br><strong>NOT_TESTABLE</strong> — manual judgment required.</span></span></th>
+                <th><span class="tip-trigger-text">Status<span class="tip-content"><strong>TESTABLE</strong> — verified directly against data.<br><strong>APPROXIMATED</strong> — tested via a proxy.<br><strong>LIVE ONLY</strong> — evaluated live via checklist, not in historical replay.</span></span></th>
                 <th><span class="tip-trigger-text">Proxy<span class="tip-content">The approximate signal used when the rule cannot be tested exactly against market data.</span></span></th>
                 <th><span class="tip-trigger-text">Confidence<span class="tip-content">How closely the proxy matches the original rule's intent. Higher % = more reliable approximation.</span></span></th>
                 <th>Notes</th>
@@ -100,7 +138,7 @@
                 <td>{{ rule.name }}</td>
                 <td><small>{{ rule.rule_type }}</small></td>
                 <td>
-                    <span class="badge badge--{{ 'success' if rule.status == 'TESTABLE' else 'warning' if rule.status == 'APPROXIMATED' else 'error' }} tip-trigger-badge">{{ rule.status }}<span class="tip-content">{% if rule.status == 'TESTABLE' %}Can be checked directly against market data.{% elif rule.status == 'APPROXIMATED' %}No exact signal exists; tested via a similar proxy rule.{% else %}Cannot be machine-checked; requires manual judgment.{% endif %}</span></span>
+                    <span class="badge badge--{{ 'success' if rule.status == 'TESTABLE' else 'warning' if rule.status == 'APPROXIMATED' else 'neutral' }} tip-trigger-badge">{{ 'LIVE ONLY' if rule.status == 'NOT_TESTABLE' else rule.status }}<span class="tip-content">{% if rule.status == 'TESTABLE' %}Can be checked directly against market data.{% elif rule.status == 'APPROXIMATED' %}No exact signal exists; tested via a similar proxy rule.{% else %}Evaluated during live trading via the checklist — not included in historical replay.{% endif %}</span></span>
                     {% if rule.user_confirmed %}
                     <span class="badge badge--info" title="Confirmed by you">&#10003;</span>
                     {% endif %}
