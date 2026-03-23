@@ -52,6 +52,10 @@ def _layer_breakdown(compiled_rules: list[dict]) -> dict:
                 "confidence": rule.get("confidence"),
                 "interpretation_notes": rule.get("interpretation_notes", ""),
                 "user_confirmed": rule.get("user_confirmed", False),
+                "live_only": (
+                    status == InterpretationStatus.NOT_TESTABLE.value
+                    or layer == PlanLayer.BEHAVIORAL.value
+                ),
             }
         )
 
@@ -93,6 +97,8 @@ def _generate_suggestions(
     coherence_warnings: list[str],
     interpretability_score: float,
     replay_readiness: str,
+    replayable_rules: list[dict] | None = None,
+    live_only_rules: list[dict] | None = None,
 ) -> list[str]:
     """Generate actionable refinement suggestions."""
     suggestions: list[str] = []
@@ -117,8 +123,8 @@ def _generate_suggestions(
         total = data["testable"] + data["approximated"] + data["not_testable"]
         if total > 0 and data["not_testable"] == total:
             suggestions.append(
-                f"All rules in the {layer_name} layer are non-testable. "
-                "Consider adding at least one objective, measurable rule to this layer."
+                f"All rules in the {layer_name} layer are live-enforced. "
+                "If you want historical replay coverage for this layer, consider adding a measurable rule."
             )
 
     # Risk layer suggestion
@@ -144,8 +150,8 @@ def _generate_suggestions(
     behavioral_rules = [r for r in compiled_rules if r["layer"] == PlanLayer.BEHAVIORAL.value]
     if behavioral_rules:
         suggestions.append(
-            f"{len(behavioral_rules)} behavioral rule(s) cannot be replayed historically. "
-            "These will be enforced in live trading through Gatekeeper's checklist and journaling."
+            f"{len(behavioral_rules)} behavioral rule(s) are tracked via live journaling and checklist, "
+            "not included in historical replay."
         )
 
     # Approximation transparency
@@ -165,9 +171,12 @@ def _generate_suggestions(
             "You can run a replay from the validation dashboard."
         )
     elif replay_readiness == _REPLAY_PARTIAL:
+        replayable_count = len(replayable_rules) if replayable_rules else 0
+        non_behavioral = [r for r in compiled_rules if r["layer"] != PlanLayer.BEHAVIORAL.value]
+        non_behavioral_count = len(non_behavioral)
         suggestions.append(
-            "Your plan is partially ready for replay. Some rules could not be interpreted and will be "
-            "treated as always-satisfied during replay. Review the non-testable rules before running."
+            f"Your replay will cover {replayable_count} of {non_behavioral_count} non-behavioral rules. "
+            "The remaining rules will be evaluated during live trading."
         )
 
     return suggestions
@@ -195,13 +204,33 @@ def build_report(compiled_plan: CompiledPlan) -> dict:
         f"{len({r['layer'] for r in compiled_rules})} layer(s). "
         f"{testable_count} are directly testable, "
         f"{approximated_count} are approximated, "
-        f"{not_testable_count} cannot be tested historically"
+        f"{not_testable_count} are enforced live via the checklist"
         + (f", and {behavioral_count} are behavioral (live enforcement only)" if behavioral_count else "")
         + "."
     )
 
+    # Build replayable and live-only rule lists
+    replayable_rules = [
+        {"name": r["name"], "layer": r["layer"], "proxy_type": r["proxy"]["type"] if r.get("proxy") else None}
+        for r in compiled_rules
+        if r["layer"] != PlanLayer.BEHAVIORAL.value
+        and r["status"] in (InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value)
+    ]
+    live_only_rules = [
+        {
+            "name": r["name"],
+            "layer": r["layer"],
+            "reason": "behavioral" if r["layer"] == PlanLayer.BEHAVIORAL.value else "live_judgment",
+        }
+        for r in compiled_rules
+        if r["layer"] == PlanLayer.BEHAVIORAL.value or r["status"] == InterpretationStatus.NOT_TESTABLE.value
+    ]
+
     layer_data = _layer_breakdown(compiled_rules)
-    suggestions = _generate_suggestions(compiled_rules, layer_data, coherence_warnings, score, replay_readiness)
+    suggestions = _generate_suggestions(
+        compiled_rules, layer_data, coherence_warnings, score, replay_readiness,
+        replayable_rules=replayable_rules, live_only_rules=live_only_rules,
+    )
 
     return {
         "interpretability_score": score,
@@ -217,4 +246,6 @@ def build_report(compiled_plan: CompiledPlan) -> dict:
         "layer_breakdown": layer_data,
         "coherence_warnings": coherence_warnings,
         "refinement_suggestions": suggestions,
+        "replayable_rules": replayable_rules,
+        "live_only_rules": live_only_rules,
     }

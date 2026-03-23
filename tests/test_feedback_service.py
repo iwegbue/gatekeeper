@@ -66,6 +66,8 @@ def test_build_report_returns_required_keys():
     assert "layer_breakdown" in report
     assert "coherence_warnings" in report
     assert "refinement_suggestions" in report
+    assert "replayable_rules" in report
+    assert "live_only_rules" in report
 
 
 def test_build_report_rule_counts_correct():
@@ -228,3 +230,86 @@ def test_layer_breakdown_rule_list_structure():
     assert r["name"] == "My setup rule"
     assert r["status"] == "APPROXIMATED"
     assert r["proxy_type"] is not None
+
+
+# ── Replayable / live-only rule lists ────────────────────────────────────────
+
+
+def test_build_report_includes_replayable_and_live_only_rules():
+    rules = [
+        _make_compiled_rule(layer="CONTEXT", status="TESTABLE", name="SMA trend"),
+        _make_compiled_rule(layer="SETUP", status="APPROXIMATED", name="Zone proximity"),
+        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE", name="Gut feel"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No FOMO"),
+    ]
+    plan = _make_compiled_plan(rules)
+    report = build_report(plan)
+
+    replayable_names = [r["name"] for r in report["replayable_rules"]]
+    live_only_names = [r["name"] for r in report["live_only_rules"]]
+
+    assert "SMA trend" in replayable_names
+    assert "Zone proximity" in replayable_names
+    assert "Gut feel" in live_only_names
+    assert "No FOMO" in live_only_names
+    # Replayable should not contain NOT_TESTABLE or BEHAVIORAL rules
+    assert "Gut feel" not in replayable_names
+    assert "No FOMO" not in replayable_names
+
+
+def test_live_only_rules_have_reason_field():
+    rules = [
+        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE", name="Discretionary"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No revenge"),
+        _make_compiled_rule(layer="RISK", status="TESTABLE", name="ATR stop"),
+    ]
+    plan = _make_compiled_plan(rules)
+    report = build_report(plan)
+
+    live_only_by_name = {r["name"]: r for r in report["live_only_rules"]}
+    assert live_only_by_name["Discretionary"]["reason"] == "live_judgment"
+    assert live_only_by_name["No revenge"]["reason"] == "behavioral"
+    assert "ATR stop" not in live_only_by_name
+
+
+def test_summary_uses_live_enforcement_language():
+    rules = [
+        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
+        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE"),
+        _make_compiled_rule(layer="RISK", status="TESTABLE"),
+    ]
+    plan = _make_compiled_plan(rules)
+    report = build_report(plan)
+
+    assert "cannot be tested historically" not in report["summary"]
+    assert "enforced live via the checklist" in report["summary"]
+
+
+def test_suggestions_use_constructive_language():
+    rules = [
+        _make_compiled_rule(layer="CONTEXT", status="NOT_TESTABLE", name="Vague bias"),
+        _make_compiled_rule(layer="RISK", status="TESTABLE", name="ATR stop"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No tilt"),
+    ]
+    plan = _make_compiled_plan(rules, score=50.0)
+    report = build_report(plan)
+
+    suggestions_text = " ".join(report["refinement_suggestions"])
+    # Should use constructive "live" language
+    assert "live" in suggestions_text.lower()
+    # Should not use punitive "non-testable" phrasing
+    assert "non-testable" not in suggestions_text.lower()
+
+
+def test_layer_breakdown_includes_live_only_flag():
+    rules = [
+        _make_compiled_rule(layer="CONTEXT", status="TESTABLE", name="SMA check"),
+        _make_compiled_rule(layer="CONTEXT", status="NOT_TESTABLE", name="Gut feel"),
+    ]
+    plan = _make_compiled_plan(rules)
+    report = build_report(plan)
+
+    context_rules = report["layer_breakdown"]["CONTEXT"]["rules"]
+    by_name = {r["name"]: r for r in context_rules}
+    assert by_name["SMA check"]["live_only"] is False
+    assert by_name["Gut feel"]["live_only"] is True
