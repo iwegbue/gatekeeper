@@ -146,6 +146,8 @@ Always implement both `upgrade()` and `downgrade()`.
 
 ### Local dev
 
+**End-user installs** (pre-built image, no Git clone) use **`deploy/`** — see `deploy/README.md`. The repo-root compose file below is for **contributors** who build from source.
+
 ```bash
 # Full stack — no .env editing required
 docker compose up -d

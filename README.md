@@ -39,9 +39,23 @@ Bring your own AI key (Anthropic, OpenAI, or Ollama) for plan-building assistanc
 
 ### Prerequisites
 
-- Docker + Docker Compose
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Mac/Windows) or Docker Engine + Compose on Linux
 
-### 1. Clone and start
+### Recommended: install without Git (pre-built image)
+
+From any empty folder:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/iwegbue/gatekeeper/main/deploy/install.sh | bash
+```
+
+This downloads `docker-compose.yml` and `nginx.conf`, pulls the app image from **GitHub Container Registry**, and starts the stack. No repository clone and no local image build.
+
+After the first successful publish from `main`, the `latest` image will exist. If `docker compose pull` fails with “denied”, open the **`gatekeeper`** package under the repo’s **Packages** tab on GitHub and set visibility to **public**, or run `docker login ghcr.io`.
+
+More options (release zip, pinning a version, forks): **`deploy/README.md`**.
+
+### Alternative: clone and build (contributors)
 
 ```bash
 git clone https://github.com/iwegbue/gatekeeper
@@ -49,9 +63,9 @@ cd gatekeeper
 docker compose up -d
 ```
 
-That's it. No `.env` editing required.
+Uses the repo-root compose file and **builds** the app image locally. No `.env` editing required for a first run.
 
-### 2. Complete first-run setup
+### 1. Complete first-run setup
 
 Navigate to **http://localhost** — you'll be redirected to the setup wizard automatically.
 Set your admin password and you're in.
@@ -59,13 +73,13 @@ Set your admin password and you're in.
 A strong `SECRET_KEY` is auto-generated on first run and persisted to the `appdata` Docker
 volume so sessions survive container restarts.
 
-### 4. Set up your plan
+### 2. Set up your plan
 
 1. Go to **Trading Plans** → create or select a plan, then add rules across the 7 layers
 2. Go to **Instruments** → add the markets you trade
 3. Go to **Settings** → optionally configure your AI provider (BYOK)
 
-### 5. Start trading
+### 3. Start trading
 
 1. **Create an idea** for a setup you're watching
 2. **Work through the checklist** — tick rules as conditions are met

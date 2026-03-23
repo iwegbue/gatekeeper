@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Frictionless Docker install** — pre-built **`ghcr.io`** images on pushes to `main` (tag `latest`) and on version tags `v*`; **`deploy/`** bundle (`docker-compose.yml`, `nginx.conf`, `install.sh`, `README.md`) for installs without Git; **`install.sh`** one-liner documented in the root README; GitHub **Releases** automatically attach **`gatekeeper-docker.zip`** when a `v*` tag is pushed (workflow: Docker image & release bundle)
 - **Multiple Trading Plans** — create, duplicate, and switch between multiple trading plans; only one plan is active at a time and new ideas use the active plan; existing ideas keep the plan they were created with
   - Plan list page at `/plan` with activate, duplicate, and delete actions
   - Plan detail page at `/plan/{id}` with full rule management
