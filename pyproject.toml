@@ -20,6 +20,7 @@ dependencies = [
     "slowapi>=0.1.9",
     "fastmcp>=2.0",
     "typer>=0.12",
+    "yfinance>=0.2",
 ]
 
 [project.optional-dependencies]

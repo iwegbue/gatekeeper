@@ -7,6 +7,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Plan Validation Engine (Phase 2 — Replay Engine)** — bar-by-bar historical simulation of a compiled trading plan against real OHLCV data from yfinance
+  - `POST /api/v1/validation/runs/{id}/replay` — trigger a historical replay for an interpretability run; returns completed `ValidationRun` with `summary_metrics` populated
+  - `POST /validation/runs/{id}/replay` — HTML form trigger; redirects to replay report on completion
+  - `GET /validation/runs/{id}/replay` — view the most recent completed replay report with KPI cards, data coverage info, exit breakdown, and "Run Again" form
+  - `OhlcBar` model + migration `009_add_ohlc_bars_table` — persistent OHLCV snapshots keyed by `data_snapshot_id`
+  - `data_loader.py` — async yfinance wrapper; fetches FX (EURUSD, GBPUSD, USDJPY…), metals (XAUUSD), and indices (NQ, SPX, DAX…); 4h resampling from 1h data via pure Python bucketing
+  - `feature_engine.py` — pure Python technical indicators: SMA, EMA, ATR, RSI, swing high/low, HTF bias, session classifier; all return `None` during warm-up period (safe default)
+  - `proxy_evaluator.py` — one `eval_*` function per proxy type (16 types); `evaluate_proxy()` dispatcher; `None` features evaluate to `False`
+  - `replay_engine.py` — bar-by-bar walk: layer-gated entry logic (CONTEXT → SETUP → CONFIRMATION → ENTRY → RISK → MANAGEMENT); trade lifecycle simulation with SL/TP/trailing-stop/partial/BE; fallback 2% stop when no testable RISK rule exists
+  - `replay_service.py` — orchestration: `create_replay_run` + `run_replay_for_run`; full `summary_metrics` JSONB shape (win rate, profit factor, max drawdown R, consecutive losses, signal rate, exit/management tallies, data coverage warning)
+  - `ReplayRequest`, `SimulatedTradeResponse`, `ReplaySummaryMetricsResponse` Pydantic schemas; `ValidationRunResponse` extended with `settings`, `summary_metrics`, `data_snapshot_id`
+  - "Run Replay" expandable form on the interpretability report page (shown when `replay_readiness` is READY or PARTIAL)
+  - 94 new tests: `test_feature_engine.py` (28), `test_proxy_evaluator.py` (54), `test_replay_service.py` (12) — all unit tests run without a DB or network
+
 - **Multiple Trading Plans** — create, duplicate, and switch between multiple trading plans; only one plan is active at a time and new ideas use the active plan; existing ideas keep the plan they were created with
   - Plan list page at `/plan` with activate, duplicate, and delete actions
   - Plan detail page at `/plan/{id}` with full rule management
