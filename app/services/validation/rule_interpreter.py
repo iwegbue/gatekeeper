@@ -10,6 +10,7 @@ Strategy: AI proposes, user confirms.
 
 import json
 import logging
+import re
 from typing import TYPE_CHECKING
 
 from app.models.enums import InterpretationStatus, PlanLayer
@@ -151,7 +152,7 @@ Available proxy types:
 {_VOCAB_SUMMARY}
   - not_testable: Use when no proxy in the vocabulary fits the rule.
 
-You must respond with a single JSON object (no markdown, no explanation outside JSON) with these exact fields:
+You must respond with a single JSON object only — no markdown code fences (no ```), no preamble or trailing commentary — with these exact fields:
 {{
   "status": "TESTABLE" | "APPROXIMATED" | "NOT_TESTABLE",
   "proxy_type": "<one of the proxy type names above, or not_testable>",
@@ -182,6 +183,48 @@ def _resolve_feature_dependencies(proxy_type: str, proxy_params: dict) -> list[s
             dep = dep_template
         deps.append(dep)
     return deps
+
+
+_JSON_FENCE_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)\s*```", re.IGNORECASE)
+
+
+def _parse_compiler_response(raw: str | None) -> dict:
+    """
+    Parse the model's reply into a dict. Models often wrap JSON in markdown fences
+    or add a short preamble despite instructions; empty replies also occur when
+    the provider drops content.
+    """
+    if raw is None:
+        raise ValueError("The model returned no text.")
+    text = raw.strip()
+    if not text:
+        raise ValueError("The model returned an empty response.")
+
+    fence = _JSON_FENCE_RE.search(text)
+    if fence:
+        text = fence.group(1).strip()
+    if not text:
+        raise ValueError("The model returned only empty markdown.")
+
+    try:
+        obj = json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        if start == -1:
+            raise ValueError(
+                "The model response did not contain a JSON object."
+            ) from None
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(text, start)
+        except json.JSONDecodeError as e:
+            raise ValueError("The model returned invalid JSON.") from e
+
+    if not isinstance(obj, dict):
+        raise ValueError(
+            "The model returned JSON that is not a single object "
+            "(an object with status, proxy_type, proxy_params, etc. was expected)."
+        )
+    return obj
 
 
 def _build_rule_message(rule: PlanRule, plan_context: str) -> str:
@@ -234,8 +277,18 @@ async def interpret_rule(
     message = _build_rule_message(rule, plan_context)
     try:
         raw = await provider.chat(system=_SYSTEM_PROMPT, messages=[{"role": "user", "content": message}])
-        parsed = json.loads(raw.strip())
-    except (json.JSONDecodeError, Exception) as e:
+        parsed = _parse_compiler_response(raw)
+    except ValueError as e:
+        logger.warning("Rule interpretation failed for rule %s: %s", rule.id, e)
+        return {
+            **base,
+            "status": InterpretationStatus.NOT_TESTABLE.value,
+            "proxy": None,
+            "confidence": None,
+            "interpretation_notes": f"{e} Rule marked as not testable.",
+            "feature_dependencies": [],
+        }
+    except Exception as e:
         logger.warning("Rule interpretation failed for rule %s: %s", rule.id, e)
         return {
             **base,

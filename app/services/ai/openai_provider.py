@@ -25,4 +25,4 @@ class OpenAIProvider:
             messages=full_messages,
             max_tokens=2048,
         )
-        return response.choices[0].message.content
+        return response.choices[0].message.content or ""

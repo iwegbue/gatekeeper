@@ -95,6 +95,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Plan validation / rule interpreter**: parse model replies wrapped in markdown JSON code fences, leading prose, or trailing text; treat empty or missing content with a clear user-facing message instead of raw JSON parse errors (e.g. “Expecting value: line 1 column 1”)
+- **OpenAI provider**: coerce `message.content` `None` to `""` so downstream parsing does not mis-handle refusals or empty completions
 - `plan_service.update_rule`: protect `id`, `plan_id`, `layer`, `created_at` from mutation
 - `ChecklistItemResponse` schema: add `ConfigDict(from_attributes=True)`
 - `PATCH /api/v1/journal/{id}`: guard against `None` after tag re-fetch
