@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import InterpretationStatus
 from app.services.validation.rule_interpreter import (
     PROXY_VOCABULARY,
+    _parse_compiler_response,
     _resolve_feature_dependencies,
     interpret_rule,
     interpret_rules,
@@ -223,7 +224,42 @@ async def test_malformed_json_response_falls_back_gracefully(db: AsyncSession):
 
     assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
     assert result["proxy"] is None
-    assert "failed" in result["interpretation_notes"].lower()
+    notes = result["interpretation_notes"].lower()
+    assert "model" in notes and "not testable" in notes
+
+
+def test_parse_compiler_response_strips_markdown_json_fence():
+    inner = _make_ai_response()
+    raw = f"Here you go:\n```json\n{inner}\n```\n"
+    parsed = _parse_compiler_response(raw)
+    assert parsed["proxy_type"] == "sma_trend"
+    assert parsed["status"] == "TESTABLE"
+
+
+def test_parse_compiler_response_strips_generic_fence():
+    inner = _make_ai_response()
+    raw = f"```\n{inner}\n```"
+    parsed = _parse_compiler_response(raw)
+    assert parsed["proxy_type"] == "sma_trend"
+
+
+def test_parse_compiler_response_tolerates_preamble_and_trailing_text():
+    inner = _make_ai_response()
+    raw = f"The compiled rule follows.\n{inner}\nHope this helps."
+    parsed = _parse_compiler_response(raw)
+    assert parsed["status"] == "TESTABLE"
+
+
+@pytest.mark.asyncio
+async def test_empty_model_response_user_facing_note(db: AsyncSession):
+    plan = await create_plan(db)
+    rule = await create_rule(db, plan.id, layer="CONTEXT", name="Rule")
+    provider = MockProvider("")
+
+    result = await interpret_rule(rule, provider, "ctx")
+
+    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
+    assert "empty" in result["interpretation_notes"].lower()
 
 
 # ── Feature dependencies ──────────────────────────────────────────────────────
