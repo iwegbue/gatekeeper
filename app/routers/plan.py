@@ -270,7 +270,12 @@ async def rule_delete(
 
 
 @router.get("/{plan_id}/reset")
-async def plan_reset_confirm(request: Request, plan_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def plan_reset_confirm(
+    request: Request,
+    plan_id: uuid.UUID,
+    preselect: str = "",
+    db: AsyncSession = Depends(get_db),
+):
     plan = await plan_service.get_plan_by_id(db, plan_id)
     if plan is None:
         return RedirectResponse(url="/plan?msg=Plan+not+found&msg_type=error", status_code=303)
@@ -283,6 +288,7 @@ async def plan_reset_confirm(request: Request, plan_id: uuid.UUID, db: AsyncSess
             "plan": plan,
             "total_rules": total_rules,
             "templates": list_templates(),
+            "preselect": preselect,
         },
     )
 

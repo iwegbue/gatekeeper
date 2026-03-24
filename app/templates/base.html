@@ -80,6 +80,10 @@
                                {% if request.url.path.startswith('/reports') %}aria-current="page"{% endif %}>
                             <i data-lucide="bar-chart-2"></i> Reports
                         </a></li>
+                        <li><a href="/help"
+                               {% if request.url.path.startswith('/help') %}aria-current="page"{% endif %}>
+                            <i data-lucide="help-circle"></i> Help
+                        </a></li>
                     </ul>
                 </div>
 
@@ -97,15 +101,6 @@
                         <li><a href="/instruments"
                                {% if request.url.path.startswith('/instruments') %}aria-current="page"{% endif %}>
                             <i data-lucide="eye"></i> Instruments
-                        </a></li>
-                    </ul>
-                </div>
-
-                <div class="sidebar-group">
-                    <ul>
-                        <li><a href="/help"
-                               {% if request.url.path.startswith('/help') %}aria-current="page"{% endif %}>
-                            <i data-lucide="help-circle"></i> Help
                         </a></li>
                     </ul>
                 </div>

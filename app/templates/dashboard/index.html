@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros/states.html" import state_label %}
 {% block title %}Dashboard — Gatekeeper{% endblock %}
 {% block content %}
 <h2>Dashboard</h2>
@@ -6,7 +7,7 @@
 {# ── KPI row ─────────────────────────────────────────────────────────────── #}
 <div class="kpi-row">
     <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Discipline Score<span class="tip-content">Composite score (0–100) based on plan adherence, grade distribution, and rule compliance across all closed trades.</span></span></small>
+        <small class="muted"><span class="tip-trigger-text">Discipline Score <a href="/help#discipline-score" class="kpi-help-link" title="Learn more">?</a><span class="tip-content">Your Discipline Score (0–100) measures how consistently you follow your rules. It combines: plan adherence (% of Required rules checked), grade distribution (how often you reach A and B setups), and rule violation rate. Higher means more disciplined. Aim for 70+.</span></span></small>
         <strong class="kpi-big">{{ discipline_score }}</strong>
         <small class="muted">/ 100</small>
     </article>
@@ -16,7 +17,7 @@
         <small class="muted">{{ trade_stats.wins }}W / {{ trade_stats.losses }}L</small>
     </article>
     <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Avg R<span class="tip-content">Average R-multiple across all closed trades. R = how much you made or lost relative to your initial risk. 1R = exactly your risk amount.</span></span></small>
+        <small class="muted"><span class="tip-trigger-text">Avg <abbr title="Risk multiple — how many times your initial risk this trade made or lost">R</abbr> <a href="/help#grading" class="kpi-help-link" title="Learn more">?</a><span class="tip-content">Average R-multiple across all closed trades. R = how much you made or lost relative to your initial risk. 1R = exactly your risk. 2R = twice your risk. Negative = a loss.</span></span></small>
         <strong class="kpi-big {% if trade_stats.avg_r > 0 %}positive{% elif trade_stats.avg_r < 0 %}negative{% endif %}">
             {{ trade_stats.avg_r }}R
         </strong>
@@ -39,7 +40,7 @@
         </div>
         {% if open_trades %}
         <table>
-            <thead><tr><th>Instrument</th><th>Dir</th><th><span class="tip-trigger-text">Grade<span class="tip-content">Setup quality at entry. A = 80%+ of checklist points, B = 60–79%, C = below 60%.</span></span></th><th>Entry</th><th><span class="tip-trigger-text">SL<span class="tip-content">Stop loss price — the level at which this trade exits at a controlled loss.</span></span></th><th></th></tr></thead>
+            <thead><tr><th>Instrument</th><th>Dir</th><th><span class="tip-trigger-text">Grade <a href="/help#grading" class="kpi-help-link" title="Learn more">?</a><span class="tip-content">Setup quality at entry. A = 85%+ of checklist points, B = 65–84%, C = below 65%.</span></span></th><th>Entry</th><th><span class="tip-trigger-text"><abbr title="Stop Loss">SL</abbr><span class="tip-content">Stop Loss — the price at which this trade exits at a controlled loss.</span></span></th><th></th></tr></thead>
             <tbody>
                 {% for trade in open_trades %}
                 <tr>
@@ -66,13 +67,13 @@
         </div>
         {% if active_ideas %}
         <table>
-            <thead><tr><th>Instrument</th><th>Dir</th><th><span class="tip-trigger-text">State<span class="tip-content">Which gate this idea has passed. Each advance requires all REQUIRED rules in that layer to be checked.</span></span></th><th><span class="tip-trigger-text">Grade<span class="tip-content">Setup quality. A = 80%+ of checklist points, B = 60–79%, C = below 60%.</span></span></th><th></th></tr></thead>
+            <thead><tr><th>Instrument</th><th>Dir</th><th><span class="tip-trigger-text">State<span class="tip-content">Where this idea is in the evaluation process. Each advance requires all Required rules in that layer to be checked first.</span></span></th><th><span class="tip-trigger-text">Grade <a href="/help#grading" class="kpi-help-link" title="Learn more">?</a><span class="tip-content">Setup quality. A = 85%+ of checklist points, B = 65–84%, C = below 65%.</span></span></th><th></th></tr></thead>
             <tbody>
                 {% for idea in active_ideas[:8] %}
                 <tr>
                     <td><strong>{{ idea.instrument }}</strong></td>
                     <td><span class="badge badge-{{ 'long' if idea.direction == 'LONG' else 'short' }}">{{ idea.direction }}</span></td>
-                    <td><span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ idea.state }}</span></td>
+                    <td><span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ state_label(idea.state) }}</span></td>
                     <td>{% if idea.grade %}<span class="badge badge-grade-{{ idea.grade | lower }}">{{ idea.grade }}</span>{% else %}—{% endif %}</td>
                     <td><a href="/ideas/{{ idea.id }}" class="secondary small">→</a></td>
                 </tr>
@@ -90,12 +91,34 @@
 {% if trade_stats.total == 0 and not active_ideas %}
 <article class="quick-start">
     <header><strong>Getting Started</strong></header>
-    <ol>
-        <li><a href="/plan">Define your trading plan</a> — add rules across 7 layers</li>
-        <li><a href="/instruments">Set up your watchlist</a></li>
-        <li><a href="/ideas/new">Create your first idea</a></li>
-        <li><a href="/settings">Configure AI</a> — bring your own API key (optional)</li>
-    </ol>
+    <p class="muted" style="margin-bottom: 1rem;">Follow these steps in order to make your first trade through Gatekeeper.</p>
+    <div class="quick-start-steps">
+        <a href="/plan" class="quick-start-step">
+            <span class="quick-start-step-num">1</span>
+            <span>
+                <strong>Set up your trading plan</strong>
+                <small class="muted">Define the rules you'll follow across 7 layers</small>
+            </span>
+            <span class="quick-start-step-arrow">→</span>
+        </a>
+        <a href="/instruments" class="quick-start-step">
+            <span class="quick-start-step-num">2</span>
+            <span>
+                <strong>Add instruments to your watchlist</strong>
+                <small class="muted">The markets or instruments you trade</small>
+            </span>
+            <span class="quick-start-step-arrow">→</span>
+        </a>
+        <a href="/ideas/new" class="quick-start-step">
+            <span class="quick-start-step-num">3</span>
+            <span>
+                <strong>Create your first idea</strong>
+                <small class="muted">Spot a setup and work through the checklist</small>
+            </span>
+            <span class="quick-start-step-arrow">→</span>
+        </a>
+    </div>
+    <p class="muted" style="font-size: 0.8rem; margin-top: 1rem;"><a href="/settings">Configure AI (optional)</a> — bring your own API key to unlock plan building, idea review, and journal coaching.</p>
 </article>
 {% endif %}
 {% endblock %}

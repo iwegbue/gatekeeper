@@ -117,11 +117,6 @@ Once v0.3.0 is shipped, the next focus areas are:
 
 ### Later — Expanding the enforcement boundary
 
-- **Broker bridge integrations.** Beyond the existing MT5 bridge — adapters for cTrader, IBKR, and webhook-based brokers. Gatekeeper gates permission; the bridge executes.
-- **Automated rule detection.** The system observes market conditions and checks rules without manual toggling. The trader still approves — but the checklist fills itself where possible.
-- **Community plan templates.** Curated, peer-reviewed rule sets for common strategies. Not signals — *structures*. A starting point that traders customize and own.
-- **Mobile / PWA access.** Responsive UI already works on mobile, but a dedicated PWA with push notifications closes the loop for traders who aren't always at a desk.
-
 ### Not on the roadmap for Core (deliberate non-goals)
 
 - **Strategy generation.** Gatekeeper helps you enforce and refine *your* strategy. It will never tell you what to trade.

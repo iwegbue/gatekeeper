@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros/states.html" import state_label %}
 {% block title %}Ideas — Gatekeeper{% endblock %}
 
 {% block content %}
@@ -35,7 +36,7 @@
                     {{ idea.direction }}
                 </span>
             </td>
-            <td><span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ idea.state }}</span></td>
+            <td><span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ state_label(idea.state) }}</span></td>
             <td>
                 {% if idea.grade %}
                     <span class="badge badge-grade-{{ idea.grade | lower }}">{{ idea.grade }}</span>

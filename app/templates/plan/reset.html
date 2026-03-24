@@ -121,6 +121,6 @@ function selectTemplate(id) {
     }
 }
 
-selectTemplate('scratch');
+selectTemplate({{ (preselect or 'scratch') | tojson }});
 </script>
 {% endblock %}

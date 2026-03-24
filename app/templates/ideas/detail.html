@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros/states.html" import state_label %}
 {% block title %}{{ idea.instrument }} {{ idea.direction }} — Gatekeeper{% endblock %}
 
 {% block content %}
@@ -7,7 +8,7 @@
         <h2>
             {{ idea.instrument }}
             <span class="badge badge-{{ 'long' if idea.direction == 'LONG' else 'short' }}">{{ idea.direction }}</span>
-            <span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ idea.state }}</span>
+            <span class="badge badge-state-{{ idea.state | lower | replace('_', '-') }}">{{ state_label(idea.state) }}</span>
         </h2>
         <small class="muted">Created {{ idea.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</small>
     </div>
@@ -38,9 +39,9 @@
         <article>
             <header><strong>Details</strong></header>
             <dl>
-                <dt>Risk %</dt>
+                <dt><span class="tip-trigger-text">Risk %<span class="tip-content">Percentage of your account you plan to risk on this trade, based on entry price and stop loss distance.</span></span></dt>
                 <dd>{% if idea.risk_pct %}{{ idea.risk_pct }}%{% else %}<span class="muted">—</span>{% endif %}</dd>
-                <dt>Entry window</dt>
+                <dt><span class="tip-trigger-text">Entry Window<span class="tip-content">The time period during which you plan to enter this trade. Once it expires, the idea is automatically invalidated. Set it when the opportunity has a time constraint (e.g. end of session for a day trade).</span></span></dt>
                 <dd>
                     {% if idea.entry_window_expires_at %}
                         {{ idea.entry_window_expires_at.strftime('%Y-%m-%d %H:%M UTC') }}
@@ -75,7 +76,8 @@
         {# State machine — invalidate #}
         {% if actions.can_invalidate and idea.state not in ['IN_TRADE', 'MANAGED'] %}
         <article class="danger-zone">
-            <header><strong>Invalidate</strong></header>
+            <header><strong>Invalidate Idea</strong></header>
+            <p class="muted small">Use when the setup no longer meets your criteria but you want to keep a record. The idea stays in your history as Invalidated.</p>
             <form method="post" action="/ideas/{{ idea.id }}/invalidate">
                 <label>
                     Reason <small class="muted">(optional)</small>
@@ -89,7 +91,8 @@
         {# Danger: delete (only non-terminal, non-in-trade) #}
         {% if idea.state in ['WATCHING', 'SETUP_VALID', 'CONFIRMED', 'ENTRY_PERMITTED', 'INVALIDATED'] %}
         <article class="danger-zone">
-            <header><strong>Delete</strong></header>
+            <header><strong>Delete Idea</strong></header>
+            <p class="muted small">Permanently removes this idea. Use only if it was created by mistake. Only available before a trade is opened.</p>
             <form method="post" action="/ideas/{{ idea.id }}/delete"
                   onsubmit="return confirm('Delete this idea permanently?')">
                 <button type="submit" class="contrast outline small">Delete Idea</button>

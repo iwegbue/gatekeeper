@@ -1,16 +1,22 @@
 {# Checklist partial — rendered standalone for HTMX swaps #}
+{% from "_macros/states.html" import state_label %}
 <div id="checklist-panel">
 
     {# Score header #}
     <div class="checklist-score-bar">
         <div class="score-info">
-            <span class="score-pct tip-trigger-text">{{ checked_score }}/{{ total_score }} pts<span class="tip-content">Total points earned out of the maximum possible. Each rule contributes its weight (1–3) when checked. REQUIRED rules must all be met to advance.</span></span>
+            {% if total_score > 0 %}
+            <span class="score-pct tip-trigger-text">{{ checked_score }}/{{ total_score }} pts ({{ ((checked_score / total_score) * 100) | round | int }}%)<span class="tip-content">Points earned out of the maximum possible. Each rule contributes its weight (1–3) when checked. The percentage determines your grade: A = 85%+, B = 65–84%, C = below 65%.</span></span>
+            {% else %}
+            <span class="score-pct muted">0/0 pts</span>
+            {% endif %}
             {% if grade %}
             <span class="badge badge-grade-{{ grade.value | lower }}">Grade {{ grade.value }}</span>
             {% endif %}
         </div>
         {% if total_score > 0 %}
         <progress value="{{ checked_score }}" max="{{ total_score }}"></progress>
+        <small class="muted" style="font-size: 0.75rem;">A = 85%+ &nbsp;·&nbsp; B = 65–84% &nbsp;·&nbsp; C = below 65%</small>
         {% endif %}
     </div>
 
@@ -48,7 +54,7 @@
                     >
                     <span class="rule-name">{{ rule.name }}</span>
                     <span class="rule-meta">
-                        <span class="badge badge-type-{{ rule.rule_type | lower }} tip-trigger-badge">{{ rule.rule_type }}<span class="tip-content">{% if rule.rule_type == 'REQUIRED' %}Must be checked before you can advance this idea to the next state.{% elif rule.rule_type == 'OPTIONAL' %}Not required to advance, but earns points toward your grade if checked.{% else %}A reminder only — does not block advancement or affect your score.{% endif %}</span></span>
+                        <span class="badge badge-type-{{ rule.rule_type | lower }} tip-trigger-badge">{{ rule.rule_type }}<span class="tip-content">{% if rule.rule_type == 'REQUIRED' %}Must be checked before you can advance this idea to the next state. Blocking.{% elif rule.rule_type == 'OPTIONAL' %}Not required to advance, but earns points toward your grade if checked. Skipping lowers your score.{% else %}Reminder only — checking this does not affect your grade or block/unblock advancement. Use for habits you want to build.{% endif %}</span></span>
                         {% if rule.weight != 1 %}<span class="muted small">×{{ rule.weight }}</span>{% endif %}
                     </span>
                 </label>
@@ -74,7 +80,7 @@
         {% if actions.can_advance %}
         <form method="post" action="/ideas/{{ idea.id }}/advance">
             <input type="hidden" name="reason" value="">
-            <button type="submit" class="advance-btn">Advance → {{ idea.state }}</button>
+            <button type="submit" class="advance-btn">Advance → {{ state_label(idea.state) }}</button>
         </form>
         {% endif %}
         {% if actions.can_regress %}

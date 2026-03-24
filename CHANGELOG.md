@@ -7,6 +7,50 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **README overhaul** — rewritten for traders, not developers
+  - Honest prerequisites section: Docker Desktop (~700MB), Git, and a terminal — with links and plain-language descriptions
+  - ZIP download alternative to `git clone` for users without Git
+  - **Daily use** section: how to start and stop Gatekeeper each day
+  - **Updating Gatekeeper** section: step-by-step update instructions with explanation of what each command does
+  - **Backing up your data** section: `pg_dump` one-liner + restore instructions
+  - **Forgotten password** section: two recovery paths (env var override and direct DB reset)
+  - **Troubleshooting** section: "cannot connect", port 80 conflict, Docker not running, containers restarting, starting fresh
+  - AI setup section rewritten with plain-language provider descriptions and direct links to API key consoles
+  - Tech stack and architecture sections moved to the bottom (relevant to contributors, not traders)
+  - State machine workflow updated to use display labels (Watching → Context & Setup Valid → Confirmed → Entry Permitted → In Trade → Managed → Closed)
+
+- **UX audit & beginner-friendliness improvements** — comprehensive UX review for traders at all levels; principle of progressive clarity: self-evident on first encounter, full depth available on demand
+  - `docs/UX_SPEC.md` — canonical design spec: audience, voice & tone, terminology glossary, state display name mapping, grading reference, abbreviation rules, tooltip standards, progressive disclosure patterns, error message standards
+  - `CLAUDE.md` — new "UX & Language Guidelines" section: audience statement, terminology rules, abbreviation intro rules, state label mapping, tooltip standards, action button rules, progressive disclosure rules, error message rules
+  - `app/templates/_macros/states.html` — new Jinja2 macro mapping `IdeaState` enum values to human-readable display labels; import with `{% from "_macros/states.html" import state_label %}`
+  - **State display labels** across all templates: `WATCHING` → "Watching", `SETUP_VALID` → "Context & Setup Valid", `CONFIRMED` → "Confirmed", `ENTRY_PERMITTED` → "Entry Permitted", `IN_TRADE` → "In Trade", `MANAGED` → "Managed", `CLOSED` → "Closed", `INVALIDATED` → "Invalidated" — raw enum values retained only in API/CLI documentation
+  - **Help page glossary** — new Glossary section at the top of `/help` with definitions for all UI terms (Idea, Layer, Rule, R-multiple, SL, TP, BE, Partials, Discipline Score, Plan Adherence, Entry Window, Violation, etc.)
+  - **Help page: grading thresholds table** — A = 85%+, B = 65–84%, C = below 65% shown explicitly in the Grading section
+  - **Help page: state display labels** in the state machine diagram and gate-requirements table; enum values noted in collapsed API/CLI note
+  - **Dashboard: sequential first-use guide** — replaces 4-link list with a numbered step-by-step flow (Set up plan → Add instruments → Create first idea); AI configuration moved to optional note
+  - **Dashboard: KPI help links** — "?" links on Discipline Score and Avg R cards linking to `/help#discipline-score` and `/help#grading`
+  - **Grade/score transparency** — checklist score now shows percentage explicitly (e.g. "42/67 pts (63%)"); grade legend "A = 85%+ · B = 65–84% · C = below 65%" shown below the progress bar
+  - **Corrected grade thresholds** in dashboard tooltips (were showing 80%/60%, now correctly show 85%/65%)
+  - **Plan Builder prominence** — on empty plan state, Plan Builder is primary CTA with "Recommended" note; starter templates (Trend Following, Mean Reversion) surfaced as cards on plan index page (not just in setup wizard); "Load a starter template" cards link to reset page with template pre-selected
+  - **Help link** moved up into the Analysis sidebar group (alongside Reports), making it more discoverable
+  - **Abbreviation `<abbr>` tags** — SL, TP, BE, and R introduced with full-form tooltips on first appearance per page (trades/detail, dashboard)
+
+### Changed
+
+  - `app/routers/plan.py`: `plan_reset_confirm` now accepts optional `preselect` query param and passes it to the reset template for template pre-selection
+  - `app/templates/plan/reset.html`: JS `selectTemplate()` now initialises from the `preselect` template variable instead of hardcoded `'scratch'`
+  - **Entry window** — label upgraded with tooltip explaining what it is, when to set it, and what happens when it expires
+  - **Invalidate vs Delete** — both danger-zone cards now include a brief plain-language description below the header explaining when to use each action
+  - **Partials / BE locked** — display labels updated ("Partial Exits", "Breakeven Locked"); management buttons renamed ("Take Partial Exit", "Lock Breakeven") with improved title attributes
+  - **R-multiple** — labelled with `<abbr>` tag for first-time users; tooltip improved
+  - **Discipline Score tooltip** — updated with explicit formula: plan adherence + grade distribution + violation rate; includes "Aim for 70+"
+  - **Rule type tooltips** — OPTIONAL and ADVISORY tooltips now explicitly distinguish their difference (OPTIONAL improves grade; ADVISORY has no effect on grade or advancement)
+  - **Weight tooltip** — updated to guide rule authors: 1 = nice-to-have, 2 = important, 3 = critical non-negotiables not already Required
+  - **Plan adherence tooltip** on trades/detail — updated with explicit definition and aim
+  - **State tooltip** on ideas dashboard — updated from "REQUIRED" jargon to plain language
+
+
+
 - **Multiple Trading Plans** — create, duplicate, and switch between multiple trading plans; only one plan is active at a time and new ideas use the active plan; existing ideas keep the plan they were created with
   - Plan list page at `/plan` with activate, duplicate, and delete actions
   - Plan detail page at `/plan/{id}` with full rule management
