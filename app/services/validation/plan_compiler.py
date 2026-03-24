@@ -216,6 +216,108 @@ async def compile_plan(
     return compiled_plan, run
 
 
+async def start_compile(db: AsyncSession) -> ValidationRun:
+    """
+    Create a PENDING ValidationRun record immediately and return it.
+    The actual compilation work is done asynchronously by run_compile_in_background().
+    """
+    plan = await plan_service.get_active_plan(db)
+    rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id, active_only=True)
+    all_rules = [r for rules in rules_by_layer.values() for r in rules]
+    plan_snapshot = _build_plan_snapshot(plan, all_rules)
+
+    compiled_plan = CompiledPlan(
+        plan_id=plan.id,
+        plan_snapshot=plan_snapshot,
+        compiled_rules=[],
+        interpretability_score=0.0,
+        coherence_warnings=[],
+    )
+    db.add(compiled_plan)
+    await db.flush()
+
+    run = ValidationRun(
+        compiled_plan_id=compiled_plan.id,
+        status=ValidationRunStatus.COMPILING.value,
+        mode=ValidationMode.INTERPRETABILITY.value,
+        started_at=datetime.now(timezone.utc),
+    )
+    db.add(run)
+    await db.flush()
+    return run
+
+
+async def run_compile_in_background(run_id: uuid.UUID, provider: "AIProvider") -> None:
+    """
+    Execute the full compilation pipeline for an existing COMPILING run.
+    Opens its own DB session so it can run independently of the request lifecycle.
+    """
+    from app.database import AsyncSessionFactory
+    from app.services.validation import feedback_service
+
+    if AsyncSessionFactory is None:
+        logger.error("AsyncSessionFactory not available; cannot compile in background")
+        return
+
+    from sqlalchemy import select
+
+    async with AsyncSessionFactory() as db:
+        try:
+            result = await db.execute(select(ValidationRun).where(ValidationRun.id == run_id))
+            run = result.scalar_one_or_none()
+            if run is None:
+                logger.error("Background compile: run %s not found", run_id)
+                return
+
+            compiled_result = await db.execute(
+                select(CompiledPlan).where(CompiledPlan.id == run.compiled_plan_id)
+            )
+            compiled_plan = compiled_result.scalar_one_or_none()
+            if compiled_plan is None:
+                logger.error("Background compile: compiled_plan not found for run %s", run_id)
+                return
+
+            plan = await plan_service.get_plan_by_id(db, compiled_plan.plan_id)
+            if plan is None:
+                raise ValueError(f"Plan {compiled_plan.plan_id} not found")
+
+            rules_by_layer = await plan_service.get_rules_by_layer(db, plan.id, active_only=True)
+            all_rules = [r for rules in rules_by_layer.values() for r in rules]
+
+            plan_context = _build_plan_context_text(plan, rules_by_layer)
+            compiled_rules = await interpret_rules(all_rules, provider, plan_context)
+
+            interpretability_score = _compute_interpretability_score(compiled_rules)
+            coherence_warnings = _run_coherence_checks(compiled_rules)
+
+            compiled_plan.compiled_rules = compiled_rules
+            compiled_plan.interpretability_score = interpretability_score
+            compiled_plan.coherence_warnings = coherence_warnings
+            await db.flush()
+
+            report = feedback_service.build_report(compiled_plan)
+            run.feedback = report
+            run.status = ValidationRunStatus.COMPLETED.value
+            run.completed_at = datetime.now(timezone.utc)
+            await db.flush()
+            await db.commit()
+            logger.info("Background compile complete for run %s", run_id)
+
+        except Exception as exc:
+            logger.exception("Background compile failed for run %s: %s", run_id, exc)
+            try:
+                result = await db.execute(select(ValidationRun).where(ValidationRun.id == run_id))
+                run = result.scalar_one_or_none()
+                if run:
+                    run.status = ValidationRunStatus.FAILED.value
+                    run.error_message = str(exc)
+                    run.completed_at = datetime.now(timezone.utc)
+                    await db.flush()
+                    await db.commit()
+            except Exception:
+                logger.exception("Could not mark run %s as failed", run_id)
+
+
 async def confirm_compiled_rule(
     db: AsyncSession,
     compiled_plan_id: uuid.UUID,
@@ -270,10 +372,15 @@ async def get_compiled_plan(db: AsyncSession, compiled_plan_id: uuid.UUID) -> Co
     return result.scalar_one_or_none()
 
 
-async def list_validation_runs(db: AsyncSession) -> list[ValidationRun]:
+async def list_validation_runs(db: AsyncSession, plan_id: uuid.UUID | None = None) -> list[ValidationRun]:
     from sqlalchemy import select
 
-    result = await db.execute(select(ValidationRun).order_by(ValidationRun.created_at.desc()))
+    query = select(ValidationRun)
+    if plan_id is not None:
+        query = query.join(CompiledPlan, ValidationRun.compiled_plan_id == CompiledPlan.id).where(
+            CompiledPlan.plan_id == plan_id
+        )
+    result = await db.execute(query.order_by(ValidationRun.created_at.desc()))
     return list(result.scalars().all())
 
 
@@ -282,3 +389,22 @@ async def get_validation_run(db: AsyncSession, run_id: uuid.UUID) -> ValidationR
 
     result = await db.execute(select(ValidationRun).where(ValidationRun.id == run_id))
     return result.scalar_one_or_none()
+
+
+async def delete_validation_run(db: AsyncSession, run_id: uuid.UUID) -> bool:
+    """Delete a validation run and its associated compiled plan. Returns False if not found."""
+    from sqlalchemy import select
+
+    result = await db.execute(select(ValidationRun).where(ValidationRun.id == run_id))
+    run = result.scalar_one_or_none()
+    if run is None:
+        return False
+
+    compiled_result = await db.execute(select(CompiledPlan).where(CompiledPlan.id == run.compiled_plan_id))
+    compiled_plan = compiled_result.scalar_one_or_none()
+
+    await db.delete(run)
+    if compiled_plan is not None:
+        await db.delete(compiled_plan)
+    await db.flush()
+    return True

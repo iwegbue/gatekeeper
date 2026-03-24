@@ -197,7 +197,7 @@
         doneForm.addEventListener('submit', function() {
             if (doneBtn) {
                 doneBtn.disabled = true;
-                doneBtn.innerHTML = '<i data-lucide="loader-2"></i> Extracting rules…';
+                doneBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Extracting rules…';
                 lucide.createIcons();
             }
         });

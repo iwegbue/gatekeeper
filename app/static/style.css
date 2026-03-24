@@ -695,10 +695,7 @@ footer.container {
 
 .tip-content {
     display: none;
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;
     width: 220px;
     background: #1e293b;
     border: 1px solid var(--pico-muted-border-color, #374151);
@@ -708,17 +705,18 @@ footer.container {
     line-height: 1.5;
     color: var(--pico-color, #e5e7eb);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    z-index: 50;
+    z-index: 9999;
     pointer-events: none;
     text-align: left;
     font-weight: 400;
 }
 
+/* caret arrow — left offset set by JS positioner via --tip-caret-left */
 .tip-content::after {
     content: '';
     position: absolute;
     top: 100%;
-    left: 50%;
+    left: var(--tip-caret-left, 50%);
     transform: translateX(-50%);
     border: 5px solid transparent;
     border-top-color: #374151;
@@ -2596,6 +2594,16 @@ details.plan-layer-details {
     40% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin {
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+}
+
 /* Done row */
 
 .builder-done-row {
@@ -2719,6 +2727,72 @@ details.plan-layer-details {
     border: none;
     background: none;
     margin-top: 0.5rem;
+}
+
+/* ── Validation verdict card ─────────────────────────────────────────── */
+
+.verdict-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 10px;
+    border: 1px solid;
+}
+
+.verdict-card--good {
+    background: rgba(74, 222, 128, 0.07);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.verdict-card--warning {
+    background: rgba(251, 191, 36, 0.07);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.verdict-card--issues {
+    background: rgba(248, 113, 113, 0.07);
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+.verdict-icon {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.verdict-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.verdict-card--good .verdict-icon svg { color: #4ade80; }
+.verdict-card--warning .verdict-icon svg { color: #fbbf24; }
+.verdict-card--issues .verdict-icon svg { color: #f87171; }
+
+.verdict-headline {
+    font-size: 1rem;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.verdict-detail {
+    margin: 0;
+    font-size: 0.88rem;
+}
+
+/* ── Tooltip overflow fix: parent containers must not clip tooltips ───── */
+
+/* Ensure tip-trigger containers can overflow their table cells / cards */
+th .tip-trigger-text,
+td .tip-trigger-text {
+    /* Allow the absolute tooltip to escape the cell */
+    position: static;
+}
+
+th:has(.tip-trigger-text),
+td:has(.tip-trigger-text) {
+    overflow: visible;
+    position: relative;
 }
 
 /* ── Plan Builder responsive ─────────────────────────────────────────── */

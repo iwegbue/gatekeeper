@@ -1,57 +1,91 @@
 {% extends "base.html" %}
-{% block title %}Validate Plan — Gatekeeper{% endblock %}
+{% block title %}Plan Check — Gatekeeper{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h2>Plan Validation</h2>
-    <p class="muted">Compile your trading plan to analyse which rules are historically testable and receive coherence feedback.</p>
+    <h2>Plan Check</h2>
+    {% if active_plan %}
+    <span class="badge grade-a">{{ active_plan.name }}</span>
+    {% endif %}
 </div>
 
-<form method="post" action="/validation/compile">
+<p class="muted" style="margin-bottom: 1.5rem;">
+    Review your trading plan rules for gaps, conflicts, and ambiguity. Takes 30–60 seconds.
+</p>
+
+<form method="post" action="/validation/compile" id="compile-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <button type="submit" class="btn-primary">
-        <i data-lucide="play-circle"></i> Compile &amp; Validate Plan
+    <button type="submit" id="compile-btn">
+        <i data-lucide="play-circle"></i> Check my plan
     </button>
 </form>
 
 {% if runs %}
-<h3 style="margin-top: 2rem;">Previous Runs</h3>
+<h3 style="margin-top: 2rem;">Previous checks</h3>
 <table>
     <thead>
         <tr>
             <th>Date</th>
-            <th>Mode</th>
-            <th>Status</th>
-            <th>Interpretability</th>
+            <th>Result</th>
+            <th></th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         {% for run in runs %}
         <tr>
-            <td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-            <td>{{ run.mode }}</td>
+            <td>{{ run.created_at.strftime('%d %b %Y, %H:%M') }}</td>
             <td>
-                <span class="badge badge--{{ 'success' if run.status == 'COMPLETED' else 'warning' if run.status in ('PENDING', 'COMPILING') else 'error' }}">
-                    {{ run.status }}
-                </span>
-            </td>
-            <td>
-                {% if run.feedback %}
-                    {{ run.feedback.interpretability_score }}%
+                {% if run.status in ('PENDING', 'COMPILING') %}
+                    <span class="badge badge--warning">
+                        <i data-lucide="loader-2" class="spin" style="width:0.8rem;height:0.8rem;margin-right:0.25rem;"></i>
+                        Checking…
+                    </span>
+                {% elif run.status == 'FAILED' %}
+                    <span class="badge badge--error">Failed</span>
+                {% elif run.feedback and run.feedback.verdict %}
+                    {% set v = run.feedback.verdict %}
+                    <span class="badge {% if v.level == 'good' %}badge--success{% elif v.level == 'warning' %}badge--warning{% else %}badge--error{% endif %}">
+                        {{ v.headline }}
+                    </span>
                 {% else %}
-                    —
+                    <span class="badge badge--neutral">—</span>
                 {% endif %}
             </td>
-            <td><a href="/validation/runs/{{ run.id }}">View Report</a></td>
+            <td><a href="/validation/runs/{{ run.id }}">View</a></td>
+            <td>
+                <form method="post" action="/validation/runs/{{ run.id }}/delete" style="margin:0;"
+                      onsubmit="return confirm('Delete this check? This cannot be undone.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="outline secondary icon-btn" title="Delete this check"
+                            style="padding:0.2rem 0.4rem;line-height:1;border-radius:4px;">
+                        <i data-lucide="trash-2" style="width:0.9rem;height:0.9rem;"></i>
+                    </button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% else %}
 <article class="empty-state" style="margin-top: 2rem;">
-    <p>No validation runs yet. Compile your plan to get started.</p>
+    <p>No checks yet. Run your first check to get started.</p>
 </article>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var form = document.getElementById('compile-form');
+    var btn = document.getElementById('compile-btn');
+    if (!form || !btn) return;
+    form.addEventListener('submit', function() {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Checking your plan…';
+        lucide.createIcons();
+    });
+})();
+</script>
 {% endblock %}
