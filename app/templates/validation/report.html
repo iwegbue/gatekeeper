@@ -128,13 +128,13 @@
 {% endif %}
 
 {% if run.status not in ('PENDING', 'COMPILING') %}
-<div style="margin-top: 2rem;">
-    <form method="post" action="/validation/compile" id="recompile-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" id="recompile-btn" class="secondary outline">
-            <i data-lucide="refresh-cw"></i> Re-check Plan
-        </button>
-    </form>
+<div style="margin-top: 2.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <a href="/plan" role="button">
+        <i data-lucide="pencil"></i> Edit my plan
+    </a>
+    <a href="/validation" role="button" class="secondary outline" style="font-size: 0.9rem;">
+        <i data-lucide="arrow-left"></i> Back to plan check
+    </a>
 </div>
 {% endif %}
 
@@ -176,16 +176,6 @@
     }
 
     setTimeout(poll, pollInterval);
-    {% else %}
-    var form = document.getElementById('recompile-form');
-    var btn = document.getElementById('recompile-btn');
-    if (form && btn) {
-        form.addEventListener('submit', function() {
-            btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Checking…';
-            lucide.createIcons();
-        });
-    }
     {% endif %}
 })();
 </script>
