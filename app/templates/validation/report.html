@@ -17,6 +17,10 @@
     <p><strong>Checking your plan…</strong></p>
     <p class="muted">This usually takes 30–60 seconds. The page will update automatically when it's ready.</p>
 </article>
+<article class="empty-state" style="margin-top: 2rem; display:none;" id="timeout-state">
+    <p><strong>This is taking longer than expected.</strong></p>
+    <p class="muted">The check may have been interrupted. <a href="/validation">Go back</a> and try again.</p>
+</article>
 
 {% elif run.status == 'FAILED' %}
 <article class="empty-state" style="margin-top: 2rem;">
@@ -145,6 +149,13 @@
     var maxAttempts = 60;
     var attempts = 0;
 
+    function showTimeout() {
+        var compiling = document.getElementById('compiling-state');
+        var timeout = document.getElementById('timeout-state');
+        if (compiling) compiling.style.display = 'none';
+        if (timeout) timeout.style.display = '';
+    }
+
     function poll() {
         fetch('/validation/runs/' + runId + '/status')
             .then(function(r) { return r.json(); })
@@ -154,11 +165,13 @@
                 } else {
                     attempts++;
                     if (attempts < maxAttempts) { setTimeout(poll, pollInterval); }
+                    else { showTimeout(); }
                 }
             })
             .catch(function() {
                 attempts++;
                 if (attempts < maxAttempts) { setTimeout(poll, pollInterval); }
+                else { showTimeout(); }
             });
     }
 

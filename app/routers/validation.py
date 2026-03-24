@@ -68,11 +68,23 @@ async def validation_compile(
 @router.get("/runs/{run_id}/status")
 async def validation_run_status(run_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     """JSON endpoint for polling run completion."""
+    from datetime import datetime, timezone
+
     from fastapi.responses import JSONResponse
 
     run = await plan_compiler.get_validation_run(db, run_id)
     if run is None:
         return JSONResponse({"status": "NOT_FOUND"}, status_code=404)
+
+    # If the run has been stuck in COMPILING for >5 min, the background task
+    # likely died (e.g. container restart). Mark it failed so the UI unblocks.
+    if run.status in ("PENDING", "COMPILING") and run.started_at:
+        age = (datetime.now(timezone.utc) - run.started_at).total_seconds()
+        if age > 300:
+            run.status = "FAILED"
+            run.error_message = "Check timed out — please try again."
+            # db.commit() is called automatically by get_db on exit
+
     return JSONResponse({"status": run.status})
 
 
