@@ -146,15 +146,41 @@ After completing any feature, bug fix, or refactor, always do these steps in ord
 1. **Bug audit** — re-read every file you touched and check for regressions, edge cases, or anything inconsistent with the rest of the codebase.
 2. **Run tests** — `SKIP_SECURITY_CHECKS=1 uv run pytest`. All must pass.
 3. **Commit** — stage and commit with a conventional commit message.
-4. **Rebuild Docker** — so changes are visible at http://localhost:
+4. **Rebuild Docker** — so changes are visible at http://localhost.
+   The Docker build context must point at the **worktree**, not the main repo:
    ```bash
-   docker compose build app
-   docker compose run --rm app uv run alembic upgrade head   # only if there are new migrations
-   docker compose up -d app
-   docker compose logs app --tail=10                          # confirm clean startup
+   # Build from the worktree (required when working in a Claude worktree)
+   docker build -t gatekeeper-app -f /Users/iwegbue/Dev/gatekeeper/Dockerfile \
+       /Users/iwegbue/Dev/gatekeeper/.claude/worktrees/stoic-thompson
+
+   # Run migrations if there are new alembic versions
+   docker compose -f /Users/iwegbue/Dev/gatekeeper/docker-compose.yml \
+       run --rm app uv run alembic upgrade head
+
+   # Restart the container with the new image
+   docker compose -f /Users/iwegbue/Dev/gatekeeper/docker-compose.yml up -d app
+
+   # Confirm clean startup
+   docker compose -f /Users/iwegbue/Dev/gatekeeper/docker-compose.yml logs app --tail=10
+   ```
+   Note: `docker compose build app` builds from the main repo directory and will NOT pick up worktree changes.
+
+5. **Open a PR** — push the branch and open a pull request so the work is reviewable before merge:
+   ```bash
+   git push -u origin claude/stoic-thompson
+   gh pr create --title "feat(scope): short summary" --body "$(cat <<'EOF'
+   ## Summary
+   - What changed and why
+
+   ## Test plan
+   - [ ] Existing tests pass: `SKIP_SECURITY_CHECKS=1 uv run pytest`
+   - [ ] New service tests written (if applicable)
+   - [ ] CHANGELOG.md updated under [Unreleased]
+   EOF
+   )"
    ```
 
-Never leave a session without completing all four steps.
+Never leave a session without completing all five steps.
 
 ---
 
