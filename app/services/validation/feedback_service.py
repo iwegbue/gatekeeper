@@ -3,7 +3,7 @@ Feedback service — transforms a CompiledPlan into a structured,
 human-readable validation report.
 
 This is the output layer for Phase 1 (interpretability). It produces:
-  - Per-layer breakdown of rule testability
+  - Per-layer breakdown of rule replay coverage
   - Interpretability score summary
   - Coherence warnings
   - Replay readiness assessment
@@ -17,15 +17,30 @@ _REPLAY_READY = "READY"
 _REPLAY_PARTIAL = "PARTIAL"
 _REPLAY_NOT_READY = "NOT_READY"
 
+# Statuses that mean a rule can be evaluated from OHLC data
+_REPLAYABLE_STATUSES = {
+    InterpretationStatus.OHLC_COMPUTABLE.value,
+    InterpretationStatus.OHLC_APPROXIMATE.value,
+    # Legacy aliases for runs compiled before the redesign
+    InterpretationStatus.TESTABLE.value,
+    InterpretationStatus.APPROXIMATED.value,
+}
+
+# Statuses that mean the rule can only be enforced during live trading
+_LIVE_ONLY_STATUSES = {
+    InterpretationStatus.LIVE_ONLY.value,
+    InterpretationStatus.NOT_TESTABLE.value,  # legacy alias
+}
+
 
 def _layer_breakdown(compiled_rules: list[dict]) -> dict:
-    """Per-layer count of rule testability statuses."""
+    """Per-layer count of rule replay coverage."""
     breakdown: dict[str, dict] = {}
     for layer in PlanLayer:
         breakdown[layer.value] = {
-            "testable": 0,
-            "approximated": 0,
-            "not_testable": 0,
+            "replayable": 0,
+            "approximate": 0,
+            "live_only": 0,
             "behavioral": layer == PlanLayer.BEHAVIORAL,
             "rules": [],
         }
@@ -34,26 +49,26 @@ def _layer_breakdown(compiled_rules: list[dict]) -> dict:
         layer = rule["layer"]
         status = rule["status"]
         if layer not in breakdown:
-            breakdown[layer] = {"testable": 0, "approximated": 0, "not_testable": 0, "behavioral": False, "rules": []}
+            breakdown[layer] = {"replayable": 0, "approximate": 0, "live_only": 0, "behavioral": False, "rules": []}
 
-        if status == InterpretationStatus.TESTABLE.value:
-            breakdown[layer]["testable"] += 1
-        elif status == InterpretationStatus.APPROXIMATED.value:
-            breakdown[layer]["approximated"] += 1
+        if status in {InterpretationStatus.OHLC_COMPUTABLE.value, InterpretationStatus.TESTABLE.value}:
+            breakdown[layer]["replayable"] += 1
+        elif status in {InterpretationStatus.OHLC_APPROXIMATE.value, InterpretationStatus.APPROXIMATED.value}:
+            breakdown[layer]["approximate"] += 1
         else:
-            breakdown[layer]["not_testable"] += 1
+            breakdown[layer]["live_only"] += 1
 
         breakdown[layer]["rules"].append(
             {
                 "name": rule["name"],
                 "rule_type": rule["rule_type"],
                 "status": status,
-                "proxy_type": rule["proxy"]["type"] if rule.get("proxy") else None,
+                "data_sources_required": rule.get("data_sources_required") or [],
                 "confidence": rule.get("confidence"),
                 "interpretation_notes": rule.get("interpretation_notes", ""),
                 "user_confirmed": rule.get("user_confirmed", False),
                 "live_only": (
-                    status == InterpretationStatus.NOT_TESTABLE.value
+                    status in _LIVE_ONLY_STATUSES
                     or layer == PlanLayer.BEHAVIORAL.value
                 ),
             }
@@ -65,28 +80,24 @@ def _layer_breakdown(compiled_rules: list[dict]) -> dict:
 def _assess_replay_readiness(compiled_rules: list[dict]) -> str:
     """
     Determine overall replay readiness.
-    READY     — all non-behavioral rules are testable or approximated.
-    PARTIAL   — some rules are testable/approximated but important gaps exist.
-    NOT_READY — no testable rules or critical layers (RISK) are fully non-testable.
+    READY     — all non-behavioral rules are OHLC_COMPUTABLE or OHLC_APPROXIMATE.
+    PARTIAL   — some rules are replayable but important gaps exist.
+    NOT_READY — no replayable rules, or RISK layer is fully live-only.
     """
     non_behavioral = [r for r in compiled_rules if r["layer"] != PlanLayer.BEHAVIORAL.value]
     if not non_behavioral:
         return _REPLAY_NOT_READY
 
-    testable_count = sum(
-        1
-        for r in non_behavioral
-        if r["status"] in (InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value)
-    )
+    replayable_count = sum(1 for r in non_behavioral if r["status"] in _REPLAYABLE_STATUSES)
 
     risk_rules = [r for r in compiled_rules if r["layer"] == PlanLayer.RISK.value]
-    has_testable_risk = any(r["status"] != InterpretationStatus.NOT_TESTABLE.value for r in risk_rules)
+    has_replayable_risk = any(r["status"] in _REPLAYABLE_STATUSES for r in risk_rules)
 
-    if testable_count == 0:
+    if replayable_count == 0:
         return _REPLAY_NOT_READY
-    if not has_testable_risk:
+    if not has_replayable_risk:
         return _REPLAY_NOT_READY
-    if testable_count == len(non_behavioral):
+    if replayable_count == len(non_behavioral):
         return _REPLAY_READY
     return _REPLAY_PARTIAL
 
@@ -106,42 +117,44 @@ def _generate_suggestions(
     # Score-based
     if interpretability_score < 40:
         suggestions.append(
-            "More than half of your testable rules could not be interpreted. "
-            "Consider adding specific, measurable criteria (e.g., 'price above 200-period SMA on the daily chart' "
-            "instead of 'trade with the trend')."
+            "More than half of your rules can only be evaluated during live trading. "
+            "If you want historical replay coverage, consider whether any of these rules "
+            "could be expressed using price, volume, or a standard indicator "
+            "(e.g., 'RSI(14) above 50 on the 1H chart' or 'price within 0.5 ATR of prior swing high')."
         )
     elif interpretability_score < 70:
         suggestions.append(
-            "Several rules required approximation. Review the interpretation notes for each approximated rule "
-            "and confirm whether the proxy captures your intent."
+            "Several rules were classified as approximate. Review the interpretation notes "
+            "for each rule and confirm whether the classification captures your intent."
         )
 
-    # Layer-specific suggestions
+    # Layer-specific: all rules in a non-behavioral layer are live-only
     for layer_name, data in layer_data.items():
         if layer_name == PlanLayer.BEHAVIORAL.value:
             continue
-        total = data["testable"] + data["approximated"] + data["not_testable"]
-        if total > 0 and data["not_testable"] == total:
+        total = data["replayable"] + data["approximate"] + data["live_only"]
+        if total > 0 and data["live_only"] == total:
             suggestions.append(
-                f"All rules in the {layer_name} layer are live-enforced. "
-                "If you want historical replay coverage for this layer, consider adding a measurable rule."
+                f"All rules in the {layer_name} layer will be enforced during live trading only. "
+                "If you want replay coverage for this layer, consider whether any rule "
+                "can be expressed using OHLC data or a standard indicator."
             )
 
-    # Risk layer suggestion
+    # Risk layer
     risk_data = layer_data.get(PlanLayer.RISK.value, {})
-    if risk_data.get("not_testable", 0) > 0 and risk_data.get("testable", 0) == 0:
+    if risk_data.get("live_only", 0) > 0 and risk_data.get("replayable", 0) == 0:
         suggestions.append(
-            "Your RISK layer has no testable stop-loss rule. "
-            "Without a testable stop, replay cannot compute R-multiples. "
+            "Your RISK layer has no replayable stop-loss rule. "
+            "Without a replayable stop, replay cannot compute R-multiples. "
             "Consider adding an ATR-based or swing-based stop rule."
         )
 
-    # Management suggestions
+    # Management
     mgmt_data = layer_data.get(PlanLayer.MANAGEMENT.value, {})
-    mgmt_total = mgmt_data.get("testable", 0) + mgmt_data.get("approximated", 0)
-    if mgmt_total == 0:
+    mgmt_replayable = mgmt_data.get("replayable", 0) + mgmt_data.get("approximate", 0)
+    if mgmt_replayable == 0:
         suggestions.append(
-            "No testable MANAGEMENT rules were found. "
+            "No replayable MANAGEMENT rules were found. "
             "Without management rules, the replay will use a simple full-position exit. "
             "If you use partials, breakeven, or trailing stops, add those rules explicitly."
         )
@@ -154,20 +167,23 @@ def _generate_suggestions(
             "not included in historical replay."
         )
 
-    # Approximation transparency
-    approximated = [r for r in compiled_rules if r["status"] == InterpretationStatus.APPROXIMATED.value]
-    if approximated:
-        names = ", ".join(f"'{r['name']}'" for r in approximated[:3])
-        more = f" and {len(approximated) - 3} more" if len(approximated) > 3 else ""
+    # Approximate transparency
+    approximate = [r for r in compiled_rules if r["status"] in {
+        InterpretationStatus.OHLC_APPROXIMATE.value,
+        InterpretationStatus.APPROXIMATED.value,
+    }]
+    if approximate:
+        names = ", ".join(f"'{r['name']}'" for r in approximate[:3])
+        more = f" and {len(approximate) - 3} more" if len(approximate) > 3 else ""
         suggestions.append(
-            f"Rules using approximated interpretations ({names}{more}) may not perfectly reflect "
-            "your intent. Review and confirm the proposed proxies before running a replay."
+            f"Rules with approximate OHLC coverage ({names}{more}) may not perfectly reflect "
+            "your intent. Review the interpretation notes and confirm before running a replay."
         )
 
     # Replay readiness
     if replay_readiness == _REPLAY_READY:
         suggestions.append(
-            "Your plan is ready for historical replay. All testable rules have been interpreted. "
+            "Your plan is ready for historical replay. All non-behavioral rules have OHLC coverage. "
             "You can run a replay from the validation dashboard."
         )
     elif replay_readiness == _REPLAY_PARTIAL:
@@ -194,27 +210,34 @@ def build_report(compiled_plan: CompiledPlan) -> dict:
 
     total_rules = len(compiled_rules)
     non_behavioral = [r for r in compiled_rules if r["layer"] != PlanLayer.BEHAVIORAL.value]
-    testable_count = sum(1 for r in non_behavioral if r["status"] == InterpretationStatus.TESTABLE.value)
-    approximated_count = sum(1 for r in non_behavioral if r["status"] == InterpretationStatus.APPROXIMATED.value)
-    not_testable_count = sum(1 for r in non_behavioral if r["status"] == InterpretationStatus.NOT_TESTABLE.value)
+    replayable_count = sum(1 for r in non_behavioral if r["status"] in {
+        InterpretationStatus.OHLC_COMPUTABLE.value, InterpretationStatus.TESTABLE.value
+    })
+    approximate_count = sum(1 for r in non_behavioral if r["status"] in {
+        InterpretationStatus.OHLC_APPROXIMATE.value, InterpretationStatus.APPROXIMATED.value
+    })
+    live_only_count = sum(1 for r in non_behavioral if r["status"] in _LIVE_ONLY_STATUSES)
     behavioral_count = sum(1 for r in compiled_rules if r["layer"] == PlanLayer.BEHAVIORAL.value)
 
     summary = (
         f"Your plan has {total_rules} rule(s) across "
         f"{len({r['layer'] for r in compiled_rules})} layer(s). "
-        f"{testable_count} are directly testable, "
-        f"{approximated_count} are approximated, "
-        f"{not_testable_count} are enforced live via the checklist"
+        f"{replayable_count} can be replayed from OHLC data, "
+        f"{approximate_count} have approximate OHLC coverage, "
+        f"{live_only_count} are enforced live"
         + (f", and {behavioral_count} are behavioral (live enforcement only)" if behavioral_count else "")
         + "."
     )
 
     # Build replayable and live-only rule lists
     replayable_rules = [
-        {"name": r["name"], "layer": r["layer"], "proxy_type": r["proxy"]["type"] if r.get("proxy") else None}
+        {
+            "name": r["name"],
+            "layer": r["layer"],
+            "data_sources_required": r.get("data_sources_required") or [],
+        }
         for r in compiled_rules
-        if r["layer"] != PlanLayer.BEHAVIORAL.value
-        and r["status"] in (InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value)
+        if r["layer"] != PlanLayer.BEHAVIORAL.value and r["status"] in _REPLAYABLE_STATUSES
     ]
     live_only_rules = [
         {
@@ -223,7 +246,7 @@ def build_report(compiled_plan: CompiledPlan) -> dict:
             "reason": "behavioral" if r["layer"] == PlanLayer.BEHAVIORAL.value else "live_judgment",
         }
         for r in compiled_rules
-        if r["layer"] == PlanLayer.BEHAVIORAL.value or r["status"] == InterpretationStatus.NOT_TESTABLE.value
+        if r["layer"] == PlanLayer.BEHAVIORAL.value or r["status"] in _LIVE_ONLY_STATUSES
     ]
 
     layer_data = _layer_breakdown(compiled_rules)
@@ -238,9 +261,9 @@ def build_report(compiled_plan: CompiledPlan) -> dict:
         "summary": summary,
         "rule_counts": {
             "total": total_rules,
-            "testable": testable_count,
-            "approximated": approximated_count,
-            "not_testable": not_testable_count,
+            "replayable": replayable_count,
+            "approximate": approximate_count,
+            "live_only": live_only_count,
             "behavioral": behavioral_count,
         },
         "layer_breakdown": layer_data,

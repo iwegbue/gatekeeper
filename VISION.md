@@ -93,7 +93,8 @@ The foundation is solid. The immediate priority is releasing the substantial bod
 
 - MCP server (StreamableHTTP transport, 21 tools, 4 resources)
 - `gk` CLI (full workflow coverage, stdio MCP transport)
-- Plan Validation Engine Phase 1 — rule interpretability, testable proxy compilation, coherence checks
+- Plan Validation Engine Phase 1 — rule data-source classification (OHLC_COMPUTABLE / OHLC_APPROXIMATE / LIVE_ONLY), coherence checks, interpretability scoring
+- Plan Review — AI-powered analysis of trading plan rules based on a sample of real trades and journal entries; per-rule performance, assumption testing, suggested changes
 - Setup wizard and plan starter templates
 - SMTP + Telegram notifications
 - Help section
@@ -104,7 +105,8 @@ Once v0.3.0 is shipped, the next focus areas are:
 
 - **Plan Validation Phase 2 — Replay.** Run compiled rules against historical price data to measure how they would have filtered. Move from "are your rules testable?" to "do your rules actually filter well?"
 - **Notification expansion.** More trigger points beyond trade-close (idea invalidated, discipline score drop, entry window expiry). Webhook support for event-driven automation.
-- **Rule performance attribution.** Per-rule statistics: how often is each rule the blocking gate? Which rules correlate with better outcomes? Surface this in reports so traders can prune and sharpen.
+- **Rule performance attribution.** Per-rule statistics in reports: how often is each rule the blocking gate? Which rules correlate with better outcomes?
+- **Auto plan review scheduling.** Automatically trigger a plan review after every N completed trades, without requiring a manual button click. Requires a background scheduler or hook into the trade-close flow.
 
 ### Next — Closing the feedback loop
 

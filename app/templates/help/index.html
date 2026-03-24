@@ -16,6 +16,8 @@
             <li><a href="#grading" class="help-toc-link">Grading</a></li>
             <li><a href="#journal" class="help-toc-link">Journal</a></li>
             <li><a href="#reports" class="help-toc-link">Reports</a></li>
+            <li><a href="#validation" class="help-toc-link">Plan Validation</a></li>
+            <li><a href="#plan-review" class="help-toc-link">Plan Review</a></li>
             <li><a href="#ai" class="help-toc-link">AI Features</a></li>
             <li><a href="#api" class="help-toc-link">API &amp; CLI</a></li>
             <li><a href="#keyboard" class="help-toc-link">Shortcuts</a></li>
@@ -379,6 +381,75 @@
                     <p>Which Required rules are most frequently left unchecked — your weak spots.</p>
                 </div>
             </div>
+        </section>
+
+        {# ── Plan Validation ──────────────────────────────────────────────── #}
+        <section id="validation" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="search-code"></i>
+                <h3>Plan Validation</h3>
+            </div>
+            <p>Plan Validation checks whether your trading rules can be evaluated from historical OHLC price data. Run it from the <strong>Validation</strong> page (sidebar → Config → Trading Plans → Validate Plan, or directly at <code>/validation</code>).</p>
+            <p>Each rule is classified by the AI into one of three coverage categories:</p>
+            <div class="help-metrics-grid">
+                <div class="help-metric">
+                    <strong>OHLC Computable</strong>
+                    <p>The rule can be fully evaluated using price bars and standard indicators (moving averages, RSI, ATR, candlestick patterns, swing levels, etc.). These rules are candidates for historical replay.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Approximate</strong>
+                    <p>The rule can be partially captured from OHLC data, but with some loss of fidelity. An OHLC proxy is identified; the classification may not perfectly reflect your intent.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Live Only</strong>
+                    <p>The rule requires data or judgment that cannot be derived from OHLC bars — such as order flow, sentiment, or discretionary reads. These rules are enforced via the live checklist, not historical replay.</p>
+                </div>
+            </div>
+            <h4>Interpretability Score</h4>
+            <p>The percentage of your non-behavioral rules that are OHLC Computable or Approximate. A higher score means more of your plan can be historically tested.</p>
+            <h4>Replay Readiness</h4>
+            <p><strong>READY</strong> — all non-behavioral rules have OHLC coverage. <strong>PARTIAL</strong> — some rules are live-only; replay will assume those layers are always satisfied. <strong>NOT_READY</strong> — no replayable rules, or the RISK layer has no testable stop rule (required to compute R-multiples).</p>
+            <h4>Coherence Warnings</h4>
+            <p>Deterministic checks on your plan structure: layers with no required rules, potential over- or under-filtering, and missing entry or risk rules.</p>
+            <h4>Overriding AI Classifications</h4>
+            <p>If the AI misclassifies a rule, you can confirm or override it via the JSON API (<code>PUT /api/v1/validation/compiled-plans/{id}/rules/{rule_id}/confirm</code>). Supply the correct status and, optionally, a list of the OHLC data sources required.</p>
+            <p class="muted"><small>Phase 2 — running compiled rules against historical market data — is coming in a future release.</small></p>
+        </section>
+
+        {# ── Plan Review ──────────────────────────────────────────────────── #}
+        <section id="plan-review" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="clipboard-check"></i>
+                <h3>Plan Review</h3>
+            </div>
+            <p>Plan Review is an AI-powered analysis of your trading plan based on a sample of real trades and journal entries. Once you have completed and journaled enough trades, a "Plan Review" button appears on your trading plan page.</p>
+            <h4>How it works</h4>
+            <ol>
+                <li>You complete and journal a set of trades (default: 20, configurable in <strong>Settings → General → Plan Review Sample Size</strong>).</li>
+                <li>Click <strong>Plan Review</strong> on your trading plan page.</li>
+                <li>The AI analyses your plan rules, per-rule adherence, win rates when rules were followed vs. skipped, and your journal notes.</li>
+                <li>A structured report is produced covering: overall verdict, per-rule performance, assumptions that held, assumptions that were challenged, and suggested plan changes.</li>
+            </ol>
+            <h4>Report contents</h4>
+            <div class="help-metrics-grid">
+                <div class="help-metric">
+                    <strong>Overall Verdict</strong>
+                    <p><em>Keep</em> — plan is working; no major changes needed. <em>Refine</em> — specific rules need adjustment. <em>Overhaul</em> — the plan's core assumptions are not holding up.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Rule Performance</strong>
+                    <p>For each rule: how often you followed it, your win rate when you did vs. when you didn't, and the AI's verdict (keep / review / remove).</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Assumptions Held / Challenged</strong>
+                    <p>A plain-language summary of which plan assumptions the data supports and which it calls into question.</p>
+                </div>
+                <div class="help-metric">
+                    <strong>Suggested Changes</strong>
+                    <p>Specific, actionable suggestions for improving or simplifying your plan based on the sample.</p>
+                </div>
+            </div>
+            <p class="muted"><small>Automatic review scheduling (triggered after every N trades) is planned for a future release.</small></p>
         </section>
 
         {# ── AI Features ──────────────────────────────────────────────────── #}

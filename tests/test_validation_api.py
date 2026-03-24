@@ -24,11 +24,10 @@ class MockProvider:
     async def chat(self, system: str, messages: list[dict]) -> str:
         return json.dumps(
             {
-                "status": "TESTABLE",
-                "proxy_type": "sma_trend",
-                "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+                "status": "OHLC_COMPUTABLE",
+                "data_sources_required": ["sma(200, 1d)", "price_close(1d)"],
                 "confidence": 0.9,
-                "interpretation_notes": "Mapped to SMA 200.",
+                "interpretation_notes": "Rule can be evaluated from daily SMA(200) and close price.",
             }
         )
 
@@ -195,9 +194,8 @@ async def test_confirm_rule_updates_interpretation(api_client: AsyncClient, db: 
     response = await api_client.put(
         f"/api/v1/validation/compiled-plans/{compiled_plan_id}/rules/{rule_id}/confirm",
         json={
-            "status": "APPROXIMATED",
-            "proxy_type": "ema_trend",
-            "proxy_params": {"period": 50, "timeframe": "4h", "direction_match": True},
+            "status": "OHLC_APPROXIMATE",
+            "data_sources_required": ["ema(50, 4h)", "price_close(4h)"],
             "interpretation_notes": "User override: EMA 50 on 4H.",
         },
     )
@@ -206,8 +204,8 @@ async def test_confirm_rule_updates_interpretation(api_client: AsyncClient, db: 
 
     updated_rule = next((r for r in data["compiled_rules"] if r["rule_id"] == rule_id), None)
     assert updated_rule is not None
-    assert updated_rule["status"] == "APPROXIMATED"
-    assert updated_rule["proxy"]["type"] == "ema_trend"
+    assert updated_rule["status"] == "OHLC_APPROXIMATE"
+    assert updated_rule["data_sources_required"] == ["ema(50, 4h)", "price_close(4h)"]
     assert updated_rule["user_confirmed"] is True
     assert updated_rule["interpretation_notes"] == "User override: EMA 50 on 4H."
 
@@ -219,7 +217,7 @@ async def test_confirm_rule_returns_404_for_missing_plan(api_client: AsyncClient
 
     response = await api_client.put(
         f"/api/v1/validation/compiled-plans/{uuid.uuid4()}/rules/some-id/confirm",
-        json={"status": "TESTABLE"},
+        json={"status": "OHLC_COMPUTABLE"},
     )
     assert response.status_code == 404
 
@@ -236,7 +234,7 @@ async def test_confirm_rule_returns_404_for_missing_rule_id(api_client: AsyncCli
 
     response = await api_client.put(
         f"/api/v1/validation/compiled-plans/{compiled_plan_id}/rules/{uuid.uuid4()}/confirm",
-        json={"status": "TESTABLE"},
+        json={"status": "OHLC_COMPUTABLE"},
     )
     assert response.status_code == 404
 
@@ -272,5 +270,5 @@ async def test_compile_behavioral_rule_not_testable_in_response(api_client: Asyn
 
     behavioral = next((r for r in compiled_rules if r["layer"] == "BEHAVIORAL"), None)
     assert behavioral is not None
-    assert behavioral["status"] == "NOT_TESTABLE"
-    assert behavioral["proxy"] is None
+    assert behavioral["status"] == "LIVE_ONLY"
+    assert behavioral["data_sources_required"] == []

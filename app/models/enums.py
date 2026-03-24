@@ -67,6 +67,11 @@ class AssetClass(str, enum.Enum):
 
 
 class InterpretationStatus(str, enum.Enum):
+    # Phase 1 (data-source classification) — current values
+    OHLC_COMPUTABLE = "OHLC_COMPUTABLE"
+    OHLC_APPROXIMATE = "OHLC_APPROXIMATE"
+    LIVE_ONLY = "LIVE_ONLY"
+    # Legacy aliases kept for backward-compat with stored JSONB data
     TESTABLE = "TESTABLE"
     APPROXIMATED = "APPROXIMATED"
     NOT_TESTABLE = "NOT_TESTABLE"

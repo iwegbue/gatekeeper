@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Plan Review — {{ plan.name }} — Gatekeeper{% endblock %}
+
+{% block content %}
+<a href="/plan/{{ plan.id }}" class="back-link">&larr; {{ plan.name }}</a>
+
+<div class="page-header">
+    <div>
+        <h2>Plan Review</h2>
+        <p class="muted">AI-powered analysis of your trading plan based on real trade outcomes.</p>
+    </div>
+</div>
+
+{# ── Eligibility card ──────────────────────────────────────────────────────── #}
+<article>
+    <header><strong>Review Readiness</strong></header>
+    <p>
+        <strong>{{ eligibility.completed_count }}</strong> of
+        <strong>{{ eligibility.required }}</strong> completed, journaled trades available
+        {% if eligibility.last_review_at %}
+        &nbsp;&middot;&nbsp; Last review: {{ eligibility.last_review_at.strftime('%Y-%m-%d') }}
+        {% endif %}
+    </p>
+
+    {% set pct = [[(eligibility.completed_count * 100 // eligibility.required), 0] | max, 100] | min %}
+    <progress value="{{ eligibility.completed_count }}" max="{{ eligibility.required }}" style="width: 100%; margin-bottom: 0.75rem;"></progress>
+
+    {% if eligibility.eligible %}
+    <form method="post" action="/plan/{{ plan.id }}/review/run">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn-primary">
+            <i data-lucide="brain-circuit"></i> Run Plan Review
+        </button>
+    </form>
+    {% else %}
+    <button disabled title="Complete {{ eligibility.required - eligibility.completed_count }} more trade(s) with journal entries to unlock">
+        <i data-lucide="brain-circuit"></i> Run Plan Review
+    </button>
+    <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
+        Complete {{ eligibility.required - eligibility.completed_count }} more journaled trade(s) to unlock.
+        Adjust the sample size in <a href="/settings">Settings</a>.
+    </p>
+    {% endif %}
+</article>
+
+{# ── Past reviews ──────────────────────────────────────────────────────────── #}
+{% if reviews %}
+<h3 style="margin-top: 2rem;">Past Reviews</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Trades</th>
+            <th>Overall Verdict</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reviews %}
+        <tr>
+            <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ r.trade_count }}</td>
+            <td>
+                {% if r.status == 'COMPLETED' and r.report %}
+                    {% set v = r.report.overall_verdict %}
+                    <span class="badge {% if v == 'keep' %}grade-a{% elif v == 'refine' %}grade-b{% else %}grade-c{% endif %}">
+                        {{ v | upper }}
+                    </span>
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+            <td>
+                <span class="badge badge--{{ 'success' if r.status == 'COMPLETED' else 'error' }}">
+                    {{ r.status }}
+                </span>
+            </td>
+            <td>
+                {% if r.status == 'COMPLETED' %}
+                <a href="/plan/{{ plan.id }}/review/{{ r.id }}">View Report</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<article class="empty-state" style="margin-top: 2rem;">
+    <p>No reviews yet. Run your first plan review once you have enough completed trades.</p>
+</article>
+{% endif %}
+
+{% endblock %}

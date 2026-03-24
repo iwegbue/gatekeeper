@@ -46,6 +46,9 @@ class Settings(Base):
     # Entry window default (hours)
     entry_window_hours: Mapped[int] = mapped_column(Integer, default=4)
 
+    # Plan Review — minimum completed journal entries before a review is available
+    plan_review_sample_size: Mapped[int] = mapped_column(Integer, default=20)
+
     # API token (hashed)
     api_token_hash: Mapped[str | None] = mapped_column(String, nullable=True)
 

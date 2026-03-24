@@ -11,9 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import InterpretationStatus
 from app.services.validation.rule_interpreter import (
-    PROXY_VOCABULARY,
     _parse_compiler_response,
-    _resolve_feature_dependencies,
     interpret_rule,
     interpret_rules,
 )
@@ -34,17 +32,15 @@ class MockProvider:
 
 
 def _make_ai_response(
-    status: str = "TESTABLE",
-    proxy_type: str = "sma_trend",
-    proxy_params: dict | None = None,
+    status: str = "OHLC_COMPUTABLE",
+    data_sources: list | None = None,
     confidence: float = 0.9,
-    notes: str = "Mapped to SMA trend proxy.",
+    notes: str = "Rule can be evaluated from OHLC data.",
 ) -> str:
     return json.dumps(
         {
             "status": status,
-            "proxy_type": proxy_type,
-            "proxy_params": proxy_params or {"period": 200, "timeframe": "1d", "direction_match": True},
+            "data_sources_required": data_sources or ["sma(200, 1d)", "price_close(1d)"],
             "confidence": confidence,
             "interpretation_notes": notes,
         }
@@ -62,8 +58,8 @@ async def test_behavioral_rule_classified_without_ai_call(db: AsyncSession):
 
     result = await interpret_rule(rule, provider, "plan context")
 
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
-    assert result["proxy"] is None
+    assert result["status"] == InterpretationStatus.LIVE_ONLY.value
+    assert result["data_sources_required"] == []
     assert provider.call_count == 0
     assert "live enforcement" in result["interpretation_notes"]
 
@@ -84,11 +80,11 @@ async def test_behavioral_rule_preserves_rule_fields(db: AsyncSession):
     assert result["user_confirmed"] is False
 
 
-# ── AI call path ──────────────────────────────────────────────────────────────
+# ── OHLC_COMPUTABLE path ───────────────────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_testable_rule_calls_provider(db: AsyncSession):
+async def test_ohlc_computable_rule_calls_provider(db: AsyncSession):
     plan = await create_plan(db)
     rule = await create_rule(db, plan.id, layer="CONTEXT", name="Price above 200 SMA")
     provider = MockProvider(_make_ai_response())
@@ -96,67 +92,83 @@ async def test_testable_rule_calls_provider(db: AsyncSession):
     result = await interpret_rule(rule, provider, "ctx")
 
     assert provider.call_count == 1
-    assert result["status"] == InterpretationStatus.TESTABLE.value
-    assert result["proxy"] == {
-        "type": "sma_trend",
-        "params": {"period": 200, "timeframe": "1d", "direction_match": True},
-    }
+    assert result["status"] == InterpretationStatus.OHLC_COMPUTABLE.value
+    assert result["data_sources_required"] == ["sma(200, 1d)", "price_close(1d)"]
     assert result["confidence"] == 0.9
 
 
 @pytest.mark.asyncio
-async def test_approximated_rule_status_preserved(db: AsyncSession):
+async def test_ohlc_approximate_status_preserved(db: AsyncSession):
     plan = await create_plan(db)
     rule = await create_rule(db, plan.id, layer="SETUP", name="Near demand zone")
     provider = MockProvider(
         _make_ai_response(
-            status="APPROXIMATED",
-            proxy_type="zone_proximity",
-            proxy_params={"zone_atr_multiple": 0.5},
+            status="OHLC_APPROXIMATE",
+            data_sources=["swing_high(5)", "atr(14)"],
             confidence=0.5,
+            notes="Partially capturable — zone width requires approximation.",
         )
     )
 
     result = await interpret_rule(rule, provider, "ctx")
 
-    assert result["status"] == InterpretationStatus.APPROXIMATED.value
-    assert result["proxy"]["type"] == "zone_proximity"
+    assert result["status"] == InterpretationStatus.OHLC_APPROXIMATE.value
+    assert result["data_sources_required"] == ["swing_high(5)", "atr(14)"]
     assert result["confidence"] == 0.5
 
 
 @pytest.mark.asyncio
-async def test_not_testable_rule_has_no_proxy(db: AsyncSession):
+async def test_live_only_rule_has_no_data_sources(db: AsyncSession):
     plan = await create_plan(db)
     rule = await create_rule(db, plan.id, layer="CONFIRMATION", name="Gut feeling confirms")
     provider = MockProvider(
         _make_ai_response(
-            status="NOT_TESTABLE",
-            proxy_type="not_testable",
-            proxy_params={},
+            status="LIVE_ONLY",
+            data_sources=[],
             confidence=0.1,
-            notes="Cannot be objectively measured.",
+            notes="Requires discretionary judgment; cannot be derived from OHLC.",
         )
     )
 
     result = await interpret_rule(rule, provider, "ctx")
 
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
-    assert result["proxy"] is None
+    assert result["status"] == InterpretationStatus.LIVE_ONLY.value
+    assert result["data_sources_required"] == []
 
 
-# ── Unknown / invalid proxy type ──────────────────────────────────────────────
+# ── Invalid / unexpected AI responses ────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_not_testable_status_with_valid_proxy_type_clears_proxy(db: AsyncSession):
-    """If AI returns NOT_TESTABLE status but a valid proxy_type, proxy must be cleared."""
+async def test_unknown_status_falls_back_to_live_only(db: AsyncSession):
+    """If AI returns an unknown status string, rule is classified LIVE_ONLY."""
+    plan = await create_plan(db)
+    rule = await create_rule(db, plan.id, layer="CONTEXT", name="Some rule")
+    bad_response = json.dumps(
+        {
+            "status": "INVENTED_STATUS",
+            "data_sources_required": [],
+            "confidence": 0.8,
+            "interpretation_notes": "Made up status.",
+        }
+    )
+    provider = MockProvider(bad_response)
+
+    result = await interpret_rule(rule, provider, "ctx")
+
+    assert result["status"] == InterpretationStatus.LIVE_ONLY.value
+    assert result["data_sources_required"] == []
+
+
+@pytest.mark.asyncio
+async def test_live_only_status_clears_data_sources_even_if_ai_returns_them(db: AsyncSession):
+    """If AI returns LIVE_ONLY but also populates data_sources_required, sources are cleared."""
     plan = await create_plan(db)
     rule = await create_rule(db, plan.id, layer="CONTEXT", name="Ambiguous rule")
     contradictory_response = json.dumps(
         {
-            "status": "NOT_TESTABLE",
-            "proxy_type": "sma_trend",
-            "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+            "status": "LIVE_ONLY",
+            "data_sources_required": ["sma(200, 1d)"],
             "confidence": 0.2,
             "interpretation_notes": "Could not reliably classify.",
         }
@@ -165,53 +177,8 @@ async def test_not_testable_status_with_valid_proxy_type_clears_proxy(db: AsyncS
 
     result = await interpret_rule(rule, provider, "ctx")
 
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
-    assert result["proxy"] is None
-    assert result["feature_dependencies"] == []
-
-
-@pytest.mark.asyncio
-async def test_unknown_proxy_type_clears_confidence(db: AsyncSession):
-    """Confidence should be zeroed when the AI returns an unknown proxy type."""
-    plan = await create_plan(db)
-    rule = await create_rule(db, plan.id, layer="CONTEXT", name="Some rule")
-    bad_response = json.dumps(
-        {
-            "status": "TESTABLE",
-            "proxy_type": "invented_proxy_xyz",
-            "proxy_params": {},
-            "confidence": 0.8,
-            "interpretation_notes": "Made up type.",
-        }
-    )
-    provider = MockProvider(bad_response)
-
-    result = await interpret_rule(rule, provider, "ctx")
-
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
-    assert result["proxy"] is None
-    assert result["confidence"] == 0.0
-
-
-@pytest.mark.asyncio
-async def test_unknown_proxy_type_falls_back_to_not_testable(db: AsyncSession):
-    plan = await create_plan(db)
-    rule = await create_rule(db, plan.id, layer="CONTEXT", name="Some rule")
-    bad_response = json.dumps(
-        {
-            "status": "TESTABLE",
-            "proxy_type": "invented_proxy_xyz",
-            "proxy_params": {},
-            "confidence": 0.8,
-            "interpretation_notes": "Made up type.",
-        }
-    )
-    provider = MockProvider(bad_response)
-
-    result = await interpret_rule(rule, provider, "ctx")
-
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
-    assert result["proxy"] is None
+    assert result["status"] == InterpretationStatus.LIVE_ONLY.value
+    assert result["data_sources_required"] == []
 
 
 @pytest.mark.asyncio
@@ -222,67 +189,47 @@ async def test_malformed_json_response_falls_back_gracefully(db: AsyncSession):
 
     result = await interpret_rule(rule, provider, "ctx")
 
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
-    assert result["proxy"] is None
+    assert result["status"] == InterpretationStatus.LIVE_ONLY.value
+    assert result["data_sources_required"] == []
     notes = result["interpretation_notes"].lower()
-    assert "model" in notes and "not testable" in notes
-
-
-def test_parse_compiler_response_strips_markdown_json_fence():
-    inner = _make_ai_response()
-    raw = f"Here you go:\n```json\n{inner}\n```\n"
-    parsed = _parse_compiler_response(raw)
-    assert parsed["proxy_type"] == "sma_trend"
-    assert parsed["status"] == "TESTABLE"
-
-
-def test_parse_compiler_response_strips_generic_fence():
-    inner = _make_ai_response()
-    raw = f"```\n{inner}\n```"
-    parsed = _parse_compiler_response(raw)
-    assert parsed["proxy_type"] == "sma_trend"
-
-
-def test_parse_compiler_response_tolerates_preamble_and_trailing_text():
-    inner = _make_ai_response()
-    raw = f"The compiled rule follows.\n{inner}\nHope this helps."
-    parsed = _parse_compiler_response(raw)
-    assert parsed["status"] == "TESTABLE"
+    assert "model" in notes and "live-only" in notes
 
 
 @pytest.mark.asyncio
-async def test_empty_model_response_user_facing_note(db: AsyncSession):
+async def test_empty_model_response_falls_back_gracefully(db: AsyncSession):
     plan = await create_plan(db)
     rule = await create_rule(db, plan.id, layer="CONTEXT", name="Rule")
     provider = MockProvider("")
 
     result = await interpret_rule(rule, provider, "ctx")
 
-    assert result["status"] == InterpretationStatus.NOT_TESTABLE.value
+    assert result["status"] == InterpretationStatus.LIVE_ONLY.value
     assert "empty" in result["interpretation_notes"].lower()
 
 
-# ── Feature dependencies ──────────────────────────────────────────────────────
+# ── JSON parsing helpers ───────────────────────────────────────────────────────
 
 
-def test_resolve_feature_dependencies_sma():
-    deps = _resolve_feature_dependencies("sma_trend", {"period": 200, "timeframe": "1d"})
-    assert "sma_200_1d" in deps
+def test_parse_compiler_response_strips_markdown_json_fence():
+    inner = _make_ai_response()
+    raw = f"Here you go:\n```json\n{inner}\n```\n"
+    parsed = _parse_compiler_response(raw)
+    assert parsed["status"] == "OHLC_COMPUTABLE"
+    assert "data_sources_required" in parsed
 
 
-def test_resolve_feature_dependencies_atr():
-    deps = _resolve_feature_dependencies("atr_stop", {"atr_period": 14, "atr_multiple": 1.5})
-    assert "atr_14" in deps
+def test_parse_compiler_response_strips_generic_fence():
+    inner = _make_ai_response()
+    raw = f"```\n{inner}\n```"
+    parsed = _parse_compiler_response(raw)
+    assert parsed["status"] == "OHLC_COMPUTABLE"
 
 
-def test_resolve_feature_dependencies_no_proxy():
-    deps = _resolve_feature_dependencies("not_testable", {})
-    assert deps == []
-
-
-def test_resolve_feature_dependencies_unknown_type():
-    deps = _resolve_feature_dependencies("nonexistent_proxy", {})
-    assert deps == []
+def test_parse_compiler_response_tolerates_preamble_and_trailing_text():
+    inner = _make_ai_response()
+    raw = f"The compiled rule follows.\n{inner}\nHope this helps."
+    parsed = _parse_compiler_response(raw)
+    assert parsed["status"] == "OHLC_COMPUTABLE"
 
 
 # ── Batch interpretation ──────────────────────────────────────────────────────
@@ -304,14 +251,4 @@ async def test_interpret_rules_processes_all_rules(db: AsyncSession):
     # BEHAVIORAL should not have called AI
     assert provider.call_count == 2
     behavioral = next(r for r in results if r["layer"] == "BEHAVIORAL")
-    assert behavioral["status"] == InterpretationStatus.NOT_TESTABLE.value
-
-
-# ── Proxy vocabulary completeness ─────────────────────────────────────────────
-
-
-def test_all_proxy_types_have_required_fields():
-    required_keys = {"layer", "description", "params", "feature_dependencies"}
-    for proxy_type, meta in PROXY_VOCABULARY.items():
-        missing = required_keys - meta.keys()
-        assert not missing, f"Proxy type '{proxy_type}' missing keys: {missing}"
+    assert behavioral["status"] == InterpretationStatus.LIVE_ONLY.value

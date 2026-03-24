@@ -16,7 +16,7 @@ from tests.factories import create_plan, create_rule
 
 
 class MockProvider:
-    """Returns a canned TESTABLE sma_trend response for any non-BEHAVIORAL rule."""
+    """Returns a canned OHLC_COMPUTABLE response for any non-BEHAVIORAL rule."""
 
     def __init__(self, response_override: str | None = None):
         self._override = response_override
@@ -29,11 +29,10 @@ class MockProvider:
             return self._override
         return json.dumps(
             {
-                "status": "TESTABLE",
-                "proxy_type": "sma_trend",
-                "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+                "status": "OHLC_COMPUTABLE",
+                "data_sources_required": ["sma(200, 1d)", "price_close(1d)"],
                 "confidence": 0.9,
-                "interpretation_notes": "Mapped to 200 SMA trend.",
+                "interpretation_notes": "Can be evaluated from daily SMA(200) and close price.",
             }
         )
 
@@ -112,16 +111,15 @@ async def test_compile_plan_empty_plan_returns_perfect_score(db: AsyncSession):
 @pytest.mark.asyncio
 async def test_interpretability_score_partial(db: AsyncSession):
     plan = await create_plan(db)
-    await create_rule(db, plan.id, layer="CONTEXT", name="Testable rule")
-    await create_rule(db, plan.id, layer="SETUP", name="Non-testable rule")
+    await create_rule(db, plan.id, layer="CONTEXT", name="Computable rule")
+    await create_rule(db, plan.id, layer="SETUP", name="Live-only rule")
 
-    not_testable_response = json.dumps(
+    live_only_response = json.dumps(
         {
-            "status": "NOT_TESTABLE",
-            "proxy_type": "not_testable",
-            "proxy_params": {},
+            "status": "LIVE_ONLY",
+            "data_sources_required": [],
             "confidence": 0.1,
-            "interpretation_notes": "Cannot interpret.",
+            "interpretation_notes": "Requires live market context.",
         }
     )
 
@@ -136,14 +134,13 @@ async def test_interpretability_score_partial(db: AsyncSession):
             if call_count == 1:
                 return json.dumps(
                     {
-                        "status": "TESTABLE",
-                        "proxy_type": "sma_trend",
-                        "proxy_params": {"period": 200, "timeframe": "1d", "direction_match": True},
+                        "status": "OHLC_COMPUTABLE",
+                        "data_sources_required": ["price_close(1d)"],
                         "confidence": 0.9,
                         "interpretation_notes": "ok",
                     }
                 )
-            return not_testable_response
+            return live_only_response
 
     compiled, _ = await plan_compiler.compile_plan(db, AlternatingProvider())
     assert compiled.interpretability_score == 50.0
@@ -162,7 +159,7 @@ async def test_coherence_gap_warning_for_empty_layer(db: AsyncSession):
     compiled, _ = await plan_compiler.compile_plan(db, provider)
 
     warnings = compiled.coherence_warnings
-    gap_warnings = [w for w in warnings if "no testable required" in w.lower()]
+    gap_warnings = [w for w in warnings if "no replayable required" in w.lower() or "no testable required" in w.lower()]
     assert len(gap_warnings) > 0
 
 
@@ -219,7 +216,7 @@ async def test_confirm_rule_marks_user_confirmed(db: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_confirm_rule_updates_proxy(db: AsyncSession):
+async def test_confirm_rule_updates_data_sources(db: AsyncSession):
     plan = await create_plan(db)
     rule = await create_rule(db, plan.id, layer="CONTEXT", name="Rule")
     provider = MockProvider()
@@ -230,13 +227,14 @@ async def test_confirm_rule_updates_proxy(db: AsyncSession):
         db,
         compiled.id,
         str(rule.id),
-        proxy_type="ema_trend",
-        proxy_params={"period": 50, "timeframe": "4h", "direction_match": True},
+        status="OHLC_APPROXIMATE",
+        data_sources_required=["ema(50, 4h)"],
+        interpretation_notes="Approximated via EMA(50) on 4h.",
     )
 
     rule_data = next((r for r in updated.compiled_rules if r["rule_id"] == str(rule.id)), None)
-    assert rule_data["proxy"]["type"] == "ema_trend"
-    assert rule_data["proxy"]["params"]["period"] == 50
+    assert rule_data["data_sources_required"] == ["ema(50, 4h)"]
+    assert rule_data["status"] == "OHLC_APPROXIMATE"
 
 
 @pytest.mark.asyncio

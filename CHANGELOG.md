@@ -25,17 +25,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Settings / AI** — `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` env vars (e.g. Docker `.env`) are now seeded into the database on first boot, identical to entering them via the UI; `OPENAI_API_KEY` is also wired into `app/config.py` and `docker-compose.yml` for parity with Anthropic
 - **Reset Plan** — new `/plan/{id}/reset` page lets you wipe all existing rules and optionally load a starter template (Trend Following, Mean Reversion) or start from scratch; plan name and description can be updated at the same time
 
-- **Plan Validation Engine (Phase 1 — Interpretability)** — AI-assisted compilation of trading plan rules into machine-testable proxies
-  - `POST /api/v1/validation/compile` — compile the active plan; each rule is mapped to a proxy from a fixed vocabulary (16 proxy types across all 7 layers) using the configured AI provider; BEHAVIORAL rules auto-classified as NOT_TESTABLE without an AI call
+- **Plan Validation Engine (Phase 1 — Interpretability)** — AI-assisted classification of trading plan rules by data-source requirements
+  - `POST /api/v1/validation/compile` — compile the active plan; each rule is classified as `OHLC_COMPUTABLE`, `OHLC_APPROXIMATE`, or `LIVE_ONLY` based on whether it can be evaluated from OHLC price data; BEHAVIORAL rules auto-classified as `LIVE_ONLY` without an AI call
   - `GET /api/v1/validation/runs` — list past validation runs
   - `GET /api/v1/validation/runs/{id}` — get run detail with compiled plan and feedback report
-  - `PUT /api/v1/validation/compiled-plans/{id}/rules/{rule_id}/confirm` — user reviews and can override AI-proposed interpretations
-  - HTML routes at `/validation` (history) and `/validation/runs/{id}` (report) with "Validate Plan" sidebar link
-  - Interpretability score (% of non-behavioral rules that are testable or approximated)
-  - Deterministic coherence checks: gap detection, underfiltering/overfiltering warnings, redundancy detection
+  - `PUT /api/v1/validation/compiled-plans/{id}/rules/{rule_id}/confirm` — user reviews and can override AI-proposed classifications; override accepts `status` and `data_sources_required`
+  - HTML routes at `/validation` (history) and `/validation/runs/{id}` (report) with "Validate Plan" button on plan detail page
+  - Interpretability score (% of non-behavioral rules that are OHLC_COMPUTABLE or OHLC_APPROXIMATE)
+  - Deterministic coherence checks: gap detection, underfiltering/overfiltering warnings, missing entry/risk rule warnings
   - Structured feedback report with per-layer rule breakdowns, replay readiness assessment (`READY / PARTIAL / NOT_READY`), and actionable refinement suggestions
   - `CompiledPlan` and `ValidationRun` models; migration `006_add_validation_tables`
   - 58 new tests across `test_rule_interpreter`, `test_plan_compiler`, `test_feedback_service`, `test_validation_api`
+
+- **Plan Review** — AI-powered analysis of your trading plan based on a sample of real trades and journal entries
+  - Available once you have reached the configured sample size of completed, journaled trades (default: 20)
+  - Triggered from the plan detail page at `/plan/{id}/review`; results stored as `PlanReview` records
+  - Report covers: overall verdict (keep / refine / overhaul), per-rule performance (adherence %, win rate when followed vs. skipped), assumptions held/challenged, and suggested plan changes
+  - `GET /api/v1/plans/{id}/review/runs` — list reviews; `GET /api/v1/plans/{id}/review/runs/{review_id}` — detail; `POST /api/v1/plans/{id}/review/run` — trigger
+  - Sample size configurable in Settings → General → Plan Review Sample Size (min 5)
+  - `PlanReview` model; migrations `009_add_plan_review_sample_size`, `010_add_plan_reviews_table`
 
 - **MCP server** — Gatekeeper is now an MCP server, mountable at `/mcp` (StreamableHTTP transport)
   - 16 tools covering the full workflow: `create_idea`, `get_idea`, `list_ideas`, `toggle_check`, `advance_idea`, `regress_idea`, `invalidate_idea`, `open_trade`, `close_trade`, `update_stop_loss`, `take_partial`, `lock_breakeven`, `list_trades`, `get_trade`, `list_journal`, `get_journal_entry`, `update_journal_entry`, `complete_journal_entry`, `review_idea`, `coach_journal`, `get_status`
@@ -69,6 +77,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Setup walkthrough wizard** — 5-step onboarding flow after initial password setup: Welcome intro, AI provider configuration, trading plan selection, watchlist builder, and quick tour
 - **Plan starter templates** — two curated rule sets (Trend Following, Mean Reversion) covering all 7 layers to help new users get started immediately; fully editable after setup
 - **`setup_completed` flag** — new `settings.setup_completed` boolean column (migration `004_add_setup_completed`) tracks whether onboarding has been completed; authenticated users are redirected to the wizard until it is
+
+### Changed
+
+- **Plan Validation — Phase 1 redesign** — rule classification no longer uses a fixed proxy vocabulary; the AI now answers one question: "Can this rule be evaluated from OHLC data?" Status values changed from `TESTABLE / APPROXIMATED / NOT_TESTABLE` to `OHLC_COMPUTABLE / OHLC_APPROXIMATE / LIVE_ONLY`; compiled rules now carry `data_sources_required` (free-form list of OHLC data streams) instead of `proxy` + `feature_dependencies`; old status values remain as legacy aliases for stored data backward-compatibility; proxy-based redundancy coherence check removed from Phase 1 (belongs in Phase 2)
 
 ---
 

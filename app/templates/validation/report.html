@@ -14,22 +14,22 @@
 {# ── Score row ─────────────────────────────────────────────────────────────── #}
 <div class="kpi-row" style="margin-top: 1.5rem;">
     <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Interpretability Score<span class="tip-content">Percentage of your rules that are either directly testable or approximated via a proxy. Higher = more of your plan can be machine-validated.</span></span></small>
+        <small class="muted"><span class="tip-trigger-text">Interpretability Score<span class="tip-content">Percentage of your rules that can be evaluated from OHLC price data. Higher = more of your plan can be historically tested.</span></span></small>
         <strong class="kpi-big">{{ feedback.interpretability_score }}%</strong>
-        <small class="muted">rules testable or approximated</small>
+        <small class="muted">rules with OHLC coverage</small>
     </article>
     <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Testable Rules<span class="tip-content">Rules that can be checked directly against market data with no approximation needed.</span></span></small>
-        <strong class="kpi-big">{{ feedback.rule_counts.testable }}</strong>
-        <small class="muted">directly machine-testable</small>
+        <small class="muted"><span class="tip-trigger-text">Replayable Rules<span class="tip-content">Rules that can be fully evaluated from OHLC bars and standard indicators — no discretionary judgment needed.</span></span></small>
+        <strong class="kpi-big">{{ feedback.rule_counts.replayable }}</strong>
+        <small class="muted">directly from OHLC data</small>
     </article>
     <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Approximated<span class="tip-content">Rules that cannot be tested exactly but are mapped to a similar proxy signal for testing purposes.</span></span></small>
-        <strong class="kpi-big">{{ feedback.rule_counts.approximated }}</strong>
-        <small class="muted">mapped with proxies</small>
+        <small class="muted"><span class="tip-trigger-text">Approximate Coverage<span class="tip-content">Rules that can be partially captured from OHLC data. The AI has identified an OHLC proxy, but some nuance may be lost.</span></span></small>
+        <strong class="kpi-big">{{ feedback.rule_counts.approximate }}</strong>
+        <small class="muted">approximate OHLC coverage</small>
     </article>
     <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Replay Readiness<span class="tip-content">Whether enough rules are testable or approximated to run a meaningful historical replay of your plan against market data.</span></span></small>
+        <small class="muted"><span class="tip-trigger-text">Replay Readiness<span class="tip-content">Whether enough rules have OHLC coverage to run a meaningful historical replay of your plan against market data.</span></span></small>
         <strong class="kpi-big {{ 'positive' if feedback.replay_readiness == 'READY' else '' }}">
             {{ feedback.replay_readiness }}
         </strong>
@@ -57,7 +57,9 @@
             {% if replayable %}
             <ul style="margin: 0; padding-left: 1.2rem;">
                 {% for r in replayable %}
-                <li><small>{{ r.name }} <span class="muted">({{ r.layer }}{% if r.proxy_type %} &middot; {{ r.proxy_type }}{% endif %})</span></small></li>
+                <li>
+                    <small>{{ r.name }} <span class="muted">({{ r.layer }}{% if r.data_sources_required %} &middot; {{ r.data_sources_required | join(', ') }}{% endif %})</span></small>
+                </li>
                 {% endfor %}
             </ul>
             {% else %}
@@ -106,17 +108,17 @@
 {% endif %}
 
 {# ── Layer breakdown ──────────────────────────────────────────────────────── #}
-<h3 style="margin-top: 2rem;">Rule Interpretations by Layer</h3>
+<h3 style="margin-top: 2rem;">Rule Classification by Layer</h3>
 
 {% for layer_name, layer_data in feedback.layer_breakdown.items() %}
-{% set total = layer_data.testable + layer_data.approximated + layer_data.not_testable %}
+{% set total = layer_data.replayable + layer_data.approximate + layer_data.live_only %}
 {% if total > 0 %}
 <details style="margin-bottom: 1rem;">
     <summary>
         <strong>{{ layer_name }}</strong>
         &nbsp;
         <small class="muted">
-            {{ layer_data.testable }}<span class="tip-trigger-text">T<span class="tip-content">Testable — checked directly against market data.</span></span> &middot; {{ layer_data.approximated }}<span class="tip-trigger-text">A<span class="tip-content">Approximated — tested via a proxy when no exact signal exists.</span></span> &middot; {{ layer_data.not_testable }}<span class="tip-trigger-text">L<span class="tip-content">Live only — evaluated via the checklist during live trading, not included in replay.</span></span>
+            {{ layer_data.replayable }}<span class="tip-trigger-text">R<span class="tip-content">Replayable — fully evaluable from OHLC data.</span></span> &middot; {{ layer_data.approximate }}<span class="tip-trigger-text">A<span class="tip-content">Approximate — OHLC coverage with some loss of fidelity.</span></span> &middot; {{ layer_data.live_only }}<span class="tip-trigger-text">L<span class="tip-content">Live only — requires data or judgment beyond OHLC; enforced via checklist during live trading.</span></span>
             {% if layer_data.behavioral %}(live enforcement only){% endif %}
         </small>
     </summary>
@@ -126,9 +128,9 @@
             <tr>
                 <th>Rule</th>
                 <th><span class="tip-trigger-text">Type<span class="tip-content"><strong>REQUIRED</strong> — must be met before acting.<br><strong>OPTIONAL</strong> — improves score if met.<br><strong>ADVISORY</strong> — reminder only.</span></span></th>
-                <th><span class="tip-trigger-text">Status<span class="tip-content"><strong>TESTABLE</strong> — verified directly against data.<br><strong>APPROXIMATED</strong> — tested via a proxy.<br><strong>LIVE ONLY</strong> — evaluated live via checklist, not in historical replay.</span></span></th>
-                <th><span class="tip-trigger-text">Proxy<span class="tip-content">The approximate signal used when the rule cannot be tested exactly against market data.</span></span></th>
-                <th><span class="tip-trigger-text">Confidence<span class="tip-content">How closely the proxy matches the original rule's intent. Higher % = more reliable approximation.</span></span></th>
+                <th><span class="tip-trigger-text">Coverage<span class="tip-content"><strong>OHLC COMPUTABLE</strong> — fully evaluable from price data.<br><strong>OHLC APPROXIMATE</strong> — partial OHLC coverage; some nuance may be lost.<br><strong>LIVE ONLY</strong> — requires data or judgment beyond OHLC; enforced via checklist in live trading.</span></span></th>
+                <th><span class="tip-trigger-text">Data Sources<span class="tip-content">The OHLC-derived data streams required to evaluate this rule historically.</span></span></th>
+                <th><span class="tip-trigger-text">Confidence<span class="tip-content">How confident the AI is in its classification. Higher % = more reliable assessment.</span></span></th>
                 <th>Notes</th>
             </tr>
         </thead>
@@ -138,12 +140,26 @@
                 <td>{{ rule.name }}</td>
                 <td><small>{{ rule.rule_type }}</small></td>
                 <td>
-                    <span class="badge badge--{{ 'success' if rule.status == 'TESTABLE' else 'warning' if rule.status == 'APPROXIMATED' else 'neutral' }} tip-trigger-badge">{{ 'LIVE ONLY' if rule.status == 'NOT_TESTABLE' else rule.status }}<span class="tip-content">{% if rule.status == 'TESTABLE' %}Can be checked directly against market data.{% elif rule.status == 'APPROXIMATED' %}No exact signal exists; tested via a similar proxy rule.{% else %}Evaluated during live trading via the checklist — not included in historical replay.{% endif %}</span></span>
+                    {% if rule.status in ('OHLC_COMPUTABLE', 'TESTABLE') %}
+                        <span class="badge badge--success tip-trigger-badge">OHLC<span class="tip-content">Fully evaluable from OHLC price data.</span></span>
+                    {% elif rule.status in ('OHLC_APPROXIMATE', 'APPROXIMATED') %}
+                        <span class="badge badge--warning tip-trigger-badge">APPROX<span class="tip-content">Partial OHLC coverage — some nuance may be lost in replay.</span></span>
+                    {% else %}
+                        <span class="badge badge--neutral tip-trigger-badge">LIVE ONLY<span class="tip-content">Requires data or judgment beyond OHLC — enforced via checklist during live trading.</span></span>
+                    {% endif %}
                     {% if rule.user_confirmed %}
                     <span class="badge badge--info" title="Confirmed by you">&#10003;</span>
                     {% endif %}
                 </td>
-                <td><small>{{ rule.proxy_type or '—' }}</small></td>
+                <td>
+                    <small>
+                        {% if rule.data_sources_required %}
+                            {{ rule.data_sources_required | join(', ') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </small>
+                </td>
                 <td>
                     {% if rule.confidence is not none %}
                         {{ (rule.confidence * 100) | int }}%

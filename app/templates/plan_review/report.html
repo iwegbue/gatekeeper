@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Plan Review Report — {{ plan.name }} — Gatekeeper{% endblock %}
+
+{% block content %}
+<a href="/plan/{{ plan.id }}/review" class="back-link">&larr; Plan Reviews</a>
+
+<div class="page-header">
+    <div>
+        <h2>Plan Review</h2>
+        <small class="muted">
+            {{ review.created_at.strftime('%Y-%m-%d %H:%M') }}
+            &mdash; {{ review.trade_count }} trades
+            {% if review.trade_window_start and review.trade_window_end %}
+            &mdash; {{ review.trade_window_start.strftime('%Y-%m-%d') }} to {{ review.trade_window_end.strftime('%Y-%m-%d') }}
+            {% endif %}
+        </small>
+    </div>
+</div>
+
+{% if review.status == 'FAILED' %}
+<article class="empty-state">
+    <p><strong>Review failed.</strong> {{ review.error_message or 'An unknown error occurred.' }}</p>
+</article>
+
+{% elif report %}
+
+{# ── KPI row ───────────────────────────────────────────────────────────────── #}
+<div class="kpi-row" style="margin-top: 1.5rem;">
+    <article class="kpi-card">
+        <small class="muted">Overall Verdict</small>
+        {% set v = report.overall_verdict %}
+        <strong class="kpi-big">
+            <span class="badge {% if v == 'keep' %}grade-a{% elif v == 'refine' %}grade-b{% else %}grade-c{% endif %}">
+                {{ v | upper if v else '—' }}
+            </span>
+        </strong>
+        <small class="muted">plan assessment</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Win Rate</small>
+        <strong class="kpi-big">
+            {% if report.win_rate is not none %}
+                {{ (report.win_rate * 100) | round(1) }}%
+            {% else %}—{% endif %}
+        </strong>
+        <small class="muted">from {{ report.sample_size }} trades</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Avg R-Multiple</small>
+        <strong class="kpi-big {% if report.avg_r and report.avg_r > 0 %}positive{% elif report.avg_r and report.avg_r < 0 %}negative{% endif %}">
+            {% if report.avg_r is not none %}
+                {{ report.avg_r }}R
+            {% else %}—{% endif %}
+        </strong>
+        <small class="muted">average outcome</small>
+    </article>
+    <article class="kpi-card">
+        <small class="muted">Rules Reviewed</small>
+        <strong class="kpi-big">{{ report.rule_performance | length if report.rule_performance else 0 }}</strong>
+        <small class="muted">active rules assessed</small>
+    </article>
+</div>
+
+{# ── Summary ───────────────────────────────────────────────────────────────── #}
+{% if report.summary %}
+<article style="margin-top: 1.5rem;">
+    <header><strong>Summary</strong></header>
+    <p>{{ report.summary }}</p>
+</article>
+{% endif %}
+
+{# ── Rule Performance ──────────────────────────────────────────────────────── #}
+{% if report.rule_performance %}
+<article style="margin-top: 1rem;">
+    <header><strong>Rule Performance</strong></header>
+    <table>
+        <thead>
+            <tr>
+                <th>Rule</th>
+                <th>Layer</th>
+                <th><span class="tip-trigger-text">Adherence<span class="tip-content">How often this rule was followed across the sample trades.</span></span></th>
+                <th><span class="tip-trigger-text">Win Rate (followed)<span class="tip-content">Win rate on trades where this rule was followed.</span></span></th>
+                <th><span class="tip-trigger-text">Win Rate (skipped)<span class="tip-content">Win rate on trades where this rule was skipped.</span></span></th>
+                <th>Verdict</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rp in report.rule_performance %}
+            <tr>
+                <td><strong>{{ rp.rule_name }}</strong></td>
+                <td><span class="badge state-watch" style="font-size: 0.7rem;">{{ rp.layer }}</span></td>
+                <td>{{ rp.adherence_pct }}%</td>
+                <td>
+                    {% if rp.win_rate_when_followed is not none %}
+                        {{ (rp.win_rate_when_followed * 100) | round(1) }}%
+                    {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td>
+                    {% if rp.win_rate_when_skipped is not none %}
+                        {{ (rp.win_rate_when_skipped * 100) | round(1) }}%
+                    {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td>
+                    {% set vd = rp.verdict %}
+                    <span class="badge {% if vd == 'keep' %}grade-a{% elif vd == 'review' %}grade-b{% else %}grade-c{% endif %}">
+                        {{ vd | upper if vd else '—' }}
+                    </span>
+                </td>
+                <td><small class="muted">{{ rp.notes or '' }}</small></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+{% endif %}
+
+{# ── Assumptions ───────────────────────────────────────────────────────────── #}
+{% if report.assumptions_held or report.assumptions_challenged %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+    {% if report.assumptions_held %}
+    <article>
+        <header><strong style="color: #4ade80;">Assumptions Holding</strong></header>
+        <ul style="margin: 0; padding-left: 1.2rem;">
+            {% for a in report.assumptions_held %}
+            <li>{{ a }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    {% endif %}
+    {% if report.assumptions_challenged %}
+    <article>
+        <header><strong style="color: #f87171;">Assumptions Challenged</strong></header>
+        <ul style="margin: 0; padding-left: 1.2rem;">
+            {% for a in report.assumptions_challenged %}
+            <li>{{ a }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    {% endif %}
+</div>
+{% endif %}
+
+{# ── Suggested Changes ─────────────────────────────────────────────────────── #}
+{% if report.suggested_changes %}
+<article style="margin-top: 1rem;">
+    <header><strong>Suggested Changes</strong></header>
+    <ul style="margin: 0; padding-left: 1.2rem;">
+        {% for s in report.suggested_changes %}
+        <li>{{ s }}</li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+{% else %}
+<article class="empty-state">
+    <p>No report data available for this review.</p>
+</article>
+{% endif %}
+
+{% endblock %}

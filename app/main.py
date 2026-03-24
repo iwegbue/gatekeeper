@@ -22,6 +22,7 @@ from app.routers import (
     journal,
     plan,
     plan_builder,
+    plan_review,
     reports,
     settings,
     setup,
@@ -149,6 +150,7 @@ def create_app() -> FastAPI:
     app.include_router(settings.router)
     app.include_router(reports.router)
     app.include_router(validation.router)
+    app.include_router(plan_review.router)
     app.include_router(help.router)
 
     # JSON API v1
