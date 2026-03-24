@@ -57,8 +57,9 @@
                 <form method="post" action="/validation/runs/{{ run.id }}/delete" style="margin:0;"
                       onsubmit="return confirm('Delete this check? This cannot be undone.');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="outline secondary small" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
-                        Delete
+                    <button type="submit" class="outline secondary icon-btn" title="Delete this check"
+                            style="padding:0.2rem 0.4rem;line-height:1;border-radius:4px;">
+                        <i data-lucide="trash-2" style="width:0.9rem;height:0.9rem;"></i>
                     </button>
                 </form>
             </td>

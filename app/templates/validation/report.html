@@ -136,10 +136,10 @@
 
 {% endblock %}
 
-{% if run.status in ('PENDING', 'COMPILING') %}
 {% block scripts %}
 <script>
 (function() {
+    {% if run.status in ('PENDING', 'COMPILING') %}
     var runId = {{ run.id | tojson }};
     var pollInterval = 3000;
     var maxAttempts = 60;
@@ -153,38 +153,27 @@
                     window.location.reload();
                 } else {
                     attempts++;
-                    if (attempts < maxAttempts) {
-                        setTimeout(poll, pollInterval);
-                    }
+                    if (attempts < maxAttempts) { setTimeout(poll, pollInterval); }
                 }
             })
             .catch(function() {
                 attempts++;
-                if (attempts < maxAttempts) {
-                    setTimeout(poll, pollInterval);
-                }
+                if (attempts < maxAttempts) { setTimeout(poll, pollInterval); }
             });
     }
 
     setTimeout(poll, pollInterval);
-})();
-</script>
-{% endblock %}
-{% endif %}
-
-{% if run.status not in ('PENDING', 'COMPILING') %}
-{% block scripts %}
-<script>
-(function() {
+    {% else %}
     var form = document.getElementById('recompile-form');
     var btn = document.getElementById('recompile-btn');
-    if (!form || !btn) return;
-    form.addEventListener('submit', function() {
-        btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Checking…';
-        lucide.createIcons();
-    });
+    if (form && btn) {
+        form.addEventListener('submit', function() {
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Checking…';
+            lucide.createIcons();
+        });
+    }
+    {% endif %}
 })();
 </script>
 {% endblock %}
-{% endif %}
