@@ -1,194 +1,190 @@
 {% extends "base.html" %}
-{% block title %}Validation Report — Gatekeeper{% endblock %}
+{% block title %}Plan Check — Gatekeeper{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h2>Validation Report</h2>
-    <small class="muted">{{ run.created_at.strftime('%Y-%m-%d %H:%M UTC') }} &mdash; {{ run.mode }}</small>
+    <h2>Plan Check</h2>
+    <small class="muted">{{ run.created_at.strftime('%d %b %Y, %H:%M') }}</small>
 </div>
 
-<a href="/validation">&larr; All runs</a>
+<a href="/validation">&larr; All checks</a>
 
-{% if feedback %}
-
-{# ── Score row ─────────────────────────────────────────────────────────────── #}
-<div class="kpi-row" style="margin-top: 1.5rem;">
-    <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Interpretability Score<span class="tip-content">Percentage of your rules that can be evaluated from OHLC price data. Higher = more of your plan can be historically tested.</span></span></small>
-        <strong class="kpi-big">{{ feedback.interpretability_score }}%</strong>
-        <small class="muted">rules with OHLC coverage</small>
-    </article>
-    <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Replayable Rules<span class="tip-content">Rules that can be fully evaluated from OHLC bars and standard indicators — no discretionary judgment needed.</span></span></small>
-        <strong class="kpi-big">{{ feedback.rule_counts.replayable }}</strong>
-        <small class="muted">directly from OHLC data</small>
-    </article>
-    <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Approximate Coverage<span class="tip-content">Rules that can be partially captured from OHLC data. The AI has identified an OHLC proxy, but some nuance may be lost.</span></span></small>
-        <strong class="kpi-big">{{ feedback.rule_counts.approximate }}</strong>
-        <small class="muted">approximate OHLC coverage</small>
-    </article>
-    <article class="kpi-card">
-        <small class="muted"><span class="tip-trigger-text">Replay Readiness<span class="tip-content">Whether enough rules have OHLC coverage to run a meaningful historical replay of your plan against market data.</span></span></small>
-        <strong class="kpi-big {{ 'positive' if feedback.replay_readiness == 'READY' else '' }}">
-            {{ feedback.replay_readiness }}
-        </strong>
-        <small class="muted">for historical replay</small>
-    </article>
-</div>
-
-{# ── Summary ─────────────────────────────────────────────────────────────── #}
-<article style="margin-top: 1.5rem;">
-    <header><strong>Summary</strong></header>
-    <p>{{ feedback.summary }}</p>
-</article>
-
-{# ── Replay coverage ──────────────────────────────────────────────────────── #}
-{% if feedback.replayable_rules is defined %}
-{% set replayable = feedback.replayable_rules %}
-{% set live_only = feedback.live_only_rules %}
-{% set coverage_total = (replayable | length) + (live_only | length) %}
-{% if coverage_total > 0 %}
-<article style="margin-top: 1rem;">
-    <header><strong>Replay Coverage</strong> &mdash; <small class="muted">{{ replayable | length }} of {{ coverage_total }} rules will be replayed</small></header>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-        <div>
-            <h6 style="color: #4ade80; margin-bottom: 0.5rem;">Included in replay</h6>
-            {% if replayable %}
-            <ul style="margin: 0; padding-left: 1.2rem;">
-                {% for r in replayable %}
-                <li>
-                    <small>{{ r.name }} <span class="muted">({{ r.layer }}{% if r.data_sources_required %} &middot; {{ r.data_sources_required | join(', ') }}{% endif %})</span></small>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <small class="muted">No replayable rules yet.</small>
-            {% endif %}
-        </div>
-        <div>
-            <h6 style="color: #9ca3af; margin-bottom: 0.5rem;">Live enforcement only</h6>
-            {% if live_only %}
-            <ul style="margin: 0; padding-left: 1.2rem;">
-                {% for r in live_only %}
-                <li><small>{{ r.name }} <span class="muted">({{ r.layer }} &middot; {{ r.reason }})</span></small></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <small class="muted">All rules are replayable.</small>
-            {% endif %}
-        </div>
+{% if run.status in ('PENDING', 'COMPILING') %}
+<article class="empty-state" style="margin-top: 2rem;" id="compiling-state">
+    <div style="margin-bottom: 1rem;">
+        <i data-lucide="loader-2" class="spin" style="width:2rem;height:2rem;"></i>
     </div>
+    <p><strong>Checking your plan…</strong></p>
+    <p class="muted">This usually takes 30–60 seconds. The page will update automatically when it's ready.</p>
 </article>
-{% endif %}
+
+{% elif run.status == 'FAILED' %}
+<article class="empty-state" style="margin-top: 2rem;">
+    <p><strong>Check failed.</strong></p>
+    {% if run.error_message %}<p class="muted">{{ run.error_message }}</p>{% endif %}
+    <p><a href="/validation">Try again</a></p>
+</article>
+
+{% elif feedback %}
+
+{# ── Verdict card ──────────────────────────────────────────────────────────── #}
+{% set verdict = feedback.verdict %}
+{% if verdict %}
+<div class="verdict-card verdict-card--{{ verdict.level }}" style="margin-top: 1.5rem;">
+    <div class="verdict-icon">
+        {% if verdict.level == 'good' %}
+        <i data-lucide="check-circle-2"></i>
+        {% elif verdict.level == 'warning' %}
+        <i data-lucide="alert-triangle"></i>
+        {% else %}
+        <i data-lucide="x-circle"></i>
+        {% endif %}
+    </div>
+    <div>
+        <strong class="verdict-headline">{{ verdict.headline }}</strong>
+        <p class="verdict-detail muted">{{ verdict.detail }}</p>
+    </div>
+</div>
 {% endif %}
 
-{# ── Coherence warnings ───────────────────────────────────────────────────── #}
-{% if feedback.coherence_warnings %}
-<article style="margin-top: 1rem; border-left: 3px solid var(--pico-color-amber-450);">
-    <header><strong>Coherence Warnings</strong></header>
-    <ul>
-        {% for warning in feedback.coherence_warnings %}
-        <li>{{ warning }}</li>
+{# ── What to improve ───────────────────────────────────────────────────────── #}
+{% set plain = feedback.plain_suggestions %}
+{% if plain %}
+<article style="margin-top: 1.25rem;">
+    <header><strong>What to improve</strong></header>
+    <ul style="margin-bottom: 0;">
+        {% for s in plain %}
+        <li style="margin-bottom: 0.4rem;">{{ s }}</li>
         {% endfor %}
     </ul>
 </article>
 {% endif %}
 
-{# ── Refinement suggestions ───────────────────────────────────────────────── #}
-{% if feedback.refinement_suggestions %}
-<article style="margin-top: 1rem;">
-    <header><strong>Refinement Suggestions</strong></header>
-    <ul>
-        {% for suggestion in feedback.refinement_suggestions %}
-        <li>{{ suggestion }}</li>
-        {% endfor %}
-    </ul>
-</article>
-{% endif %}
-
-{# ── Layer breakdown ──────────────────────────────────────────────────────── #}
-<h3 style="margin-top: 2rem;">Rule Classification by Layer</h3>
-
-{% for layer_name, layer_data in feedback.layer_breakdown.items() %}
-{% set total = layer_data.replayable + layer_data.approximate + layer_data.live_only %}
-{% if total > 0 %}
-<details style="margin-bottom: 1rem;">
-    <summary>
-        <strong>{{ layer_name }}</strong>
-        &nbsp;
-        <small class="muted">
-            {{ layer_data.replayable }}<span class="tip-trigger-text">R<span class="tip-content">Replayable — fully evaluable from OHLC data.</span></span> &middot; {{ layer_data.approximate }}<span class="tip-trigger-text">A<span class="tip-content">Approximate — OHLC coverage with some loss of fidelity.</span></span> &middot; {{ layer_data.live_only }}<span class="tip-trigger-text">L<span class="tip-content">Live only — requires data or judgment beyond OHLC; enforced via checklist during live trading.</span></span>
-            {% if layer_data.behavioral %}(live enforcement only){% endif %}
+{# ── Rule-by-rule detail (collapsed by default) ───────────────────────────── #}
+<details style="margin-top: 1.5rem;">
+    <summary style="cursor:pointer; font-weight: 600;">
+        Rule detail
+        <small class="muted" style="font-weight: 400; margin-left: 0.5rem;">
+            {{ feedback.rule_counts.total }} rules checked
         </small>
     </summary>
 
-    <table style="margin-top: 0.5rem; font-size: 0.9em;">
-        <thead>
-            <tr>
-                <th>Rule</th>
-                <th><span class="tip-trigger-text">Type<span class="tip-content"><strong>REQUIRED</strong> — must be met before acting.<br><strong>OPTIONAL</strong> — improves score if met.<br><strong>ADVISORY</strong> — reminder only.</span></span></th>
-                <th><span class="tip-trigger-text">Coverage<span class="tip-content"><strong>OHLC COMPUTABLE</strong> — fully evaluable from price data.<br><strong>OHLC APPROXIMATE</strong> — partial OHLC coverage; some nuance may be lost.<br><strong>LIVE ONLY</strong> — requires data or judgment beyond OHLC; enforced via checklist in live trading.</span></span></th>
-                <th><span class="tip-trigger-text">Data Sources<span class="tip-content">The OHLC-derived data streams required to evaluate this rule historically.</span></span></th>
-                <th><span class="tip-trigger-text">Confidence<span class="tip-content">How confident the AI is in its classification. Higher % = more reliable assessment.</span></span></th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for rule in layer_data.rules %}
-            <tr>
-                <td>{{ rule.name }}</td>
-                <td><small>{{ rule.rule_type }}</small></td>
-                <td>
-                    {% if rule.status in ('OHLC_COMPUTABLE', 'TESTABLE') %}
-                        <span class="badge badge--success tip-trigger-badge">OHLC<span class="tip-content">Fully evaluable from OHLC price data.</span></span>
-                    {% elif rule.status in ('OHLC_APPROXIMATE', 'APPROXIMATED') %}
-                        <span class="badge badge--warning tip-trigger-badge">APPROX<span class="tip-content">Partial OHLC coverage — some nuance may be lost in replay.</span></span>
-                    {% else %}
-                        <span class="badge badge--neutral tip-trigger-badge">LIVE ONLY<span class="tip-content">Requires data or judgment beyond OHLC — enforced via checklist during live trading.</span></span>
-                    {% endif %}
-                    {% if rule.user_confirmed %}
-                    <span class="badge badge--info" title="Confirmed by you">&#10003;</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <small>
-                        {% if rule.data_sources_required %}
-                            {{ rule.data_sources_required | join(', ') }}
-                        {% else %}
-                            —
-                        {% endif %}
-                    </small>
-                </td>
-                <td>
-                    {% if rule.confidence is not none %}
-                        {{ (rule.confidence * 100) | int }}%
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-                <td><small class="muted">{{ rule.interpretation_notes }}</small></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="margin-top: 1rem;">
+        {% for layer_name, layer_data in feedback.layer_breakdown.items() %}
+        {% set total = layer_data.replayable + layer_data.approximate + layer_data.live_only %}
+        {% if total > 0 %}
+        <div style="margin-bottom: 1.25rem;">
+            <p style="font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem;">
+                {{ layer_name | title | replace('_', ' ') }}
+            </p>
+            <table style="font-size: 0.875rem; margin: 0;">
+                <thead>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Type</th>
+                        <th>Checkability</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in layer_data.rules %}
+                    <tr>
+                        <td>{{ rule.name }}</td>
+                        <td><small class="muted">{{ rule.rule_type | title }}</small></td>
+                        <td>
+                            {% if rule.status in ('OHLC_COMPUTABLE', 'TESTABLE') %}
+                                <span class="badge badge--success">Objective</span>
+                            {% elif rule.status in ('OHLC_APPROXIMATE', 'APPROXIMATED') %}
+                                <span class="badge badge--warning">Mostly objective</span>
+                            {% else %}
+                                <span class="badge badge--neutral">Judgement call</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="muted">{{ rule.interpretation_notes }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <p class="muted" style="font-size: 0.78rem; margin-top: 0.5rem;">
+            <strong>Objective</strong> — rule can be verified from price data alone.
+            <strong>Mostly objective</strong> — close to objective, minor judgment involved.
+            <strong>Judgement call</strong> — requires discretion; enforced via checklist during live trading.
+        </p>
+    </div>
 </details>
-{% endif %}
-{% endfor %}
 
 {% else %}
-<article class="empty-state">
-    <p>No feedback available for this run.</p>
+<article class="empty-state" style="margin-top: 2rem;">
+    <p>No results available for this check.</p>
 </article>
 {% endif %}
 
+{% if run.status not in ('PENDING', 'COMPILING') %}
 <div style="margin-top: 2rem;">
-    <form method="post" action="/validation/compile">
+    <form method="post" action="/validation/compile" id="recompile-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit">
-            <i data-lucide="refresh-cw"></i> Re-compile Plan
+        <button type="submit" id="recompile-btn" class="secondary outline">
+            <i data-lucide="refresh-cw"></i> Re-check Plan
         </button>
     </form>
 </div>
+{% endif %}
 
 {% endblock %}
+
+{% if run.status in ('PENDING', 'COMPILING') %}
+{% block scripts %}
+<script>
+(function() {
+    var runId = {{ run.id | tojson }};
+    var pollInterval = 3000;
+    var maxAttempts = 60;
+    var attempts = 0;
+
+    function poll() {
+        fetch('/validation/runs/' + runId + '/status')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+                    window.location.reload();
+                } else {
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        setTimeout(poll, pollInterval);
+                    }
+                }
+            })
+            .catch(function() {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(poll, pollInterval);
+                }
+            });
+    }
+
+    setTimeout(poll, pollInterval);
+})();
+</script>
+{% endblock %}
+{% endif %}
+
+{% if run.status not in ('PENDING', 'COMPILING') %}
+{% block scripts %}
+<script>
+(function() {
+    var form = document.getElementById('recompile-form');
+    var btn = document.getElementById('recompile-btn');
+    if (!form || !btn) return;
+    form.addEventListener('submit', function() {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Checking…';
+        lucide.createIcons();
+    });
+})();
+</script>
+{% endblock %}
+{% endif %}

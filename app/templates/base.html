@@ -165,6 +165,32 @@
         setTimeout(updateClock, 10000);
     })();
 
+    // ── Tooltip positioner (fixes overflow:hidden clipping) ─────────────
+    (function() {
+        function positionTip(trigger) {
+            var tip = trigger.querySelector('.tip-content');
+            if (!tip) return;
+            var rect = trigger.getBoundingClientRect();
+            var tipW = 220;
+            var centreX = rect.left + rect.width / 2;
+            var left = centreX - tipW / 2;
+            // clamp to viewport
+            left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+            var top = rect.top - 8; // will be shifted up by transform below
+            tip.style.left = left + 'px';
+            tip.style.top = (rect.top - 8) + 'px';
+            tip.style.transform = 'translateY(-100%)';
+            // keep caret centred over trigger
+            var caretLeft = (centreX - left);
+            tip.style.setProperty('--tip-caret-left', caretLeft + 'px');
+        }
+
+        document.addEventListener('mouseover', function(e) {
+            var trigger = e.target.closest('.tip-trigger-text, .tip-trigger-badge');
+            if (trigger) positionTip(trigger);
+        });
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
         var flash = document.querySelector('.flash');
         if (flash) {

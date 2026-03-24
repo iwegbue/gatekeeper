@@ -198,6 +198,110 @@ def _generate_suggestions(
     return suggestions
 
 
+def _compute_verdict(
+    interpretability_score: float,
+    coherence_warnings: list[str],
+    replay_readiness: str,
+) -> dict:
+    """
+    Produce a simple traffic-light verdict a casual trader can act on.
+    Returns {"level": "good"|"warning"|"issues", "headline": str, "detail": str}
+    """
+    warning_count = len(coherence_warnings)
+
+    if interpretability_score >= 70 and warning_count == 0:
+        return {
+            "level": "good",
+            "headline": "Your plan looks solid",
+            "detail": "No structural issues found. Your rules are clear and well-structured.",
+        }
+    elif interpretability_score >= 40 and warning_count <= 2:
+        return {
+            "level": "warning",
+            "headline": "Your plan has a few gaps",
+            "detail": "Some rules or layers could be clearer. See the suggestions below.",
+        }
+    else:
+        return {
+            "level": "issues",
+            "headline": "Your plan needs some work",
+            "detail": "Several issues were found. Review the suggestions below to strengthen your plan.",
+        }
+
+
+def _plain_suggestions(
+    compiled_rules: list[dict],
+    layer_data: dict,
+    coherence_warnings: list[str],
+    interpretability_score: float,
+) -> list[str]:
+    """
+    Return a short, plain-English list of things the trader should do.
+    Avoids OHLC/replay/interpretability jargon entirely.
+    """
+    suggestions: list[str] = []
+
+    # Structural gaps from coherence checks — rephrase in plain English
+    for warning in coherence_warnings:
+        w = warning.lower()
+        if "no replayable required rules" in w or "no replayable" in w:
+            # Extract the layer names mentioned
+            if "entry" in w:
+                suggestions.append(
+                    "Your Entry layer has no concrete entry rule. Add a specific entry condition "
+                    "(e.g. a price level, pattern, or signal) so your plan is unambiguous."
+                )
+            elif "risk" in w:
+                suggestions.append(
+                    "Your Risk layer has no stop-loss rule. Add a rule that defines exactly where "
+                    "you exit if the trade goes against you."
+                )
+            else:
+                # Generic gap — extract layer list from coherence warning
+                suggestions.append(
+                    "Some layers have no concrete required rules. Make sure every key layer "
+                    "(Context, Setup, Entry, Risk) has at least one rule that must be met."
+                )
+        elif "underspecified" in w or "fewer than" in w or "only" in w and "layer" in w:
+            suggestions.append(
+                "Your plan doesn't have required rules in enough layers. A complete plan should "
+                "cover at least Context, Setup, Entry, and Risk."
+            )
+        elif "every layer has required rules" in w or "overfiltering" in w or "overspecified" in w:
+            suggestions.append(
+                "Your plan may be over-specified — every layer has required rules. "
+                "Consider whether all requirements are truly mandatory, or whether some "
+                "could be Optional instead."
+            )
+
+    # Rules that can't be verified at all — too vague
+    live_only_non_behavioral = [
+        r for r in compiled_rules
+        if r["layer"] != PlanLayer.BEHAVIORAL.value
+        and r["status"] in {InterpretationStatus.LIVE_ONLY.value, InterpretationStatus.NOT_TESTABLE.value}
+    ]
+    if len(live_only_non_behavioral) >= 3:
+        suggestions.append(
+            f"{len(live_only_non_behavioral)} of your rules are too vague to be verified objectively. "
+            "Try making them more specific — use concrete price levels, indicator values, "
+            "or observable conditions rather than subjective judgments."
+        )
+
+    # Risk layer fully unverifiable
+    risk_rules = [r for r in compiled_rules if r["layer"] == PlanLayer.RISK.value]
+    if risk_rules and all(
+        r["status"] in {InterpretationStatus.LIVE_ONLY.value, InterpretationStatus.NOT_TESTABLE.value}
+        for r in risk_rules
+    ):
+        suggestions.append(
+            "Your stop-loss rule is too vague to be verified. "
+            "Define it concretely — for example: 'Stop below the last swing low' or "
+            "'Stop at 1× ATR(14) below entry'."
+        )
+
+    return suggestions
+
+
 def build_report(compiled_plan: CompiledPlan) -> dict:
     """
     Build the full interpretability report from a CompiledPlan.
@@ -254,10 +358,14 @@ def build_report(compiled_plan: CompiledPlan) -> dict:
         compiled_rules, layer_data, coherence_warnings, score, replay_readiness,
         replayable_rules=replayable_rules, live_only_rules=live_only_rules,
     )
+    plain_suggestions = _plain_suggestions(compiled_rules, layer_data, coherence_warnings, score)
+    verdict = _compute_verdict(score, coherence_warnings, replay_readiness)
 
     return {
         "interpretability_score": score,
         "replay_readiness": replay_readiness,
+        "verdict": verdict,
+        "plain_suggestions": plain_suggestions,
         "summary": summary,
         "rule_counts": {
             "total": total_rules,

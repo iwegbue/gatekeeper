@@ -7,6 +7,7 @@ from starlette.responses import RedirectResponse
 from app.csrf import require_csrf
 from app.database import get_db
 from app.models.enums import PlanLayer, RuleType
+from app.services import plan_builder_service as pb_service
 from app.services import plan_service
 from app.services.plan_templates import get_template, list_templates
 
@@ -293,6 +294,42 @@ async def plan_reset_confirm(
     )
 
 
+@router.post("/{plan_id}/apply-template")
+async def plan_apply_template(
+    plan_id: uuid.UUID,
+    template_id: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+    _csrf: None = Depends(require_csrf),
+):
+    """Apply a starter template to a plan that has no rules (skips reset confirmation)."""
+    plan = await plan_service.get_plan_by_id(db, plan_id)
+    if plan is None:
+        return RedirectResponse(url="/plan?msg=Plan+not+found&msg_type=error", status_code=303)
+
+    existing_rules = await plan_service.get_rules_by_layer(db, plan.id, active_only=False)
+    has_rules = any(rules for rules in existing_rules.values())
+    if has_rules:
+        # Plan already has rules — go through the normal reset confirmation flow
+        return RedirectResponse(url=f"/plan/{plan_id}/reset?preselect={template_id}", status_code=303)
+
+    tmpl = get_template(template_id)
+    if not tmpl:
+        return RedirectResponse(url=f"/plan/{plan_id}?msg=Template+not+found&msg_type=error", status_code=303)
+
+    for rule in tmpl["rules"]:
+        await plan_service.create_rule(
+            db,
+            plan.id,
+            layer=rule["layer"],
+            name=rule["name"],
+            description=rule.get("description"),
+            rule_type=rule["rule_type"],
+            weight=rule["weight"],
+        )
+
+    return RedirectResponse(url=f"/plan/{plan_id}?msg=Template+loaded", status_code=303)
+
+
 @router.post("/{plan_id}/reset")
 async def plan_reset(
     request: Request,
@@ -308,6 +345,7 @@ async def plan_reset(
         return RedirectResponse(url="/plan?msg=Plan+not+found&msg_type=error", status_code=303)
 
     await plan_service.clear_rules(db, plan.id)
+    await pb_service.clear_session(db)
 
     if plan_name:
         await plan_service.update_plan(db, plan_id=plan.id, name=plan_name, description=plan_description or None)

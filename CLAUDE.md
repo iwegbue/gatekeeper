@@ -139,6 +139,25 @@ Error messages must be specific and actionable. State what went wrong AND what t
 
 ## Development Workflow
 
+### Finishing work — mandatory checklist
+
+After completing any feature, bug fix, or refactor, always do these steps in order before considering the work done:
+
+1. **Bug audit** — re-read every file you touched and check for regressions, edge cases, or anything inconsistent with the rest of the codebase.
+2. **Run tests** — `SKIP_SECURITY_CHECKS=1 uv run pytest`. All must pass.
+3. **Commit** — stage and commit with a conventional commit message.
+4. **Rebuild Docker** — so changes are visible at http://localhost:
+   ```bash
+   docker compose build app
+   docker compose run --rm app uv run alembic upgrade head   # only if there are new migrations
+   docker compose up -d app
+   docker compose logs app --tail=10                          # confirm clean startup
+   ```
+
+Never leave a session without completing all four steps.
+
+---
+
 ### Branch and PR — always
 
 **Never commit directly to `main`.** Every change, no matter how small, goes through a feature branch and a pull request. This applies to human contributors and AI agents alike — if you are an AI agent making changes, you must create a branch before touching any code.
