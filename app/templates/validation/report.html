@@ -129,7 +129,7 @@
 
 {% if run.status not in ('PENDING', 'COMPILING') %}
 <div style="margin-top: 2.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-    <a href="/plan" role="button">
+    <a href="/plan/{{ compiled_plan.plan_id }}" role="button">
         <i data-lucide="pencil"></i> Edit my plan
     </a>
     <a href="/validation" role="button" class="secondary outline" style="font-size: 0.9rem;">
