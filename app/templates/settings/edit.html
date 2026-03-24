@@ -91,6 +91,11 @@
                    value="{{ settings.entry_window_hours }}" min="1" max="72">
             <p class="muted" style="font-size:0.8rem;">Default time window an idea stays in Entry Permitted before expiring.</p>
 
+            <label for="plan_review_sample_size" style="margin-top: 1rem;">Plan review sample size</label>
+            <input type="number" id="plan_review_sample_size" name="plan_review_sample_size"
+                   value="{{ settings.plan_review_sample_size }}" min="5" max="500">
+            <p class="muted" style="font-size:0.8rem;">Number of completed, journaled trades required before a Plan Review becomes available. Minimum 5.</p>
+
             <button type="submit">Save general settings</button>
         </form>
 

@@ -10,6 +10,7 @@ from app.models.settings import Settings
 from app.models.state_transition import StateTransition
 from app.models.trade import Trade
 from app.models.trading_plan import TradingPlan
+from app.models.plan_review import PlanReview
 from app.models.validation.compiled_plan import CompiledPlan
 from app.models.validation.validation_run import ValidationRun
 
@@ -30,4 +31,5 @@ __all__ = [
     "PlanBuilderSession",
     "CompiledPlan",
     "ValidationRun",
+    "PlanReview",
 ]

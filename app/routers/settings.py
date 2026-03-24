@@ -76,6 +76,7 @@ async def settings_general_update(
     request: Request,
     notifications_enabled: bool = Form(False),
     entry_window_hours: int = Form(4),
+    plan_review_sample_size: int = Form(20),
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
@@ -83,6 +84,7 @@ async def settings_general_update(
         db,
         notifications_enabled=notifications_enabled,
         entry_window_hours=entry_window_hours,
+        plan_review_sample_size=max(5, plan_review_sample_size),
     )
     return RedirectResponse(url="/settings?msg=General+settings+saved", status_code=303)
 

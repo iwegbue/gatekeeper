@@ -18,10 +18,9 @@ class CompiledRuleResponse(BaseModel):
     rule_type: str
     weight: int
     status: str
-    proxy: dict | None = None
+    data_sources_required: list[str] = []
     confidence: float | None = None
     interpretation_notes: str
-    feature_dependencies: list[str]
     user_confirmed: bool
 
 
@@ -64,9 +63,8 @@ class ValidationRunDetailResponse(ValidationRunResponse):
 
 
 class ConfirmCompiledRuleRequest(BaseModel):
-    """User confirms or overrides an AI-proposed interpretation."""
+    """User confirms or overrides an AI-proposed Phase 1 classification."""
 
     status: str | None = None
-    proxy_type: str | None = None
-    proxy_params: dict | None = None
+    data_sources_required: list[str] | None = None
     interpretation_notes: str | None = None

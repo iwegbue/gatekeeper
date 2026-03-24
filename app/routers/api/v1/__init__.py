@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.auth import verify_api_token
-from app.routers.api.v1 import ai, ideas, instruments, journal, plan, reports, status, trades, validation
+from app.routers.api.v1 import ai, ideas, instruments, journal, plan, plan_review, reports, status, trades, validation
 
 # Auth router — no token dependency (it creates tokens)
 from app.routers.api.v1 import auth as auth_router_module
@@ -18,6 +18,7 @@ api_v1_router.include_router(instruments.router)
 api_v1_router.include_router(reports.router)
 api_v1_router.include_router(ai.router)
 api_v1_router.include_router(validation.router)
+api_v1_router.include_router(plan_review.router)
 
 # Auth router — mounted separately without token dependency
 api_v1_auth_router = APIRouter(prefix="/api/v1")

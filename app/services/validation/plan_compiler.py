@@ -75,23 +75,37 @@ def _build_plan_context_text(plan, rules_by_layer: dict) -> str:
 
 def _compute_interpretability_score(compiled_rules: list[dict]) -> float:
     """
-    Percentage of rules that are TESTABLE or APPROXIMATED.
-    BEHAVIORAL / NOT_TESTABLE rules are excluded from the denominator
-    only when they are BEHAVIORAL — non-behavioral NOT_TESTABLE rules
-    still count against the score.
+    Percentage of non-behavioral rules that are OHLC_COMPUTABLE or OHLC_APPROXIMATE.
+    BEHAVIORAL rules are excluded from the denominator entirely.
+    LIVE_ONLY rules count against the score.
+    Legacy TESTABLE/APPROXIMATED values (from old stored runs) are treated as passing.
     """
     scoreable = [r for r in compiled_rules if r["layer"] != PlanLayer.BEHAVIORAL.value]
     if not scoreable:
         return 100.0
-    passing = sum(
-        1
-        for r in scoreable
-        if r["status"] in (InterpretationStatus.TESTABLE.value, InterpretationStatus.APPROXIMATED.value)
-    )
+    passing_statuses = {
+        InterpretationStatus.OHLC_COMPUTABLE.value,
+        InterpretationStatus.OHLC_APPROXIMATE.value,
+        # Legacy aliases
+        InterpretationStatus.TESTABLE.value,
+        InterpretationStatus.APPROXIMATED.value,
+    }
+    passing = sum(1 for r in scoreable if r["status"] in passing_statuses)
     return round(passing * 100 / len(scoreable), 2)
 
 
 # ── Coherence checks ──────────────────────────────────────────────────────────
+
+
+def _is_replayable(status: str) -> bool:
+    """True for any status that means the rule can be evaluated from OHLC data."""
+    return status in {
+        InterpretationStatus.OHLC_COMPUTABLE.value,
+        InterpretationStatus.OHLC_APPROXIMATE.value,
+        # Legacy aliases
+        InterpretationStatus.TESTABLE.value,
+        InterpretationStatus.APPROXIMATED.value,
+    }
 
 
 def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
@@ -102,19 +116,16 @@ def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
     warnings: list[str] = []
     non_behavioral = [r for r in compiled_rules if r["layer"] != PlanLayer.BEHAVIORAL.value]
 
-    # 1. Gap detection — layers with zero testable/approximated required rules
-    layer_testable: dict[str, int] = {layer.value: 0 for layer in PlanLayer if layer != PlanLayer.BEHAVIORAL}
+    # 1. Gap detection — layers with zero replayable required rules
+    layer_replayable: dict[str, int] = {layer.value: 0 for layer in PlanLayer if layer != PlanLayer.BEHAVIORAL}
     for r in non_behavioral:
-        if r["rule_type"] == "REQUIRED" and r["status"] in (
-            InterpretationStatus.TESTABLE.value,
-            InterpretationStatus.APPROXIMATED.value,
-        ):
-            layer_testable[r["layer"]] = layer_testable.get(r["layer"], 0) + 1
+        if r["rule_type"] == "REQUIRED" and _is_replayable(r["status"]):
+            layer_replayable[r["layer"]] = layer_replayable.get(r["layer"], 0) + 1
 
-    gaps = [layer for layer, count in layer_testable.items() if count == 0]
+    gaps = [layer for layer, count in layer_replayable.items() if count == 0]
     if gaps:
         warnings.append(
-            f"Layers with no testable required rules: {', '.join(gaps)}. "
+            f"Layers with no replayable required rules: {', '.join(gaps)}. "
             "Historical replay will assume these layers are always satisfied."
         )
 
@@ -134,35 +145,21 @@ def _run_coherence_checks(compiled_rules: list[dict]) -> list[str]:
             "Consider whether all requirements are strictly necessary."
         )
 
-    # 4. Redundancy — same proxy type appears more than once in same layer
-    seen: dict[str, list[str]] = {}
-    for r in non_behavioral:
-        if r.get("proxy"):
-            key = f"{r['layer']}:{r['proxy']['type']}"
-            seen.setdefault(key, []).append(r["name"])
-    for key, names in seen.items():
-        if len(names) > 1:
-            layer, proxy_type = key.split(":", 1)
-            warnings.append(
-                f"Redundant rules in {layer}: '{' and '.join(names)}' both use proxy type '{proxy_type}'. "
-                "Consider merging them."
-            )
-
-    # 5. No entry rule
+    # 4. No replayable entry rule
     entry_rules = [r for r in compiled_rules if r["layer"] == PlanLayer.ENTRY.value]
-    testable_entry = [r for r in entry_rules if r["status"] != InterpretationStatus.NOT_TESTABLE.value]
-    if not testable_entry:
+    replayable_entry = [r for r in entry_rules if _is_replayable(r["status"])]
+    if not replayable_entry:
         warnings.append(
-            "No testable ENTRY rules found. Replay will use default market-entry (next bar open). "
+            "No replayable ENTRY rules found. Replay will use default market-entry (next bar open). "
             "Consider adding an explicit entry rule."
         )
 
-    # 6. No risk rule
+    # 5. No replayable risk rule
     risk_rules = [r for r in compiled_rules if r["layer"] == PlanLayer.RISK.value]
-    testable_risk = [r for r in risk_rules if r["status"] != InterpretationStatus.NOT_TESTABLE.value]
-    if not testable_risk:
+    replayable_risk = [r for r in risk_rules if _is_replayable(r["status"])]
+    if not replayable_risk:
         warnings.append(
-            "No testable RISK rules found. Replay requires a stop-loss definition to compute R-multiples. "
+            "No replayable RISK rules found. Replay requires a stop-loss definition to compute R-multiples. "
             "Consider adding an ATR-based or swing-based stop rule."
         )
 
@@ -225,12 +222,11 @@ async def confirm_compiled_rule(
     rule_id: str,
     *,
     status: str | None = None,
-    proxy_type: str | None = None,
-    proxy_params: dict | None = None,
+    data_sources_required: list[str] | None = None,
     interpretation_notes: str | None = None,
 ) -> CompiledPlan | None:
     """
-    User confirms or edits an AI-proposed interpretation for a single rule.
+    User confirms or edits an AI-proposed Phase 1 classification for a single rule.
     Updates the compiled_rules JSONB in-place and marks user_confirmed=True.
     Returns None if compiled_plan_id or rule_id not found.
     """
@@ -250,15 +246,8 @@ async def confirm_compiled_rule(
             rule["user_confirmed"] = True
             if status is not None:
                 rule["status"] = status
-            if proxy_type is not None:
-                from app.services.validation.rule_interpreter import _resolve_feature_dependencies
-
-                params = proxy_params or {}
-                rule["proxy"] = None if proxy_type == "not_testable" else {"type": proxy_type, "params": params}
-                rule["feature_dependencies"] = _resolve_feature_dependencies(proxy_type, params)
-            elif proxy_params is not None and rule.get("proxy"):
-                # Update params on existing proxy without changing its type
-                rule["proxy"] = {**rule["proxy"], "params": proxy_params}
+            if data_sources_required is not None:
+                rule["data_sources_required"] = data_sources_required
             if interpretation_notes is not None:
                 rule["interpretation_notes"] = interpretation_notes
         updated_rules.append(rule)

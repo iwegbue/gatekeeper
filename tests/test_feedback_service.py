@@ -16,8 +16,8 @@ from app.services.validation.feedback_service import _assess_replay_readiness, b
 def _make_compiled_rule(
     layer: str = "CONTEXT",
     rule_type: str = "REQUIRED",
-    status: str = "TESTABLE",
-    proxy_type: str = "sma_trend",
+    status: str = "OHLC_COMPUTABLE",
+    data_sources: list | None = None,
     user_confirmed: bool = False,
     name: str = "Rule",
 ) -> dict:
@@ -29,14 +29,9 @@ def _make_compiled_rule(
         "rule_type": rule_type,
         "weight": 1,
         "status": status,
-        "proxy": {"type": proxy_type, "params": {}} if status != InterpretationStatus.NOT_TESTABLE.value else None,
-        "confidence": 0.9
-        if status == InterpretationStatus.TESTABLE.value
-        else 0.5
-        if status == InterpretationStatus.APPROXIMATED.value
-        else None,
+        "data_sources_required": data_sources or ([] if status == "LIVE_ONLY" else ["price_close(1d)"]),
+        "confidence": 0.9 if status == "OHLC_COMPUTABLE" else 0.5 if status == "OHLC_APPROXIMATE" else None,
         "interpretation_notes": "Test note.",
-        "feature_dependencies": [],
         "user_confirmed": user_confirmed,
     }
 
@@ -72,38 +67,52 @@ def test_build_report_returns_required_keys():
 
 def test_build_report_rule_counts_correct():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
-        _make_compiled_rule(layer="SETUP", status="APPROXIMATED"),
-        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE"),
-        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="SETUP", status="OHLC_APPROXIMATE"),
+        _make_compiled_rule(layer="ENTRY", status="LIVE_ONLY"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY"),
     ]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
 
     assert report["rule_counts"]["total"] == 4
-    assert report["rule_counts"]["testable"] == 1
-    assert report["rule_counts"]["approximated"] == 1
-    assert report["rule_counts"]["not_testable"] == 1
+    assert report["rule_counts"]["replayable"] == 1
+    assert report["rule_counts"]["approximate"] == 1
+    assert report["rule_counts"]["live_only"] == 1
     assert report["rule_counts"]["behavioral"] == 1
 
 
+def test_build_report_rule_counts_legacy_statuses():
+    """Legacy TESTABLE/APPROXIMATED/NOT_TESTABLE values from stored runs are handled correctly."""
+    rules = [
+        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
+        _make_compiled_rule(layer="SETUP", status="APPROXIMATED"),
+        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE"),
+    ]
+    plan = _make_compiled_plan(rules)
+    report = build_report(plan)
+
+    assert report["rule_counts"]["replayable"] == 1
+    assert report["rule_counts"]["approximate"] == 1
+    assert report["rule_counts"]["live_only"] == 1
+
+
 def test_build_report_summary_mentions_counts():
-    rules = [_make_compiled_rule(layer="CONTEXT", status="TESTABLE")]
+    rules = [_make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE")]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
 
     assert "1" in report["summary"]
-    assert "testable" in report["summary"].lower()
+    assert "replayed" in report["summary"].lower()
 
 
 def test_build_report_all_layers_in_breakdown():
     plan = _make_compiled_plan([_make_compiled_rule(layer="CONTEXT")])
     report = build_report(plan)
 
-    # Only layers with rules appear in the breakdown with rule entries
     layer_breakdown = report["layer_breakdown"]
     assert "CONTEXT" in layer_breakdown
-    assert layer_breakdown["CONTEXT"]["testable"] == 1
+    assert layer_breakdown["CONTEXT"]["replayable"] == 1
 
 
 def test_build_report_coherence_warnings_passed_through():
@@ -117,7 +126,17 @@ def test_build_report_coherence_warnings_passed_through():
 # ── replay_readiness ──────────────────────────────────────────────────────────
 
 
-def test_replay_ready_when_all_non_behavioral_testable():
+def test_replay_ready_when_all_non_behavioral_computable():
+    rules = [
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY"),
+    ]
+    readiness = _assess_replay_readiness(rules)
+    assert readiness == "READY"
+
+
+def test_replay_ready_with_legacy_testable_status():
     rules = [
         _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
         _make_compiled_rule(layer="RISK", status="TESTABLE"),
@@ -127,20 +146,20 @@ def test_replay_ready_when_all_non_behavioral_testable():
     assert readiness == "READY"
 
 
-def test_replay_partial_when_some_not_testable():
+def test_replay_partial_when_some_live_only():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE"),
-        _make_compiled_rule(layer="CONFIRMATION", status="NOT_TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="CONFIRMATION", status="LIVE_ONLY"),
     ]
     readiness = _assess_replay_readiness(rules)
     assert readiness == "PARTIAL"
 
 
-def test_replay_not_ready_when_no_testable_risk():
+def test_replay_not_ready_when_no_replayable_risk():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
-        _make_compiled_rule(layer="RISK", status="NOT_TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="RISK", status="LIVE_ONLY"),
     ]
     readiness = _assess_replay_readiness(rules)
     assert readiness == "NOT_READY"
@@ -151,10 +170,10 @@ def test_replay_not_ready_when_no_rules():
     assert readiness == "NOT_READY"
 
 
-def test_replay_not_ready_when_no_testable_rules_at_all():
+def test_replay_not_ready_when_no_replayable_rules_at_all():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="NOT_TESTABLE"),
-        _make_compiled_rule(layer="RISK", status="NOT_TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="LIVE_ONLY"),
+        _make_compiled_rule(layer="RISK", status="LIVE_ONLY"),
     ]
     readiness = _assess_replay_readiness(rules)
     assert readiness == "NOT_READY"
@@ -165,8 +184,8 @@ def test_replay_not_ready_when_no_testable_rules_at_all():
 
 def test_suggestions_mention_behavioral_rules():
     rules = [
-        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No FOMO"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY", name="No FOMO"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
     ]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
@@ -175,10 +194,10 @@ def test_suggestions_mention_behavioral_rules():
     assert "behavioral" in suggestions_text
 
 
-def test_suggestions_mention_approximated_rules():
+def test_suggestions_mention_approximate_rules():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="APPROXIMATED", name="Fuzzy trend"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_APPROXIMATE", name="Fuzzy trend"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
     ]
     plan = _make_compiled_plan(rules, score=50.0)
     report = build_report(plan)
@@ -189,8 +208,8 @@ def test_suggestions_mention_approximated_rules():
 
 def test_suggestions_include_replay_ready_message_when_ready():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
     ]
     plan = _make_compiled_plan(rules, score=100.0)
     report = build_report(plan)
@@ -201,8 +220,8 @@ def test_suggestions_include_replay_ready_message_when_ready():
 
 def test_suggestions_warn_when_no_management_rules():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
     ]
     plan = _make_compiled_plan(rules, score=100.0)
     report = build_report(plan)
@@ -212,7 +231,7 @@ def test_suggestions_warn_when_no_management_rules():
 
 
 def test_layer_breakdown_marks_behavioral():
-    rules = [_make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE")]
+    rules = [_make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY")]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
 
@@ -220,7 +239,7 @@ def test_layer_breakdown_marks_behavioral():
 
 
 def test_layer_breakdown_rule_list_structure():
-    rules = [_make_compiled_rule(layer="SETUP", status="APPROXIMATED", name="My setup rule")]
+    rules = [_make_compiled_rule(layer="SETUP", status="OHLC_APPROXIMATE", name="My setup rule")]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
 
@@ -228,8 +247,8 @@ def test_layer_breakdown_rule_list_structure():
     assert len(rule_entries) == 1
     r = rule_entries[0]
     assert r["name"] == "My setup rule"
-    assert r["status"] == "APPROXIMATED"
-    assert r["proxy_type"] is not None
+    assert r["status"] == "OHLC_APPROXIMATE"
+    assert "data_sources_required" in r
 
 
 # ── Replayable / live-only rule lists ────────────────────────────────────────
@@ -237,10 +256,10 @@ def test_layer_breakdown_rule_list_structure():
 
 def test_build_report_includes_replayable_and_live_only_rules():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE", name="SMA trend"),
-        _make_compiled_rule(layer="SETUP", status="APPROXIMATED", name="Zone proximity"),
-        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE", name="Gut feel"),
-        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No FOMO"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE", name="SMA trend"),
+        _make_compiled_rule(layer="SETUP", status="OHLC_APPROXIMATE", name="Zone proximity"),
+        _make_compiled_rule(layer="ENTRY", status="LIVE_ONLY", name="Gut feel"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY", name="No FOMO"),
     ]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
@@ -252,16 +271,15 @@ def test_build_report_includes_replayable_and_live_only_rules():
     assert "Zone proximity" in replayable_names
     assert "Gut feel" in live_only_names
     assert "No FOMO" in live_only_names
-    # Replayable should not contain NOT_TESTABLE or BEHAVIORAL rules
     assert "Gut feel" not in replayable_names
     assert "No FOMO" not in replayable_names
 
 
 def test_live_only_rules_have_reason_field():
     rules = [
-        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE", name="Discretionary"),
-        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No revenge"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE", name="ATR stop"),
+        _make_compiled_rule(layer="ENTRY", status="LIVE_ONLY", name="Discretionary"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY", name="No revenge"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE", name="ATR stop"),
     ]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
@@ -274,37 +292,35 @@ def test_live_only_rules_have_reason_field():
 
 def test_summary_uses_live_enforcement_language():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE"),
-        _make_compiled_rule(layer="ENTRY", status="NOT_TESTABLE"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE"),
+        _make_compiled_rule(layer="ENTRY", status="LIVE_ONLY"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE"),
     ]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)
 
     assert "cannot be tested historically" not in report["summary"]
-    assert "enforced live via the checklist" in report["summary"]
+    assert "enforced live" in report["summary"]
 
 
 def test_suggestions_use_constructive_language():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="NOT_TESTABLE", name="Vague bias"),
-        _make_compiled_rule(layer="RISK", status="TESTABLE", name="ATR stop"),
-        _make_compiled_rule(layer="BEHAVIORAL", status="NOT_TESTABLE", name="No tilt"),
+        _make_compiled_rule(layer="CONTEXT", status="LIVE_ONLY", name="Vague bias"),
+        _make_compiled_rule(layer="RISK", status="OHLC_COMPUTABLE", name="ATR stop"),
+        _make_compiled_rule(layer="BEHAVIORAL", status="LIVE_ONLY", name="No tilt"),
     ]
     plan = _make_compiled_plan(rules, score=50.0)
     report = build_report(plan)
 
     suggestions_text = " ".join(report["refinement_suggestions"])
-    # Should use constructive "live" language
     assert "live" in suggestions_text.lower()
-    # Should not use punitive "non-testable" phrasing
     assert "non-testable" not in suggestions_text.lower()
 
 
 def test_layer_breakdown_includes_live_only_flag():
     rules = [
-        _make_compiled_rule(layer="CONTEXT", status="TESTABLE", name="SMA check"),
-        _make_compiled_rule(layer="CONTEXT", status="NOT_TESTABLE", name="Gut feel"),
+        _make_compiled_rule(layer="CONTEXT", status="OHLC_COMPUTABLE", name="SMA check"),
+        _make_compiled_rule(layer="CONTEXT", status="LIVE_ONLY", name="Gut feel"),
     ]
     plan = _make_compiled_plan(rules)
     report = build_report(plan)

@@ -43,7 +43,7 @@ async def compile_plan(
 ):
     """
     Compile the current trading plan.
-    Each rule is interpreted by the AI provider against the proxy vocabulary.
+    Each rule is classified by the AI provider based on its data-source requirements.
     Returns a ValidationRun with interpretability report and compiled rule details.
     """
     compiled_plan, run = await plan_compiler.compile_plan(db, provider)
@@ -83,7 +83,7 @@ async def confirm_rule(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    User confirms or overrides an AI-proposed rule interpretation.
+    User confirms or overrides an AI-proposed Phase 1 classification.
     After confirmation the interpretability score and coherence warnings are recomputed.
     """
     updated = await plan_compiler.confirm_compiled_rule(
@@ -91,8 +91,7 @@ async def confirm_rule(
         compiled_plan_id,
         rule_id,
         status=body.status,
-        proxy_type=body.proxy_type,
-        proxy_params=body.proxy_params,
+        data_sources_required=body.data_sources_required,
         interpretation_notes=body.interpretation_notes,
     )
     if updated is None:
