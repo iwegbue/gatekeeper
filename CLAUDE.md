@@ -69,6 +69,74 @@ The idea state machine in `app/services/state_machine.py` is the core domain con
 
 ---
 
+## UX & Language Guidelines
+
+Gatekeeper serves traders at all levels — beginner to advanced. The product must be self-evident to a new user on first encounter and must never feel dumbed down to an experienced one. The governing principle is **progressive clarity**: surface the simple path first, reveal depth on demand.
+
+The canonical reference is **`docs/UX_SPEC.md`** — read it before writing any UI-facing code. Key rules are summarised here.
+
+### Audience
+
+- **Never assume** prior knowledge of trading jargon (SL, TP, BE, R-multiple, partials, confluence) or rule-based systems.
+- **Never dumb down** the product — advanced traders need full capability without obstruction.
+- Design for clarity on first encounter; provide depth via tooltips, collapsible sections, and the help page.
+
+### Language rules
+
+- **Use the terminology glossary** in `docs/UX_SPEC.md`. All terms used in the UI must appear there. Do not invent synonyms.
+- **Introduce abbreviations with their full form** on first appearance per page using `<abbr>`:
+  ```html
+  <abbr title="Stop Loss">SL</abbr>
+  <abbr title="Take Profit">TP</abbr>
+  <abbr title="Breakeven">BE</abbr>
+  <abbr title="Risk multiple — how many times your initial risk this trade made or lost">R</abbr>
+  ```
+- **Use state display labels** in the UI — never raw enum values. See the state mapping in `docs/UX_SPEC.md`. Raw enum values (`SETUP_VALID`, `ENTRY_PERMITTED`, etc.) are for the API/CLI only.
+  ```
+  WATCHING          → Watching
+  SETUP_VALID       → Context & Setup Valid
+  CONFIRMED         → Confirmed
+  ENTRY_PERMITTED   → Entry Permitted
+  IN_TRADE          → In Trade
+  MANAGED           → Managed
+  CLOSED            → Closed
+  INVALIDATED       → Invalidated
+  ```
+  Use the `state_label()` macro from `app/templates/_macros/states.html` in all templates.
+
+### Tooltip rules
+
+Every tooltip must answer: **what is this, and why does it matter?**
+
+- **Metrics and scores**: explain what it is AND how it is calculated. Never show a number without explaining the formula.
+- **Action buttons that change state or destroy data**: describe what will happen if clicked. The label alone is not enough.
+- **Field labels**: define the field and give an example.
+- **Rule types**: distinguish from the other types explicitly.
+
+### Action button rules
+
+Every button that causes a state change, data loss, or irreversible action needs a brief inline description underneath it — not just a label. Example:
+
+```
+[Invalidate Idea]
+Marks this idea as abandoned. Keeps a record for review.
+```
+
+### Progressive disclosure
+
+- Surface the simplest path as the primary CTA. Put alternatives below it as secondary links.
+- Hide advanced options (model overrides, custom weights, edge-case settings) behind `<details>` / "Advanced" toggles.
+- Do not hide essential information — only optional complexity.
+
+### Error messages in the UI
+
+Error messages must be specific and actionable. State what went wrong AND what the user should do next.
+
+- Bad: "Cannot advance"
+- Good: "Context layer has 2 unchecked Required rules. Check them to continue."
+
+---
+
 ## Development Workflow
 
 ### Branch and PR — always

@@ -35,9 +35,23 @@
     <h3>Build your trading plan</h3>
     <p class="muted">
         Describe your strategy in plain language — what markets you trade, what setups you look for,
-        how you manage risk. We'll structure it into rules across the 7 layers.
+        how you manage risk. AI will structure it into rules across the 7 layers.
     </p>
     <a href="/plan/builder" role="button" class="plan-hero-cta">Start Plan Builder →</a>
+    <p class="muted" style="font-size: 0.8rem; margin-top: 0.5rem;">Recommended — describe your strategy and AI builds the rules for you.</p>
+</div>
+
+<div class="plan-divider"><span>or load a starter template</span></div>
+
+<div class="plan-template-cards">
+    <a href="/plan/{{ plan.id }}/reset?preselect=trend_following" class="plan-template-card" role="button">
+        <strong>Trend Following</strong>
+        <small class="muted">Rules for trading in the direction of the prevailing trend with momentum confirmation.</small>
+    </a>
+    <a href="/plan/{{ plan.id }}/reset?preselect=mean_reversion" class="plan-template-card" role="button">
+        <strong>Mean Reversion</strong>
+        <small class="muted">Rules for trading pullbacks and reversals back toward a mean or key level.</small>
+    </a>
 </div>
 
 <div class="plan-divider"><span>or build manually</span></div>
@@ -45,15 +59,11 @@
 <div class="plan-manual-layers">
     {% for layer in layers %}
     <div class="plan-layer-row">
-        <span class="plan-layer-name">{{ layer.value }}</span>
+        <span class="plan-layer-name">{{ layer.value | title | replace('_', ' ') }}</span>
         <a href="/plan/{{ plan.id }}/rules/new?layer={{ layer.value }}" class="plan-layer-add-link">+ Add</a>
     </div>
     {% endfor %}
 </div>
-
-<p class="muted" style="font-size: 0.8rem; margin-top: 1.5rem;">
-    Want a head start? <a href="/plan/{{ plan.id }}/reset">Load a starter template →</a>
-</p>
 
 {% else %}
 

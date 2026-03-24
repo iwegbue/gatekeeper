@@ -1,0 +1,26 @@
+{#
+  State display label macro.
+
+  Maps IdeaState enum values to human-readable labels.
+  Use this in all templates instead of rendering raw enum values.
+
+  Usage:
+    {% from "_macros/states.html" import state_label %}
+    {{ state_label(idea.state) }}
+
+  The CSS class helper (state_css) returns the kebab-case class suffix
+  used by badge-state-* CSS classes, unchanged from the existing pattern.
+#}
+
+{% macro state_label(state) %}
+  {%- if state == 'WATCHING' -%}Watching
+  {%- elif state == 'SETUP_VALID' -%}Context &amp; Setup Valid
+  {%- elif state == 'CONFIRMED' -%}Confirmed
+  {%- elif state == 'ENTRY_PERMITTED' -%}Entry Permitted
+  {%- elif state == 'IN_TRADE' -%}In Trade
+  {%- elif state == 'MANAGED' -%}Managed
+  {%- elif state == 'CLOSED' -%}Closed
+  {%- elif state == 'INVALIDATED' -%}Invalidated
+  {%- else -%}{{ state }}
+  {%- endif %}
+{% endmacro %}

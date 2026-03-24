@@ -7,6 +7,7 @@
     {# ── Sidebar TOC ──────────────────────────────────────────────────────── #}
     <nav class="help-toc" id="help-toc">
         <ul>
+            <li><a href="#glossary" class="help-toc-link">Glossary</a></li>
             <li><a href="#overview" class="help-toc-link active">Overview</a></li>
             <li><a href="#workflow" class="help-toc-link">Workflow</a></li>
             <li><a href="#layers" class="help-toc-link">The 7 Layers</a></li>
@@ -32,6 +33,36 @@
             <h2>Help &amp; Guide</h2>
             <p class="muted">Everything you need to know about using Gatekeeper to enforce trading discipline.</p>
         </div>
+
+        {# ── Glossary ─────────────────────────────────────────────────────── #}
+        <section id="glossary" class="help-section">
+            <div class="help-section-header">
+                <i data-lucide="book-marked"></i>
+                <h3>Glossary</h3>
+            </div>
+            <p>Quick reference for terms used throughout Gatekeeper.</p>
+            <table>
+                <tbody>
+                    <tr><td><strong>Idea</strong></td><td>A potential trade you're evaluating. You work through a checklist before deciding whether to enter.</td></tr>
+                    <tr><td><strong>Layer</strong></td><td>One of the 7 categories of rules in your trading plan (Context, Setup, Confirmation, Entry, Risk, Management, Behavioral).</td></tr>
+                    <tr><td><strong>Rule</strong></td><td>A specific condition within a layer. You define the rules; Gatekeeper enforces them.</td></tr>
+                    <tr><td><strong>Required rule</strong></td><td>Must be checked before you can advance to the next layer. Skipping one blocks progression.</td></tr>
+                    <tr><td><strong>Optional rule</strong></td><td>Improves your grade if checked, but won't block you from advancing.</td></tr>
+                    <tr><td><strong>Advisory rule</strong></td><td>A reminder only. No effect on grade or advancement.</td></tr>
+                    <tr><td><strong>Grade</strong></td><td>A, B, or C — reflects setup quality, not profitability. A = 85%+ of checklist points, B = 65–84%, C = below 65%.</td></tr>
+                    <tr><td><strong>Discipline Score</strong></td><td>0–100 score measuring how consistently you follow your rules. Combines plan adherence, grade distribution, and violation rate. Aim for 70+.</td></tr>
+                    <tr><td><strong>Plan adherence</strong></td><td>Percentage of Required rules you checked before acting. 100% = followed every required rule.</td></tr>
+                    <tr><td><strong>Entry window</strong></td><td>An optional expiry time on an idea. Once it passes, the idea is automatically invalidated.</td></tr>
+                    <tr><td><strong><abbr title="Risk multiple">R</abbr>-multiple</strong></td><td>How many times your initial risk a trade made or lost. 2R = made twice your risk. −1R = lost your full risk.</td></tr>
+                    <tr><td><strong><abbr title="Stop Loss">SL</abbr></strong></td><td>Stop Loss — the price at which you exit to cap your loss.</td></tr>
+                    <tr><td><strong><abbr title="Take Profit">TP</abbr></strong></td><td>Take Profit — a target price at which you plan to exit with a gain.</td></tr>
+                    <tr><td><strong><abbr title="Breakeven">BE</abbr></strong></td><td>Breakeven — moving your Stop Loss to your entry price. Worst case becomes a scratch (no loss).</td></tr>
+                    <tr><td><strong>Partials / Partial exits</strong></td><td>Scaling out of part of your position at a target. Locks in some profit while the rest runs.</td></tr>
+                    <tr><td><strong>Plan</strong></td><td>A named set of rules across the 7 layers. Only one plan is active at a time.</td></tr>
+                    <tr><td><strong>Violation</strong></td><td>A Required rule that was not checked before you advanced or opened a trade.</td></tr>
+                </tbody>
+            </table>
+        </section>
 
         {# ── Overview ─────────────────────────────────────────────────────── #}
         <section id="overview" class="help-section">
@@ -71,28 +102,28 @@
                     <span class="help-step-num">1</span>
                     <div>
                         <strong>Spot an opportunity</strong>
-                        <p>Create an <em>idea</em> with the instrument and direction (Long/Short). It starts in the <span class="badge state-watching">WATCHING</span> state.</p>
+                        <p>Create an <em>idea</em> with the instrument and direction (Long/Short). It starts in the <span class="badge state-watching">Watching</span> state.</p>
                     </div>
                 </li>
                 <li>
                     <span class="help-step-num">2</span>
                     <div>
                         <strong>Work through the checklist</strong>
-                        <p>Check off rules across the 7 layers. Your idea advances state only when the required rules for each gate are met.</p>
+                        <p>Check off rules across the 7 layers. Your idea advances state only when the Required rules for each gate are met.</p>
                     </div>
                 </li>
                 <li>
                     <span class="help-step-num">3</span>
                     <div>
                         <strong>Entry permitted</strong>
-                        <p>Once your idea reaches <span class="badge state-entry-permitted">ENTRY_PERMITTED</span>, open a trade with entry price, stop loss, and targets.</p>
+                        <p>Once your idea reaches <span class="badge state-entry-permitted">Entry Permitted</span>, open a trade with entry price, stop loss, and targets.</p>
                     </div>
                 </li>
                 <li>
                     <span class="help-step-num">4</span>
                     <div>
                         <strong>Manage &amp; close</strong>
-                        <p>Track partials, move stops, and close the trade. Complete the Management layer to advance to <span class="badge state-managed">MANAGED</span>.</p>
+                        <p>Track partials, move stops, and close the trade. Complete the Management layer to advance to <span class="badge state-managed">Managed</span>.</p>
                     </div>
                 </li>
                 <li>
@@ -175,25 +206,25 @@
             <p>Every idea progresses through a state machine. Forward advancement is gated by layer completion; backward regression is allowed before entering a trade.</p>
 
             <div class="help-state-flow">
-                <div class="help-state-node"><span class="badge state-watching">WATCHING</span><small>Context layer</small></div>
+                <div class="help-state-node"><span class="badge state-watching">Watching</span><small>Context layer</small></div>
                 <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
-                <div class="help-state-node"><span class="badge state-setup-valid">SETUP_VALID</span><small>Setup layer</small></div>
+                <div class="help-state-node"><span class="badge state-setup-valid">Context &amp; Setup Valid</span><small>Setup layer</small></div>
                 <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
-                <div class="help-state-node"><span class="badge state-confirmed">CONFIRMED</span><small>Confirm + Entry + Risk</small></div>
+                <div class="help-state-node"><span class="badge state-confirmed">Confirmed</span><small>Confirm + Entry + Risk</small></div>
                 <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
-                <div class="help-state-node"><span class="badge state-entry-permitted">ENTRY_PERMITTED</span><small>Open trade</small></div>
+                <div class="help-state-node"><span class="badge state-entry-permitted">Entry Permitted</span><small>Open trade</small></div>
                 <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
-                <div class="help-state-node"><span class="badge state-in-trade">IN_TRADE</span><small>Management layer</small></div>
+                <div class="help-state-node"><span class="badge state-in-trade">In Trade</span><small>Management layer</small></div>
                 <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
-                <div class="help-state-node"><span class="badge state-managed">MANAGED</span><small>Close trade</small></div>
+                <div class="help-state-node"><span class="badge state-managed">Managed</span><small>Close trade</small></div>
                 <div class="help-state-arrow"><i data-lucide="arrow-right"></i></div>
-                <div class="help-state-node"><span class="badge state-closed">CLOSED</span></div>
+                <div class="help-state-node"><span class="badge state-closed">Closed</span></div>
             </div>
 
             <div class="help-info-box">
                 <i data-lucide="alert-circle"></i>
                 <div>
-                    <strong>Invalidation</strong> — Any idea in a non-terminal state can be moved to <span class="badge state-invalidated">INVALIDATED</span> at any time. Use this when the setup is no longer valid.
+                    <strong>Invalidation</strong> — Any idea in a non-terminal state can be marked <span class="badge state-invalidated">Invalidated</span> at any time. Use this when the setup is no longer valid. The idea stays in your history as a record.
                 </div>
             </div>
 
@@ -202,14 +233,15 @@
                 <table>
                     <thead><tr><th>From</th><th>To</th><th>Required layers</th></tr></thead>
                     <tbody>
-                        <tr><td><span class="badge state-watching">WATCHING</span></td><td><span class="badge state-setup-valid">SETUP_VALID</span></td><td>Context</td></tr>
-                        <tr><td><span class="badge state-setup-valid">SETUP_VALID</span></td><td><span class="badge state-confirmed">CONFIRMED</span></td><td>Setup</td></tr>
-                        <tr><td><span class="badge state-confirmed">CONFIRMED</span></td><td><span class="badge state-entry-permitted">ENTRY_PERMITTED</span></td><td>Confirmation, Entry, Risk</td></tr>
-                        <tr><td><span class="badge state-entry-permitted">ENTRY_PERMITTED</span></td><td><span class="badge state-in-trade">IN_TRADE</span></td><td>—  (open a trade)</td></tr>
-                        <tr><td><span class="badge state-in-trade">IN_TRADE</span></td><td><span class="badge state-managed">MANAGED</span></td><td>Management</td></tr>
-                        <tr><td><span class="badge state-managed">MANAGED</span></td><td><span class="badge state-closed">CLOSED</span></td><td>—  (close the trade)</td></tr>
+                        <tr><td><span class="badge state-watching">Watching</span></td><td><span class="badge state-setup-valid">Context &amp; Setup Valid</span></td><td>Context</td></tr>
+                        <tr><td><span class="badge state-setup-valid">Context &amp; Setup Valid</span></td><td><span class="badge state-confirmed">Confirmed</span></td><td>Setup</td></tr>
+                        <tr><td><span class="badge state-confirmed">Confirmed</span></td><td><span class="badge state-entry-permitted">Entry Permitted</span></td><td>Confirmation, Entry, Risk</td></tr>
+                        <tr><td><span class="badge state-entry-permitted">Entry Permitted</span></td><td><span class="badge state-in-trade">In Trade</span></td><td>— (open a trade)</td></tr>
+                        <tr><td><span class="badge state-in-trade">In Trade</span></td><td><span class="badge state-managed">Managed</span></td><td>Management</td></tr>
+                        <tr><td><span class="badge state-managed">Managed</span></td><td><span class="badge state-closed">Closed</span></td><td>— (close the trade)</td></tr>
                     </tbody>
                 </table>
+                <p class="muted" style="font-size:0.8rem; margin-top:0.5rem;">API/CLI users: enum values are <code>WATCHING</code>, <code>SETUP_VALID</code>, <code>CONFIRMED</code>, <code>ENTRY_PERMITTED</code>, <code>IN_TRADE</code>, <code>MANAGED</code>, <code>CLOSED</code>, <code>INVALIDATED</code>.</p>
             </details>
         </section>
 
@@ -304,30 +336,38 @@
                 <h3>Grading</h3>
             </div>
             <p>Every idea receives a <strong>setup grade</strong> based on how many rules (Required + Optional) were checked. The grade reflects the quality of your setup — not whether the trade won or lost.</p>
+            <table style="margin-bottom: 1rem;">
+                <thead><tr><th>Grade</th><th>Threshold</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="badge grade-a">A</span></td><td>85%+ of possible points</td><td>High-quality setup. Most or all rules checked. Your ideal trade.</td></tr>
+                    <tr><td><span class="badge grade-b">B</span></td><td>65–84%</td><td>Good setup. Some optional rules missed. Acceptable but not textbook.</td></tr>
+                    <tr><td><span class="badge grade-c">C</span></td><td>Below 65%</td><td>Low-quality setup. Many rules unchecked. Discipline may have slipped.</td></tr>
+                </tbody>
+            </table>
             <div class="help-grades">
                 <div class="help-grade">
                     <span class="badge grade-a">A</span>
                     <div>
                         <strong>A-grade</strong>
-                        <p>High compliance — most or all rules checked. This is your ideal trade.</p>
+                        <p>85%+ of checklist points. Most or all rules checked. This is your ideal trade.</p>
                     </div>
                 </div>
                 <div class="help-grade">
                     <span class="badge grade-b">B</span>
                     <div>
                         <strong>B-grade</strong>
-                        <p>Moderate compliance — some optional rules missed. Acceptable but not textbook.</p>
+                        <p>65–84%. Some optional rules missed. Acceptable but not textbook.</p>
                     </div>
                 </div>
                 <div class="help-grade">
                     <span class="badge grade-c">C</span>
                     <div>
                         <strong>C-grade</strong>
-                        <p>Low compliance — many rules unchecked. A warning sign that discipline slipped.</p>
+                        <p>Below 65%. Many rules unchecked. A warning sign that discipline slipped.</p>
                     </div>
                 </div>
             </div>
-            <p class="muted" style="font-size:0.85rem;">Over time, your Reports page shows grade distribution and R-multiples by grade — helping you see whether A-grade setups actually outperform.</p>
+            <p class="muted" style="font-size:0.85rem;">Grade reflects compliance with your rules — not whether the trade was profitable. An A-grade loser is a good trade that didn't work out. A C-grade winner is a discipline problem.<br>Over time, your Reports page shows grade distribution and R-multiples by grade — helping you see whether A-grade setups actually outperform.</p>
         </section>
 
         {# ── Journal ──────────────────────────────────────────────────────── #}
@@ -354,9 +394,9 @@
             </div>
             <p>The Reports page gives you a data-driven view of your trading discipline:</p>
             <div class="help-metrics-grid">
-                <div class="help-metric">
+                <div class="help-metric" id="discipline-score">
                     <strong>Discipline Score</strong>
-                    <p>A 0–100 score measuring how consistently you follow your plan — based on rule compliance, grade distribution, and win rate.</p>
+                    <p>A 0–100 score measuring how consistently you follow your rules. Combines plan adherence (% of Required rules checked), grade distribution (how often you reach A and B setups), and rule violation rate. Aim for 70+. Higher means more disciplined.</p>
                 </div>
                 <div class="help-metric">
                     <strong>Win Rate</strong>
@@ -366,9 +406,9 @@
                     <strong>Average R</strong>
                     <p>Your average risk-reward multiple across all closed trades. 1R = you made back what you risked.</p>
                 </div>
-                <div class="help-metric">
+                <div class="help-metric" id="plan-adherence">
                     <strong>Plan Adherence</strong>
-                    <p>Percentage of Required rules checked across all trades. High adherence = trading your plan consistently.</p>
+                    <p>Percentage of Required rules checked before acting, averaged across all trades. 100% = you followed every required rule on every trade. Aim for 100%.</p>
                 </div>
                 <div class="help-metric">
                     <strong>Consistency Trend</strong>
