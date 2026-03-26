@@ -63,12 +63,14 @@ async def plan_create(
     db: AsyncSession = Depends(get_db),
     _csrf: None = Depends(require_csrf),
 ):
+    effective_template_id = template_id if (template_id and template_id != "scratch") else None
     plan = await plan_service.create_plan(
-        db, name=name, description=description or None, activate=activate
+        db, name=name, description=description or None,
+        template_id=effective_template_id, activate=activate,
     )
 
-    if template_id and template_id != "scratch":
-        tmpl = get_template(template_id)
+    if effective_template_id:
+        tmpl = get_template(effective_template_id)
         if tmpl:
             for rule in tmpl["rules"]:
                 await plan_service.create_rule(
@@ -327,11 +329,17 @@ async def plan_reset(
 
     await plan_service.clear_rules(db, plan.id)
 
-    if plan_name:
-        await plan_service.update_plan(db, plan_id=plan.id, name=plan_name, description=plan_description or None)
+    effective_template_id = template_id if (template_id and template_id != "scratch") else None
+    await plan_service.update_plan(
+        db,
+        plan_id=plan.id,
+        name=plan_name or None,
+        description=plan_description or None,
+        template_id=effective_template_id,
+    )
 
-    if template_id and template_id != "scratch":
-        tmpl = get_template(template_id)
+    if effective_template_id:
+        tmpl = get_template(effective_template_id)
         if tmpl:
             for rule in tmpl["rules"]:
                 await plan_service.create_rule(

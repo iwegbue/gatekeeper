@@ -47,13 +47,14 @@ async def create_plan(
     *,
     name: str,
     description: str | None = None,
+    template_id: str | None = None,
     activate: bool = False,
 ) -> TradingPlan:
     """Create a new trading plan. If activate=True, deactivate all others first."""
     if activate:
         await _deactivate_all(db)
 
-    plan = TradingPlan(name=name, description=description, is_active=activate)
+    plan = TradingPlan(name=name, description=description, template_id=template_id, is_active=activate)
     db.add(plan)
     await db.flush()
     return plan
@@ -65,6 +66,7 @@ async def update_plan(
     plan_id: uuid.UUID | None = None,
     name: str | None = None,
     description: str | None = None,
+    template_id: str | None = None,
 ) -> TradingPlan | None:
     """Update plan metadata. If plan_id is None, updates the active plan.
     Returns None if a specific plan_id was given but not found."""
@@ -78,6 +80,8 @@ async def update_plan(
         plan.name = name
     if description is not None:
         plan.description = description
+    if template_id is not None:
+        plan.template_id = template_id
     await db.flush()
     return plan
 

@@ -162,14 +162,16 @@ async def setup_plan_submit(
     _csrf: None = Depends(require_csrf),
     db: AsyncSession = Depends(get_db),
 ):
+    effective_template_id = template_id if template_id != "scratch" else None
     plan = await plan_service.update_plan(
         db,
         name=plan_name or "My Trading Plan",
         description=plan_description or None,
+        template_id=effective_template_id,
     )
 
-    if template_id != "scratch":
-        tmpl = get_template(template_id)
+    if effective_template_id:
+        tmpl = get_template(effective_template_id)
         if tmpl:
             for rule in tmpl["rules"]:
                 await plan_service.create_rule(
@@ -181,7 +183,7 @@ async def setup_plan_submit(
                     rule_type=rule["rule_type"],
                     weight=rule["weight"],
                 )
-            logger.info("Applied plan template '%s' during setup", template_id)
+            logger.info("Applied plan template '%s' during setup", effective_template_id)
 
     return RedirectResponse(url="/setup/instruments", status_code=303)
 
