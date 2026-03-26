@@ -5,6 +5,7 @@ Supports multiple plans with exactly one active at a time.
 """
 
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -166,7 +167,26 @@ async def _deactivate_all(db: AsyncSession) -> None:
     await db.flush()
 
 
-# ── Rules ────────────────────────────────────────────────────────────────
+# ── Rule mutation helpers ─────────────────────────────────────────────────────
+
+
+async def _mark_rules_modified(db: AsyncSession, plan_id: uuid.UUID) -> None:
+    """Stamp rules_modified_at on the plan to indicate manual rule edits."""
+    plan = await get_plan_by_id(db, plan_id)
+    if plan is not None:
+        plan.rules_modified_at = datetime.now(timezone.utc)
+        await db.flush()
+
+
+async def _clear_rules_modified(db: AsyncSession, plan_id: uuid.UUID) -> None:
+    """Clear rules_modified_at — called on full reset so seed EAs remain eligible."""
+    plan = await get_plan_by_id(db, plan_id)
+    if plan is not None:
+        plan.rules_modified_at = None
+        await db.flush()
+
+
+# ── Rules ─────────────────────────────────────────────────────────────────
 
 
 async def get_rules(
@@ -215,6 +235,7 @@ async def create_rule(
     rule_type: str = "REQUIRED",
     weight: int = 1,
     parameters: dict | None = None,
+    _track_modification: bool = True,
 ) -> PlanRule:
     result = await db.execute(
         select(func.coalesce(func.max(PlanRule.order), 0)).where(PlanRule.plan_id == plan_id, PlanRule.layer == layer)
@@ -233,6 +254,8 @@ async def create_rule(
     )
     db.add(rule)
     await db.flush()
+    if _track_modification:
+        await _mark_rules_modified(db, plan_id)
     return rule
 
 
@@ -249,6 +272,7 @@ async def update_rule(
         if hasattr(rule, key) and key not in protected:
             setattr(rule, key, value)
     await db.flush()
+    await _mark_rules_modified(db, rule.plan_id)
     return rule
 
 
@@ -256,18 +280,25 @@ async def delete_rule(db: AsyncSession, rule_id: uuid.UUID) -> bool:
     rule = await get_rule(db, rule_id)
     if rule is None:
         return False
+    plan_id = rule.plan_id
     await db.delete(rule)
     await db.flush()
+    await _mark_rules_modified(db, plan_id)
     return True
 
 
 async def clear_rules(db: AsyncSession, plan_id: uuid.UUID) -> int:
-    """Delete all rules for a plan. Returns the count of deleted rules."""
+    """Delete all rules for a plan. Returns the count of deleted rules.
+
+    Clears rules_modified_at so the plan is treated as freshly created —
+    a subsequent template load will be eligible for seed EA backtest generation.
+    """
     result = await db.execute(select(PlanRule).where(PlanRule.plan_id == plan_id))
     rules = list(result.scalars().all())
     for rule in rules:
         await db.delete(rule)
     await db.flush()
+    await _clear_rules_modified(db, plan_id)
     return len(rules)
 
 

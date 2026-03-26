@@ -182,6 +182,7 @@ async def setup_plan_submit(
                     description=rule["description"],
                     rule_type=rule["rule_type"],
                     weight=rule["weight"],
+                    _track_modification=False,
                 )
             logger.info("Applied plan template '%s' during setup", effective_template_id)
 

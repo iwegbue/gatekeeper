@@ -81,6 +81,7 @@ async def plan_create(
                     description=rule.get("description"),
                     rule_type=rule["rule_type"],
                     weight=rule["weight"],
+                    _track_modification=False,
                 )
 
     return RedirectResponse(url=f"/plan/{plan.id}?msg=Plan+created", status_code=303)
@@ -350,6 +351,7 @@ async def plan_reset(
                     description=rule.get("description"),
                     rule_type=rule["rule_type"],
                     weight=rule["weight"],
+                    _track_modification=False,
                 )
 
     return RedirectResponse(url=f"/plan/{plan_id}?msg=Plan+reset+successfully", status_code=303)
