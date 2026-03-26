@@ -28,11 +28,28 @@ async def plan_list(request: Request, db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/templates")
+async def plan_templates_gallery(
+    request: Request,
+    mode: str = "new",
+    plan_id: str = "",
+):
+    return request.app.state.templates.TemplateResponse(
+        "plan/templates.html",
+        {
+            "request": request,
+            "templates": list_templates(),
+            "mode": mode,
+            "plan_id": plan_id,
+        },
+    )
+
+
 @router.get("/new")
 async def plan_new(request: Request):
     return request.app.state.templates.TemplateResponse(
         "plan/new.html",
-        {"request": request, "templates": list_templates()},
+        {"request": request},
     )
 
 
@@ -126,6 +143,7 @@ async def plan_detail(request: Request, plan_id: uuid.UUID, db: AsyncSession = D
             "total_rules": total_rules,
             "layers": PlanLayer,
             "rule_types": RuleType,
+            "plan_id_str": str(plan.id),
         },
     )
 

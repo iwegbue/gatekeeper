@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Choose a Strategy Template - Gatekeeper{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Choose a Strategy Template</h2>
+        <p class="muted" style="margin: 0;">Each template gives you a ready-made set of rules across all 7 layers. You can edit, add, or remove rules after loading.</p>
+    </div>
+    {% if mode == 'reset' and plan_id %}
+    <a href="/plan/{{ plan_id }}/reset" role="button" class="small secondary">Cancel</a>
+    {% elif mode == 'setup' %}
+    <a href="/setup/plan" role="button" class="small secondary">Back</a>
+    {% else %}
+    <a href="/plan/new" role="button" class="small secondary">Back</a>
+    {% endif %}
+</div>
+
+<div class="template-gallery">
+    {% for tmpl in templates %}
+
+    {# Build the correct form action for this mode #}
+    {% if mode == 'reset' and plan_id %}
+    <form method="post" action="/plan/{{ plan_id }}/reset" class="template-gallery-card-form">
+        <input type="hidden" name="template_id" value="{{ tmpl.id }}">
+        <input type="hidden" name="plan_name" value="{{ tmpl.name }}">
+        <input type="hidden" name="plan_description" value="{{ tmpl.description }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% elif mode == 'setup' %}
+    <form method="post" action="/setup/plan" class="template-gallery-card-form">
+        <input type="hidden" name="template_id" value="{{ tmpl.id }}">
+        <input type="hidden" name="plan_name" value="{{ tmpl.name }}">
+        <input type="hidden" name="plan_description" value="{{ tmpl.description }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% else %}
+    <form method="post" action="/plan/new" class="template-gallery-card-form">
+        <input type="hidden" name="template_id" value="{{ tmpl.id }}">
+        <input type="hidden" name="name" value="{{ tmpl.name }}">
+        <input type="hidden" name="description" value="{{ tmpl.description }}">
+        <input type="hidden" name="activate" value="true">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% endif %}
+        <button type="submit" class="template-gallery-card">
+            <div class="template-gallery-card-header">
+                <span class="template-gallery-card-icon">
+                    <i data-lucide="{{ tmpl.icon }}"></i>
+                </span>
+                <div class="template-gallery-card-meta">
+                    <strong class="template-gallery-card-name">{{ tmpl.name }}</strong>
+                    <span class="template-rule-count">{{ tmpl.rules | length }} rules</span>
+                </div>
+            </div>
+            <p class="template-gallery-card-desc">{{ tmpl.description }}</p>
+        </button>
+    </form>
+
+    {% endfor %}
+</div>
+
+{% endblock %}

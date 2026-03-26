@@ -157,25 +157,24 @@ async def test_ai_skip_goes_to_plan(wizard_client):
 
 
 @pytest.mark.asyncio
-async def test_plan_page_renders_templates(wizard_client):
+async def test_plan_page_renders(wizard_client):
     resp = await wizard_client.get("/setup/plan")
     assert resp.status_code == 200
-    assert b"Trend Following" in resp.content
-    assert b"Mean Reversion" in resp.content
+    assert b"Start from a template" in resp.content
     assert b"Start from scratch" in resp.content
 
 
 @pytest.mark.asyncio
-async def test_plan_submit_with_trend_following_creates_rules(wizard_client, db):
-    tmpl = get_template("trend_following")
+async def test_plan_submit_with_trend_pullback_creates_rules(wizard_client, db):
+    tmpl = get_template("trend_pullback")
     expected_rule_count = len(tmpl["rules"])
 
     resp = await wizard_client.post(
         "/setup/plan",
         data={
-            "template_id": "trend_following",
-            "plan_name": "Trend Following Plan",
-            "plan_description": "My trend following rules",
+            "template_id": "trend_pullback",
+            "plan_name": "Trend Pullback Plan",
+            "plan_description": "My trend pullback rules",
             "csrf_token": generate_csrf_token(),
         },
         follow_redirects=False,
@@ -189,15 +188,81 @@ async def test_plan_submit_with_trend_following_creates_rules(wizard_client, db)
 
 
 @pytest.mark.asyncio
-async def test_plan_submit_with_mean_reversion_creates_rules(wizard_client, db):
-    tmpl = get_template("mean_reversion")
+async def test_plan_submit_with_range_reversal_creates_rules(wizard_client, db):
+    tmpl = get_template("range_reversal")
     expected_rule_count = len(tmpl["rules"])
 
     resp = await wizard_client.post(
         "/setup/plan",
         data={
-            "template_id": "mean_reversion",
-            "plan_name": "Mean Reversion Plan",
+            "template_id": "range_reversal",
+            "plan_name": "Range Reversal Plan",
+            "plan_description": "",
+            "csrf_token": generate_csrf_token(),
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+
+    result = await db.execute(select(PlanRule))
+    rules = result.scalars().all()
+    assert len(rules) == expected_rule_count
+
+
+@pytest.mark.asyncio
+async def test_plan_submit_with_break_retest_creates_rules(wizard_client, db):
+    tmpl = get_template("break_retest")
+    expected_rule_count = len(tmpl["rules"])
+
+    resp = await wizard_client.post(
+        "/setup/plan",
+        data={
+            "template_id": "break_retest",
+            "plan_name": "Break & Retest Plan",
+            "plan_description": "",
+            "csrf_token": generate_csrf_token(),
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+
+    result = await db.execute(select(PlanRule))
+    rules = result.scalars().all()
+    assert len(rules) == expected_rule_count
+
+
+@pytest.mark.asyncio
+async def test_plan_submit_with_failed_breakout_creates_rules(wizard_client, db):
+    tmpl = get_template("failed_breakout")
+    expected_rule_count = len(tmpl["rules"])
+
+    resp = await wizard_client.post(
+        "/setup/plan",
+        data={
+            "template_id": "failed_breakout",
+            "plan_name": "Failed Breakout Plan",
+            "plan_description": "",
+            "csrf_token": generate_csrf_token(),
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+
+    result = await db.execute(select(PlanRule))
+    rules = result.scalars().all()
+    assert len(rules) == expected_rule_count
+
+
+@pytest.mark.asyncio
+async def test_plan_submit_with_inside_bar_breakout_creates_rules(wizard_client, db):
+    tmpl = get_template("inside_bar_breakout")
+    expected_rule_count = len(tmpl["rules"])
+
+    resp = await wizard_client.post(
+        "/setup/plan",
+        data={
+            "template_id": "inside_bar_breakout",
+            "plan_name": "Inside Bar Breakout Plan",
             "plan_description": "",
             "csrf_token": generate_csrf_token(),
         },

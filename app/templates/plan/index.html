@@ -43,14 +43,10 @@
 
 <div class="plan-divider"><span>or load a starter template</span></div>
 
-<div class="plan-template-cards">
-    <a href="/plan/{{ plan.id }}/reset?preselect=trend_following" class="plan-template-card" role="button">
-        <strong>Trend Following</strong>
-        <small class="muted">Rules for trading in the direction of the prevailing trend with momentum confirmation.</small>
-    </a>
-    <a href="/plan/{{ plan.id }}/reset?preselect=mean_reversion" class="plan-template-card" role="button">
-        <strong>Mean Reversion</strong>
-        <small class="muted">Rules for trading pullbacks and reversals back toward a mean or key level.</small>
+<div style="text-align: center; padding: 0.5rem 0 1rem;">
+    <a href="/plan/templates?mode=reset&plan_id={{ plan.id }}" role="button" class="secondary">
+        <i data-lucide="layout-template"></i>
+        Browse 5 strategy templates →
     </a>
 </div>
 

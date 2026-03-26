@@ -8,119 +8,38 @@
 
 <div class="help-info-box" style="margin-bottom: 1.5rem;">
     <strong>This will permanently delete all {{ total_rules }} rule{{ 's' if total_rules != 1 else '' }} from "{{ plan.name }}".</strong>
-    You can optionally load a starter template or start from scratch and add rules manually.
+    Choose a starter template to replace them, or start fresh.
 </div>
 
-<form method="post" action="/plan/{{ plan.id }}/reset">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="hidden" name="template_id" id="template_id" value="scratch">
+<div class="plan-start-options">
 
-    <div class="template-cards" role="radiogroup" aria-label="Plan template">
-
-        {% for tmpl in templates %}
-        <div class="template-card" data-template-id="{{ tmpl.id }}" role="radio" aria-checked="false" tabindex="0"
-             onclick="selectTemplate('{{ tmpl.id }}')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){selectTemplate('{{ tmpl.id }}');event.preventDefault();}">
-            <div class="template-card-header">
-                <div class="template-card-title">
-                    <span class="template-card-icon">
-                        {% if tmpl.id == 'trend_following' %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                        {% else %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        {% endif %}
-                    </span>
-                    <strong>{{ tmpl.name }}</strong>
-                </div>
-                <span class="template-rule-count">{{ tmpl.rules | length }} rules</span>
-            </div>
-            <p class="template-card-desc">{{ tmpl.description }}</p>
-
-            <details class="template-preview" onclick="event.stopPropagation()">
-                <summary>Preview rules</summary>
-                <div class="template-preview-rules">
-                    {% set ns = namespace(last_layer='') %}
-                    {% for rule in tmpl.rules %}
-                    {% if rule.layer != ns.last_layer %}
-                    {% if ns.last_layer != '' %}</ul>{% endif %}
-                    <p class="template-layer-label">{{ rule.layer | title }}</p>
-                    <ul>
-                    {% set ns.last_layer = rule.layer %}
-                    {% endif %}
-                    <li>
-                        <span class="template-rule-type-dot template-rule-type-dot--{{ rule.rule_type | lower }}"></span>
-                        {{ rule.name }}
-                    </li>
-                    {% endfor %}
-                    </ul>
-                    <p class="template-preview-legend">
-                        <span class="template-rule-type-dot template-rule-type-dot--required"></span> Required &nbsp;
-                        <span class="template-rule-type-dot template-rule-type-dot--optional"></span> Optional &nbsp;
-                        <span class="template-rule-type-dot template-rule-type-dot--advisory"></span> Advisory
-                    </p>
-                </div>
-            </details>
+    <a href="/plan/templates?mode=reset&plan_id={{ plan.id }}" class="plan-start-option" role="button">
+        <span class="plan-start-option-icon"><i data-lucide="layout-template"></i></span>
+        <div>
+            <strong>Load a starter template</strong>
+            <p class="muted">Browse 5 strategy templates and replace the current rules.</p>
         </div>
-        {% endfor %}
+        <span class="plan-start-option-arrow"><i data-lucide="chevron-right"></i></span>
+    </a>
 
-        <div class="template-card" data-template-id="scratch" role="radio" aria-checked="true" tabindex="0"
-             onclick="selectTemplate('scratch')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){selectTemplate('scratch');event.preventDefault();}">
-            <div class="template-card-header">
-                <div class="template-card-title">
-                    <span class="template-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    </span>
-                    <strong>Start from scratch</strong>
-                </div>
-                <span class="template-rule-count">0 rules</span>
-            </div>
-            <p class="template-card-desc">Clear all rules and add your own manually, or use the Plan Builder.</p>
+    <div class="plan-start-divider"><span>or</span></div>
+
+    <div class="plan-start-option plan-start-option--form">
+        <span class="plan-start-option-icon"><i data-lucide="trash-2"></i></span>
+        <div style="flex: 1;">
+            <strong>Start from scratch</strong>
+            <p class="muted">Clear all rules and add your own manually, or use the Plan Builder.</p>
+            <form method="post" action="/plan/{{ plan.id }}/reset" style="margin-top: 0.75rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="template_id" value="scratch">
+                <label for="plan_name">Plan name</label>
+                <input type="text" id="plan_name" name="plan_name" value="{{ plan.name }}" placeholder="My Trading Plan" required>
+                <label for="plan_description">Description <span class="muted">(optional)</span></label>
+                <textarea id="plan_description" name="plan_description" rows="2" placeholder="A short description of your strategy or edge.">{{ plan.description or '' }}</textarea>
+                <button type="submit" class="small danger">Reset Plan</button>
+            </form>
         </div>
-
     </div>
 
-    <div style="margin-top: 1.5rem;">
-        <label for="plan_name">Plan name</label>
-        <input type="text" id="plan_name" name="plan_name"
-               value="{{ plan.name }}" placeholder="My Trading Plan" required>
-        <label for="plan_description">Description <span class="muted">(optional)</span></label>
-        <textarea id="plan_description" name="plan_description" rows="2"
-                  placeholder="A short description of your strategy or edge.">{{ plan.description or '' }}</textarea>
-    </div>
-
-    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-        <a href="/plan/{{ plan.id }}" role="button" class="secondary outline">Cancel</a>
-        <button type="submit" class="danger">Reset Plan</button>
-    </div>
-</form>
-{% endblock %}
-
-{% block scripts %}
-<script>
-const TEMPLATE_DATA = {
-    {% for tmpl in templates %}
-    "{{ tmpl.id }}": { name: {{ tmpl.name | tojson }}, description: {{ tmpl.description | tojson }} },
-    {% endfor %}
-    "scratch": { name: {{ plan.name | tojson }}, description: {{ (plan.description or '') | tojson }} }
-};
-
-function selectTemplate(id) {
-    document.getElementById('template_id').value = id;
-
-    document.querySelectorAll('.template-card').forEach(card => {
-        const isSelected = card.dataset.templateId === id;
-        card.classList.toggle('template-card--selected', isSelected);
-        card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
-    });
-
-    const data = TEMPLATE_DATA[id];
-    if (data && id !== 'scratch') {
-        document.getElementById('plan_name').value = data.name;
-        document.getElementById('plan_description').value = data.description;
-    }
-}
-
-selectTemplate({{ (preselect or 'scratch') | tojson }});
-</script>
+</div>
 {% endblock %}

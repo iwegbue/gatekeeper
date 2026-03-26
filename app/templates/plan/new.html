@@ -4,28 +4,36 @@
 <a href="/plan" class="back-link">&larr; All Plans</a>
 <h2>New Trading Plan</h2>
 
-<form method="post" action="/plan/new">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="plan-start-options">
 
-    <label for="name">Plan Name</label>
-    <input type="text" id="name" name="name" required placeholder="e.g., Trend Following Strategy">
+    <a href="/plan/templates?mode=new" class="plan-start-option" role="button">
+        <span class="plan-start-option-icon"><i data-lucide="layout-template"></i></span>
+        <div>
+            <strong>Start from a template</strong>
+            <p class="muted">Browse 5 ready-made strategy templates with rules across all 7 layers.</p>
+        </div>
+        <span class="plan-start-option-arrow"><i data-lucide="chevron-right"></i></span>
+    </a>
 
-    <label for="description">Description <span class="muted">(optional)</span></label>
-    <textarea id="description" name="description" rows="3" placeholder="A short description of this strategy or edge."></textarea>
+    <div class="plan-start-divider"><span>or</span></div>
 
-    <label for="template_id">Start from template <span class="muted">(optional)</span></label>
-    <select id="template_id" name="template_id">
-        <option value="scratch">Start from scratch</option>
-        {% for tmpl in templates %}
-        <option value="{{ tmpl.id }}">{{ tmpl.name }} ({{ tmpl.rules | length }} rules)</option>
-        {% endfor %}
-    </select>
+    <div class="plan-start-option plan-start-option--form">
+        <span class="plan-start-option-icon"><i data-lucide="pencil-line"></i></span>
+        <div style="flex: 1;">
+            <strong>Start from scratch</strong>
+            <p class="muted">Create an empty plan and add your own rules, or use the Plan Builder after setup.</p>
+            <form method="post" action="/plan/new" style="margin-top: 0.75rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="template_id" value="scratch">
+                <input type="hidden" name="activate" value="true">
+                <label for="name">Plan name</label>
+                <input type="text" id="name" name="name" required placeholder="e.g., My Custom Strategy">
+                <label for="description">Description <span class="muted">(optional)</span></label>
+                <textarea id="description" name="description" rows="2" placeholder="A short description of this strategy or edge."></textarea>
+                <button type="submit" class="small">Create Empty Plan</button>
+            </form>
+        </div>
+    </div>
 
-    <label>
-        <input type="checkbox" name="activate" value="true">
-        Activate this plan immediately
-    </label>
-
-    <button type="submit">Create Plan</button>
-</form>
+</div>
 {% endblock %}

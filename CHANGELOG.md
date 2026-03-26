@@ -7,6 +7,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **5 strategy templates with gallery UX** — expanded from 2 to 5 curated starter templates; all rules are binary-checkable, price-action-only (no indicator dependency), and cover all 7 layers
+  - **Trend Pullback** (14 rules) — trade in the direction of the higher-timeframe trend after price pulls back into a value zone and shows rejection
+  - **Break & Retest** (13 rules) — trade continuation after a key level is broken and retested from the other side
+  - **Range Reversal** (14 rules) — trade reversals at the extremes of a defined range, targeting the midpoint or opposite boundary
+  - **Failed Breakout** (13 rules) — trade the reversal after a false breakout sweeps liquidity and snaps back inside the level
+  - **Inside Bar Breakout** (13 rules) — trade volatility expansion when price breaks out of a candle fully contained within the prior candle
+- **Template gallery page** (`/plan/templates`) — dedicated page listing all templates with beginner-friendly descriptions; replaces inline card selection
+  - Each card shows a Lucide icon, name, rule count, and a plain-language description (no rule preview clutter)
+  - Accepts `mode` query param (`new`, `reset`, `setup`) to POST to the correct handler
+- **Simplified plan creation UX** — New Plan, Reset Plan, and Setup Wizard pages now present two clear choices: "Start from a template" (links to gallery) or "Start from scratch" (inline form); removes the inline template cards from these pages
+- **`icon` field on `PlanTemplate`** — each template now carries a Lucide icon name used in template cards
+
+### Changed
+
+- `app/services/plan_templates.py` — replaced `trend_following` and `mean_reversion` templates with the 5 new templates above; added `icon: str` to `PlanTemplate` TypedDict
+- `app/templates/plan/index.html` — plan detail empty state now links to the template gallery rather than listing 2 hardcoded templates inline
+
 - **README overhaul** — rewritten for traders, not developers
   - Honest prerequisites section: Docker Desktop (~700MB), Git, and a terminal — with links and plain-language descriptions
   - ZIP download alternative to `git clone` for users without Git

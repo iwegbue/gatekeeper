@@ -5,123 +5,43 @@
 {% from "setup/_macros.html" import tip %}
 <hgroup>
     <h3>Your Trading Plan</h3>
-    <p>Choose a starter template to get a ready-made set of {{ tip("rules", "Each rule is a specific criterion your trade must meet. Rules belong to one of 7 layers and are either Required (must pass), Optional (improve score), or Advisory (reminder only).") }} across all {{ tip("7 layers", "Context: market conditions · Setup: structural setup · Confirmation: signal confirmation · Entry: entry trigger · Risk: position sizing & stop · Management: exits & targets · Behavioral: emotional checklist.") }}, or start from scratch and build your own.</p>
+    <p>Set up the {{ tip("rules", "Each rule is a specific criterion your trade must meet. Rules belong to one of 7 layers and are either Required (must pass), Optional (improve score), or Advisory (reminder only).") }} you'll check before every trade across the {{ tip("7 layers", "Context: market conditions · Setup: structural setup · Confirmation: signal confirmation · Entry: entry trigger · Risk: position sizing & stop · Management: exits & targets · Behavioral: emotional checklist.") }} of your decision process.</p>
 </hgroup>
 
-<form method="post" action="/setup/plan" id="plan-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="hidden" name="template_id" id="template_id" value="scratch">
+<div class="plan-start-options">
 
-    {# ── Template cards ───────────────────────────────────────────────────── #}
-    <div class="template-cards" role="radiogroup" aria-label="Plan template">
-
-        {% for tmpl in templates %}
-        <div class="template-card" data-template-id="{{ tmpl.id }}" role="radio" aria-checked="false" tabindex="0"
-             onclick="selectTemplate('{{ tmpl.id }}')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){selectTemplate('{{ tmpl.id }}');event.preventDefault();}">
-            <div class="template-card-header">
-                <div class="template-card-title">
-                    <span class="template-card-icon">
-                        {% if tmpl.id == 'trend_following' %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                        {% else %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        {% endif %}
-                    </span>
-                    <strong>{{ tmpl.name }}</strong>
-                </div>
-                <span class="template-rule-count">{{ tmpl.rules | length }} rules</span>
-            </div>
-            <p class="template-card-desc">{{ tmpl.description }}</p>
-
-            <details class="template-preview" onclick="event.stopPropagation()">
-                <summary>Preview rules</summary>
-                <div class="template-preview-rules">
-                    {% set ns = namespace(last_layer='') %}
-                    {% for rule in tmpl.rules %}
-                    {% if rule.layer != ns.last_layer %}
-                    {% if ns.last_layer != '' %}</ul>{% endif %}
-                    <p class="template-layer-label">{{ rule.layer | title }}</p>
-                    <ul>
-                    {% set ns.last_layer = rule.layer %}
-                    {% endif %}
-                    <li>
-                        <span class="template-rule-type-dot template-rule-type-dot--{{ rule.rule_type | lower }}"></span>
-                        {{ rule.name }}
-                    </li>
-                    {% endfor %}
-                    </ul>
-                    <p class="template-preview-legend">
-                        <span class="template-rule-type-dot template-rule-type-dot--required"></span> Required
-                        <span class="tip-mini" title="Must be checked for the layer to count as complete. Blocks advancement if unchecked.">?</span> &nbsp;
-                        <span class="template-rule-type-dot template-rule-type-dot--optional"></span> Optional
-                        <span class="tip-mini" title="Counts toward your grade but does not block advancement.">?</span> &nbsp;
-                        <span class="template-rule-type-dot template-rule-type-dot--advisory"></span> Advisory
-                        <span class="tip-mini" title="A reminder only — does not affect score or advancement.">?</span>
-                    </p>
-                </div>
-            </details>
+    <a href="/plan/templates?mode=setup" class="plan-start-option" role="button">
+        <span class="plan-start-option-icon"><i data-lucide="layout-template"></i></span>
+        <div>
+            <strong>Start from a template</strong>
+            <p class="muted">Browse 5 ready-made strategy templates — Trend Pullback, Break &amp; Retest, Range Reversal, and more. Each comes with rules across all 7 layers that you can edit.</p>
         </div>
-        {% endfor %}
+        <span class="plan-start-option-arrow"><i data-lucide="chevron-right"></i></span>
+    </a>
 
-        <div class="template-card" data-template-id="scratch" role="radio" aria-checked="false" tabindex="0"
-             onclick="selectTemplate('scratch')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){selectTemplate('scratch');event.preventDefault();}">
-            <div class="template-card-header">
-                <div class="template-card-title">
-                    <span class="template-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    </span>
-                    <strong>Start from scratch</strong>
+    <div class="plan-start-divider"><span>or</span></div>
+
+    <div class="plan-start-option plan-start-option--form">
+        <span class="plan-start-option-icon"><i data-lucide="pencil-line"></i></span>
+        <div style="flex: 1;">
+            <strong>Start from scratch</strong>
+            <p class="muted">Create an empty plan. Add your own rules manually, or use the Plan Builder (AI) after setup to generate rules from a plain-language description of your strategy.</p>
+            <form method="post" action="/setup/plan" id="plan-form" style="margin-top: 0.75rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="template_id" value="scratch">
+                <label for="plan_name">Plan name</label>
+                <input type="text" id="plan_name" name="plan_name"
+                       value="{{ plan.name or 'My Trading Plan' }}" required>
+                <label for="plan_description">Description <span class="muted">(optional)</span></label>
+                <textarea id="plan_description" name="plan_description" rows="2"
+                          placeholder="A short description of your strategy or edge.">{{ plan.description or '' }}</textarea>
+                <div class="wizard-nav" style="margin-top: 1rem;">
+                    <a href="/setup/ai" role="button" class="secondary outline wizard-back">← Back</a>
+                    <button type="submit">Next →</button>
                 </div>
-                <span class="template-rule-count">0 rules</span>
-            </div>
-            <p class="template-card-desc">Create an empty plan and add your own rules manually, or use the Plan Builder after setup.</p>
+            </form>
         </div>
-
     </div>
 
-    {# ── Plan name (shown after selection) ────────────────────────────────── #}
-    <div id="plan-name-section" style="margin-top: 1.5rem;">
-        <label for="plan_name">Plan name</label>
-        <input type="text" id="plan_name" name="plan_name"
-               value="{{ plan.name or 'My Trading Plan' }}" required>
-        <label for="plan_description">Description <span class="muted">(optional)</span></label>
-        <textarea id="plan_description" name="plan_description" rows="2"
-                  placeholder="A short description of your strategy or edge.">{{ plan.description or '' }}</textarea>
-    </div>
-
-    <div class="wizard-nav">
-        <a href="/setup/ai" role="button" class="secondary outline wizard-back">← Back</a>
-        <button type="submit">Next →</button>
-    </div>
-</form>
-{% endblock %}
-
-{% block scripts %}
-<script>
-const TEMPLATE_DATA = {
-    {% for tmpl in templates %}
-    "{{ tmpl.id }}": { name: {{ tmpl.name | tojson }}, description: {{ tmpl.description | tojson }} },
-    {% endfor %}
-    "scratch": { name: "My Trading Plan", description: "" }
-};
-
-function selectTemplate(id) {
-    document.getElementById('template_id').value = id;
-
-    document.querySelectorAll('.template-card').forEach(card => {
-        const isSelected = card.dataset.templateId === id;
-        card.classList.toggle('template-card--selected', isSelected);
-        card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
-    });
-
-    const data = TEMPLATE_DATA[id] || TEMPLATE_DATA['scratch'];
-    document.getElementById('plan_name').value = data.name;
-    document.getElementById('plan_description').value = data.description;
-}
-
-// Select scratch by default on page load
-selectTemplate('scratch');
-</script>
+</div>
 {% endblock %}
