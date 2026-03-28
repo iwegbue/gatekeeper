@@ -44,7 +44,9 @@ class JournalEntry(Base):
     __tablename__ = "journal_entries"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    trade_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, nullable=False)
+    trade_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("trades.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
     idea_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     status: Mapped[str] = mapped_column(String, default="DRAFT")  # JournalStatus enum
 

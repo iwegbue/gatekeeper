@@ -42,7 +42,7 @@ async def db():
         yield session
 
     async with engine.begin() as conn:
-        await conn.run_sync(lambda c: Base.metadata.drop_all(c, tables=reversed(Base.metadata.sorted_tables)))
+        await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
 
